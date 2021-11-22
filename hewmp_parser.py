@@ -61,26 +61,46 @@ class Pattern(MusicBase):
         return result
 
     def flatten(self):
-        logical_duration = self.logical_duration
+        dilation = self.duration/self.logical_duration
         result = []
         for subpattern in self.subpatterns:
             for note in subpattern.flatten():
                 result.append(Note(
                     note.pitch,
-                    self.time + note.time/logical_duration*self.duration,
-                    note.duration/logical_duration*self.duration
+                    self.time + note.time*dilation,
+                    note.duration*dilation
                 ))
         return result
+
+
+    def to_json(self):
+        events = []
+        for note in self.flatten():
+            events.append({
+                "type": "note",
+                "pitch": list(note.pitch),
+                "time": str(note.time),
+                "duration": str(note.duration),
+            })
+        return events
 
     def __repr__(self):
         return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.subpatterns, self.time, self.duration)
 
 
-PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29)
 E_INDEX = len(PRIMES)
 HZ_INDEX = E_INDEX + 1
 RAD_INDEX = HZ_INDEX + 1
 PITCH_LENGTH = RAD_INDEX + 1
+
+SEMANTIC = []
+for prime in PRIMES:
+    SEMANTIC.append(str(prime))
+SEMANTIC.append("e")
+SEMANTIC.append("Hz")
+SEMANTIC.append("rad")
+SEMANTIC = tuple(SEMANTIC)
 
 DEFAULT_INFLECTIONS = {
     "+": [-4, 4, -1],
@@ -329,7 +349,7 @@ def consume_lexer(lexer):
                 time_mode = True
             elif token == "]":
                 raise ParsingError('Unmatched "]"')
-            elif token == "|:":
+            elif token == "|:":  # TODO
                 pass
             elif token == ":|":
                 pass
@@ -338,9 +358,19 @@ def consume_lexer(lexer):
             elif token == ",":
                 time -= pattern[-1].duration
             elif token.startswith("="):
-                if not token_obj.whitespace:
-                    pattern.pop()
-                pattern.append(parse_chord(token[1:], current_pitch, DEFAULT_INFLECTIONS, 12, 2))
+                if token_obj.whitespace:
+                    if pattern:
+                        time += pattern[-1].duration
+                    subpattern_time = time
+                    subpattern_duration = Fraction(1)
+                else:
+                    replaced = pattern.pop()
+                    subpattern_time = replaced.time
+                    subpattern_duration = replaced.duration
+                subpattern = parse_chord(token[1:], current_pitch, DEFAULT_INFLECTIONS, 12, 2)
+                subpattern.time = subpattern_time
+                subpattern.duration = subpattern_duration
+                pattern.append(subpattern)
             elif ":" in token:
                 pattern.append(parse_otonal(token, current_pitch, DEFAULT_INFLECTIONS, 12, 2))
             elif ";" in token:
@@ -403,9 +433,22 @@ if __name__ == "__main__":
     # print(repr(ARROWS))
 
     giant_steps = """-P8[0]
-|:  P4=M- m3+=dom- | -P5=M-   m3+=dom-_2 | P4=M-_1[2] | A4-=m7+_1 -P5=7-_2 |
-   -P5=M- m3+=dom- | -P5=M-   m3+=dom-_2 | P4=M-[2]   | A4-=m7+_1 -P5=7-_2 |
-   -P5=M-[2]       | A4-=m7+  -P5=dom-   | P4=M-[2]   | A4-=m7+   -P5=7-   |
-   -P5=M-[2]       | A4-=m7+  -P5=dom-   | P4=M-[2]   | m7+=m7+   -P5=7-  :||"""
+|:   P4=M- m3+=dom- | -P5=M-   m3+=dom-_2 | P4=M-_1[2] | A4-=m7+_1 -P5=7-_2 |
+    -P5=M- m3+=dom- | -P5=M-   m3+=dom-_2 | P4=M-[2]   | A4-=m7+_1 -P5=7-_2 |
+    -P5=M-[2]       | A4-=m7+  -P5=dom-   | P4=M-[2]   | A4-=m7+   -P5=7-   |
+    -P5=M-[2]       | A4-=m7+  -P5=dom-   | P4=M-[2]   | m7+=m7+   -P5=7-  :||"""
 
-    print(parse_text(giant_steps))
+    melody = """P8[0]
+|:  P1[4] -M3-[4] | -m3+[4] -M3-[3] m3+[9] |  A1-[3] -M2[5] |
+    P4[4] -M3-[4] | -m3+[4] -M3-[3] m3+[9] |  A1-[4] -M2[3]
+    P4[9]         |  A1-[4]  -M2[3]  P4[9] |  A1-[4] -M2[3]
+    P4[5]   P1[4] |  A1-[4]  -M2[3]  P4[9] | -M3-[3]  P1[5] :||"""
+
+    # text = "P1=M- M3-=dom-_2 P5"
+    # text = giant_steps
+    # print(parse_text(text))
+
+    events = parse_text(melody).to_json()
+    result = {"semantic": SEMANTIC, "events": events}
+    import json
+    print(json.dumps(result))

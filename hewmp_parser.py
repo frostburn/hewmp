@@ -285,35 +285,57 @@ def parse_interval(token, inflections, edn_divisions, edn_divided):
     return pitch, absolute
 
 
+def parse_otonal(token, trasposition, *conf):
+    subtokens = token.split(":")
+    pitches = []
+    for subtoken in subtokens:
+        pitch, absolute = parse_interval(subtoken, *conf)
+        if absolute:
+            raise ParsingError("Otonal chord using absolute pitches")
+        pitches.append(pitch)
+    for i in range(len(pitches)):
+        pitches[i] -= pitches[0]
+    return Pattern([Note(pitch + trasposition) for pitches in pitches])
+
+
+def parse_utonal(token, trasposition, *conf):
+    subtokens = token.split(";")
+    pitches = []
+    for subtoken in subtokens:
+        pitch, absolute = parse_interval(subtoken, *conf)
+        if absolute:
+            raise ParsingError("Utonal chord using absolute pitches")
+        pitches.append(pitch)
+    root = pitches[0]
+    for i in range(len(pitches)):
+        pitches[i] = root - pitches[i]
+    return Pattern([Note(pitch + trasposition) for pitches in pitches])
+
+
 def parse_chord(token, trasposition, *conf):
     inversion = 0
     if "_" in token:
         token, inversion_token = token.split("_")
         inversion = int(inversion_token)
-    tokens = expand_chord(token)
-    result = Pattern()
-    for token in tokens:
-        pitch, absolute = parse_interval(token, *conf)
-        if absolute:
-            result.append(Note(pitch))
-        else:
-            result.append(Note(pitch + trasposition))
+    if ":" in token:
+        result = parse_otonal(token, trasposition, *conf)
+    elif ";" in token:
+        result = parse_utonal(token, trasposition, *conf)
+    else:
+        subtokens = expand_chord(token)
+        result = Pattern()
+        for subtoken in subtokens:
+            pitch, absolute = parse_interval(subtoken, *conf)
+            if absolute:
+                result.append(Note(pitch))
+            else:
+                result.append(Note(pitch + trasposition))
     for i in range(inversion):
         result[i].pitch[0] += 1
     if inversion:
         for i in range(len(result)):  #pylint: disable=consider-using-enumerate
             result[i].pitch[0] -= 1
     return result
-
-
-# TODO
-def parse_otonal():
-    pass
-
-
-# TODO
-def parse_utonal():
-    pass
 
 
 class RepeatExpander:
@@ -389,8 +411,8 @@ def consume_lexer(lexer):
                 transposed_pattern = pattern.pop()
             elif token == ",":
                 time -= pattern[-1].duration
-            elif token.startswith("="):
-                if token_obj.whitespace:
+            elif token.startswith("=") or ":" in token or ";" in token:
+                if token_obj.whitespace or not token.startswith("="):
                     if pattern:
                         time += pattern[-1].duration
                     subpattern_time = time
@@ -399,14 +421,12 @@ def consume_lexer(lexer):
                     replaced = pattern.pop()
                     subpattern_time = replaced.time
                     subpattern_duration = replaced.duration
-                subpattern = parse_chord(token[1:], current_pitch, DEFAULT_INFLECTIONS, 12, 2)
+                if token.startswith("="):
+                    token = token[1:]
+                subpattern = parse_chord(token, current_pitch, DEFAULT_INFLECTIONS, 12, 2)
                 subpattern.time = subpattern_time
                 subpattern.duration = subpattern_duration
                 pattern.append(subpattern)
-            elif ":" in token:
-                pattern.append(parse_otonal(token, current_pitch, DEFAULT_INFLECTIONS, 12, 2))
-            elif ";" in token:
-                pattern.append(parse_utonal(token, current_pitch, DEFAULT_INFLECTIONS, 12, 2))
             else:
                 floaty = False
                 if token.startswith("~"):
@@ -477,6 +497,7 @@ if __name__ == "__main__":
     P4[5]   P1[4] |  A1-[4]  -M2[3]  P4[9] | -M3-[3]  P1[5] :||"""
 
     text = "|:P1=M-|M3-=dom-_2 |:P5:| :|"
+    text = "P1=3:4:5 P1 4:5:6  -M3-=9;8;7 -9[0] 9,8,7 1=P1:M3-:P5"
     print(parse_text(text))
 
     # events = parse_text(giant_steps).to_json()

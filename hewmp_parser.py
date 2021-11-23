@@ -316,8 +316,44 @@ def parse_utonal():
     pass
 
 
+class RepeatExpander:
+    def __init__(self, lexer):
+        self.lexer = lexer
+
+    def __iter__(self):
+        self.repeated_section = []
+        self.record_mode = False
+        self.playback_mode = False
+        return self
+
+    def __next__(self):
+        while True:
+            if self.playback_mode and self.repeated_section:
+                return self.repeated_section.pop(0)
+            else:
+                token = next(self.lexer)
+
+            if token.value == "|:":
+                if self.record_mode:
+                    raise ParsingError('Nested "|:"')
+                self.record_mode = True
+                self.playback_mode = False
+            elif token.value == ":|":
+                if not self.record_mode:
+                    raise ParsingError('Unmatched ":|"')
+                self.record_mode = False
+                self.playback_mode = True
+            else:
+                if self.record_mode:
+                    if token.is_end():
+                        raise ParsingError('Missing ":|"')
+                    self.repeated_section.append(token)
+                return token
+
+
 def consume_lexer(lexer):
     time_mode = False
+    repeat_mode = False
     pattern = Pattern()
     time = Fraction(0)
     stack = []
@@ -349,10 +385,6 @@ def consume_lexer(lexer):
                 time_mode = True
             elif token == "]":
                 raise ParsingError('Unmatched "]"')
-            elif token == "|:":  # TODO
-                pass
-            elif token == ":|":
-                pass
             elif token == "&":
                 transposed_pattern = pattern.pop()
             elif token == ",":
@@ -402,7 +434,7 @@ def consume_lexer(lexer):
 
 
 def parse_text(text):
-    return consume_lexer(Lexer(StringIO(text)))
+    return consume_lexer(RepeatExpander(Lexer(StringIO(text))))
 
 
 if __name__ == "__main__":
@@ -444,11 +476,10 @@ if __name__ == "__main__":
     P4[9]         |  A1-[4]  -M2[3]  P4[9] |  A1-[4] -M2[3]
     P4[5]   P1[4] |  A1-[4]  -M2[3]  P4[9] | -M3-[3]  P1[5] :||"""
 
-    # text = "P1=M- M3-=dom-_2 P5"
-    # text = giant_steps
-    # print(parse_text(text))
+    text = "|:P1=M-|M3-=dom-_2 |:P5:| :|"
+    print(parse_text(text))
 
-    events = parse_text(melody).to_json()
-    result = {"semantic": SEMANTIC, "events": events}
-    import json
-    print(json.dumps(result))
+    # events = parse_text(giant_steps).to_json()
+    # result = {"semantic": SEMANTIC, "events": events}
+    # import json
+    # print(json.dumps(result))

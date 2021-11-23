@@ -363,6 +363,11 @@ class RepeatExpander:
             elif token.value == ":|":
                 if not self.record_mode:
                     raise ParsingError('Unmatched ":|"')
+                num_repeats_token = self.lexer.peek()
+                if not num_repeats_token.is_end() and num_repeats_token.value.startswith("x"):
+                    num_repeats = int(num_repeats_token.value[1:])
+                    self.repeated_section *= num_repeats
+                    next(self.lexer)
                 self.record_mode = False
                 self.playback_mode = True
             else:
@@ -496,8 +501,8 @@ if __name__ == "__main__":
     P4[9]         |  A1-[4]  -M2[3]  P4[9] |  A1-[4] -M2[3]
     P4[5]   P1[4] |  A1-[4]  -M2[3]  P4[9] | -M3-[3]  P1[5] :||"""
 
-    text = "|:P1=M-|M3-=dom-_2 |:P5:| :|"
     text = "P1=3:4:5 P1 4:5:6  -M3-=9;8;7 -9[0] 9,8,7 1=P1:M3-:P5"
+    text = "|:P1=M-|M3-=dom-_2 :|x0 |:P5:|x7"
     print(parse_text(text))
 
     # events = parse_text(giant_steps).to_json()

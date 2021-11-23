@@ -26,11 +26,16 @@ class Lexer:
         self.current_whitespace = ""
         self.current_token = ""
         self.done = False
+        self.peeked_token = None
 
     def __iter__(self):
         return self
 
     def __next__(self):
+        if self.peeked_token is not None:
+            token_obj = self.peeked_token
+            self.peeked_token = None
+            return token_obj
         if self.done:
             raise StopIteration
         whitespace = ""
@@ -71,6 +76,11 @@ class Lexer:
                     return Token(token, whitespace)
         self.done = True
         return Token(None, whitespace)
+
+
+    def peek(self):
+        self.peeked_token = next(self)
+        return self.peeked_token
 
 
 if __name__ == "__main__":

@@ -60,7 +60,7 @@ class Tuning(Event):
         super().__init__(time, duration)
         self.base_frequency = base_frequency
         self.comma_list = comma_list
-        self.constraints = constraints,
+        self.constraints = constraints
         self.subgroup = subgroup
         self.suggested_mapping = suggested_mapping
 
@@ -677,6 +677,37 @@ def parse_file(file):
     return consume_lexer(RepeatExpander(Lexer(file)))
 
 
+def simplify_events(events):
+    used = array([False] * len(SEMANTIC))
+
+    for event in events:
+        if event["type"] == "note":
+            for i, coord in enumerate(event["pitch"]):
+                if coord != 0:
+                    used[i] = True
+
+    semantic = list(array(SEMANTIC)[used])
+
+    def simplify(pitch):
+        result = []
+        for coord in array(pitch)[used]:
+            if coord == int(coord):
+                coord = int(coord)
+            result.append(coord)
+        return result
+
+    for event in events:
+        if event["type"] == "note":
+            event["pitch"] = simplify(event["pitch"])
+
+        if event["type"] == "tuning":
+            for key in ["commaList", "constraints", "subgroup"]:
+                event[key] = [simplify(vector) for vector in event[key]]
+            event["suggestedMapping"] = simplify(event["suggestedMapping"])
+
+    return semantic, events
+
+
 if __name__ == "__main__":
     import argparse
     import sys
@@ -686,15 +717,20 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('infile',  nargs='?', type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
+    parser.add_argument('--simplify', action='store_true')
     args = parser.parse_args()
 
     pattern = parse_file(args.infile)
     if args.infile is not sys.stdin:
         args.infile.close()
 
+    semantic = SEMANTIC
+    events = pattern.to_json()
+    if args.simplify:
+        semantic, events = simplify_events(events)
     data = {
-        "semantic": SEMANTIC,
-        "events": pattern.to_json()
+        "semantic": semantic,
+        "events": events
     }
     json.dump(data, args.outfile)
     if args.outfile is not sys.stdout:

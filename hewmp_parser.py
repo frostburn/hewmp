@@ -573,6 +573,7 @@ def consume_lexer(lexer):
             if config_key == "F":
                 config[config_key] = [flag.strip() for flag in token.split(",")]
             config_mode = False
+            continue
 
         if time_mode:
             if token == "]":
@@ -634,6 +635,8 @@ def consume_lexer(lexer):
                 pattern.append(transposed_pattern)
                 transposed_pattern = None
             else:
+                if absolute:
+                    current_pitch = zero_pitch()
                 pitch = current_pitch + interval
                 if not floaty:
                     current_pitch = pitch

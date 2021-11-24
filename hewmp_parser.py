@@ -5,6 +5,30 @@ from lexer import Lexer
 from chord_parser import expand_chord, separate_by_arrows
 
 
+# TODO:
+# * Ties using time addition commands [+2]
+# * Play control
+#   - Playhead (loop region start) |> (playhead only) |!>
+#   - Loop region end <|
+#   - Stop playing >|
+# * Parsing of absolute pitches
+# * Production of absolute pitches, intervals, ratios and monzos
+# * Inline messages
+# * Dynamics
+# * Chance operators
+# * Vibrato
+# * Tremolo
+# * Pitch-bends
+# * It's probably a good idea to attach most of these things to the notes themselves even if treated as events in Python
+# * Arpeggios
+#   - Arpeggiate and hold [~]
+#   - Arpeggiate and hold in sixteenth notes [~1/16]
+#   - Arpeggiate and hold evenly (as a tuplet) [~?]
+#   - Arpeggiate up in sixteenth notes [^1/16]
+#   - Arpeggiate down evenly [v?] (In reverse listed order. Don't measure pitch. Remember to fix chord spellings for this.)
+#   - Arpeggiate up and down in a loop [^v1/16]
+# * r to repeat last pitched pattern
+
 class MusicBase:
     def __init__(self, time, duration):
         self.time = Fraction(time)
@@ -25,6 +49,9 @@ class Note(MusicBase):
 
     def flatten(self):
         return [self]
+
+    def transpose(self, pitch):
+        self.pitch = self.pitch + pitch
 
     def __repr__(self):
         return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.pitch, self.time, self.duration)
@@ -72,16 +99,20 @@ class Pattern(MusicBase):
                 ))
         return result
 
+    def transpose(self, pitch):
+        for subpattern in self.subpatterns:
+            subpattern.transpose(pitch)
 
     def to_json(self):
         events = []
         for note in self.flatten():
-            events.append({
-                "type": "note",
-                "pitch": list(note.pitch),
-                "time": str(note.time),
-                "duration": str(note.duration),
-            })
+            if note.pitch is not None:
+                events.append({
+                    "type": "note",
+                    "pitch": list(note.pitch),
+                    "time": str(note.time),
+                    "duration": str(note.duration),
+                })
         return events
 
     def __repr__(self):
@@ -224,8 +255,13 @@ def parse_arrows(token, inflections):
     return result
 
 
-# Intentionally skips 'b', 'd' and 'A', so as not to confuse them with flat, diminished or augmented
-ABSOLUTE_PITCH_LETTERS = "acefgBCDEFG"
+# The following are reserved by something more important:
+# A - augmented
+# b - flat
+# c - cents
+# d - diminished
+# f - forte
+ABSOLUTE_PITCH_LETTERS = "aBCDEFG"
 
 
 # TODO:
@@ -432,6 +468,11 @@ def consume_lexer(lexer):
                 subpattern.time = subpattern_time
                 subpattern.duration = subpattern_duration
                 pattern.append(subpattern)
+            elif token == "Z":
+                if pattern:
+                    time += pattern[-1].duration
+                note = Note(None, time)
+                pattern.append(note)
             else:
                 floaty = False
                 if token.startswith("~"):
@@ -462,50 +503,29 @@ def parse_text(text):
     return consume_lexer(RepeatExpander(Lexer(StringIO(text))))
 
 
+def parse_file(file):
+    if not file.seekable():
+        file = StringIO(file.read())
+    return consume_lexer(RepeatExpander(Lexer(file)))
+
+
 if __name__ == "__main__":
-    if False:
-        triplet = Pattern([
-            Note(array([0, 0]), 0, 1),
-            Note(array([-3, 2]), 1, 1),
-            Note(array([-1, 1]), 2, 1),
-        ], 0, 1)
+    import argparse
+    import sys
+    import json
 
-        print(triplet.flatten())
+    parser = argparse.ArgumentParser(description='Parse input file (or stdin) in HEWMP notation and output JSON to file (or stdout)')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('infile',  nargs='?', type=argparse.FileType('r'), default=sys.stdin)
+    parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
+    args = parser.parse_args()
 
-        nested_tuplet = Pattern([
-            triplet,
-            Note(array([1, 0]), 1, 1)
-        ], 0, 1)
+    pattern = parse_file(args.infile)
+    if args.infile is not sys.stdin:
+        args.infile.close()
 
-        print(nested_tuplet.flatten())
-
-        nested_tuplet.subpatterns[0].time = Fraction(1)
-        nested_tuplet.subpatterns[1].time = Fraction(0)
-
-        print(nested_tuplet.flatten())
-
-    # print(parse_text("3/2 (~1,~5/4,~3/2)[2] (5/4 3/2)[1/2] 1"))
-    # print(parse_text("P1 ~M3- ~P5 ~m7<"))
-
-    # print(repr(ARROWS))
-
-    giant_steps = """-P8[0]
-|:   P4=M- m3+=dom- | -P5=M-   m3+=dom-_2 | P4=M-_1[2] | A4-=m7+_1 -P5=7-_2 |
-    -P5=M- m3+=dom- | -P5=M-   m3+=dom-_2 | P4=M-[2]   | A4-=m7+_1 -P5=7-_2 |
-    -P5=M-[2]       | A4-=m7+  -P5=dom-   | P4=M-[2]   | A4-=m7+   -P5=7-   |
-    -P5=M-[2]       | A4-=m7+  -P5=dom-   | P4=M-[2]   | m7+=m7+   -P5=7-  :||"""
-
-    melody = """P8[0]
-|:  P1[4] -M3-[4] | -m3+[4] -M3-[3] m3+[9] |  A1-[3] -M2[5] |
-    P4[4] -M3-[4] | -m3+[4] -M3-[3] m3+[9] |  A1-[4] -M2[3]
-    P4[9]         |  A1-[4]  -M2[3]  P4[9] |  A1-[4] -M2[3]
-    P4[5]   P1[4] |  A1-[4]  -M2[3]  P4[9] | -M3-[3]  P1[5] :||"""
-
-    text = "P1=3:4:5 P1 4:5:6  -M3-=9;8;7 -9[0] 9,8,7 1=P1:M3-:P5"
-    text = "|:P1=M-|M3-=dom-_2 :|x0 |:P5:|x7"
-    print(parse_text(text))
-
-    # events = parse_text(giant_steps).to_json()
-    # result = {"semantic": SEMANTIC, "events": events}
-    # import json
-    # print(json.dumps(result))
+    json.dump(pattern.to_json(), args.outfile)
+    if args.outfile is not sys.stdout:
+        args.outfile.close()
+    else:
+        args.outfile.write("\n")

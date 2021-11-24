@@ -49,10 +49,18 @@ def accidental_to_quality(token):
     return "{}{}{}".format(quality, interval_class, "".join(separated))
 
 
-# TODO
 FLAVOR_CHORDS = {
     "7": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1)),
+
+    "mM7": (("P1", 0), ("m3", 1), ("P5", 0), ("M7", -1)),
+
+    "9": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0)),
+
+    "11": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0), ("P11", 0)),
+
+    "13": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0), ("P11", 0), ("M13", 0)),
 }
+
 
 def make_flavor_chord(base, arrow_tokens):
     positive_inflection = "".join(arrow_tokens)
@@ -71,16 +79,39 @@ def make_flavor_chord(base, arrow_tokens):
 
     return chord
 
-# TODO
+
 BASIC_CHORDS = {
     "M": (("P1", "M3", "P5"), (1,)),
-    "dom": (("P1", "M3", "P5", "m7"), (1,)),
+    "m": (("P1", "m3", "P5"), (1,)),
+
+    "M7": (("P1", "M3", "P5", "M7"), (1, 3)),
     "m7": (("P1", "m3", "P5", "m7"), (1, 3)),
+    "dom": (("P1", "M3", "P5", "m7"), (1,)),
+
+    "M9": (("P1", "M3", "P5", "M7", "M9"), (1, 3)),
+    "m9": (("P1", "m3", "P5", "m7", "M9"), (1, 3)),
+    "mb9": (("P1", "m3", "P5", "m7", "m9"), (1, 3, 4)),
+    "dom9": (("P1", "M3", "P5", "m7", "M9"), (1,)),
+
+    "M11": (("P1", "M3", "P5", "M7", "M9", "P11"), (1, 3, 5)),
+    "m11": (("P1", "m3", "P5", "m7+", "M9", "P11"), (1, 3, 5)),
+    "M#11": (("P1", "M3", "P5", "M7", "M9", "A11"), (1, 3, 5)),
+    "dom11": (("P1", "M3", "P5", "m7", "M9", "P11"), (1,)),
+
+    "domb12": (("P1", "M3-", "P5", "m7", "M9", "d12"), (1,)),
+
+    "M13": (("P1", "M3", "P5", "M7", "M9", "M13"), (1, 3, 5)),
+    "dom13": (("P1", "M3-", "P5", "m7", "M9", "M13"), (1,)),
+
+    "M#15": (("P1", "M3", "P5", "M7", "M9", "M13", "A15"), (1, 3, 5)),
 }
 
-# TODO
+
 SUS_CHORDS = {
     "sus2": (("P1", "M2", "P5"), (1,)),
+    "sus4": (("P1", "P4", "P5"), (1,)),
+    "quartal": (("P1", "P4", "m7"), (1, 2)),
+    "quintal": (("P1", "P5", "M9"), (2,)),
 }
 
 BASIC_CHORDS_ = {}
@@ -109,7 +140,7 @@ def expand_chord(token):
     added_intervals = [accidental_to_quality(tone) for tone in added_tones]
 
     sus_replacement = None
-    if "sus" in token:
+    if "sus" in token and not token.startswith("sus"):
         token, sus_token = token.split("sus")
         sus_replacement = accidental_to_quality(sus_token)
 
@@ -117,6 +148,12 @@ def expand_chord(token):
     if token.startswith("M") or token.startswith("d"):
         prefix = token[0]
         token = token[1:]
+    if token.startswith("su"):
+        prefix = token[:2]
+        token = token[2:]
+    if token.startswith("qua") or token.startswith("qui"):
+        prefix = token[:3]
+        token = token[3:]
     separated = separate_by_arrows(token)
     base = prefix + separated.pop(0)
 

@@ -1,8 +1,10 @@
 from io import StringIO
 from numpy import array, zeros, log
 from fractions import Fraction
-from lexer import Lexer
+from lexer import Lexer, CONFIGS
 from chord_parser import expand_chord, separate_by_arrows
+from temperaments import TEMPERAMENTS
+from temperament import temper_subgroup
 
 
 # TODO:
@@ -38,17 +40,90 @@ class MusicBase:
     def end_time(self):
         return self.time + self.duration
 
+    def to_json(self):
+        return {
+            "time": str(self.time),
+            "duration": str(self.duration),
+        }
 
-class Note(MusicBase):
+    def retime(self, time, duration):
+        pass
+
+
+class Event(MusicBase):
+    def flatten(self):
+        return [self]
+
+
+class Tuning(Event):
+    def __init__(self, base_frequency, comma_list, constraints, subgroup, suggested_mapping, time=0, duration=0):
+        super().__init__(time, duration)
+        self.base_frequency = base_frequency
+        self.comma_list = comma_list
+        self.constraints = constraints,
+        self.subgroup = subgroup
+        self.suggested_mapping = suggested_mapping
+
+    def to_json(self):
+        result = super().to_json()
+        result.update({
+            "type": "tuning",
+            "baseFrequency": self.base_frequency,
+            "commaList": [list(comma) for comma in self.comma_list],
+            "constraints": [list(constraint) for constraint in self.constraints],
+            "subgroup": [list(basis_vector) for basis_vector in self.subgroup],
+            "suggestedMapping": list(self.suggested_mapping),
+        })
+        return result
+
+    def retime(self, time, duration):
+        # TODO: Deep copy
+        return self.__class__(self.base_frequency, self.comma_list, self.constraints, self.subgroup, self.suggested_mapping, time, duration)
+
+
+class Tempo(Event):
+    def __init__(self, beat_duration, unit, time=0, duration=0):
+        super().__init__(time, duration)
+        self.beat_duration = beat_duration
+        self.unit = unit
+
+    def to_json(self):
+        result = super().to_json()
+        result.update({
+            "type": "tempo",
+            "beatDuration": str(self.beat_duration),
+            "unit": str(self.unit),
+        })
+        return result
+
+    def retime(self, time, duration):
+        return self.__class__(self.beat_duration, self.unit, time, duration)
+
+
+class Rest(Event):
+    def __init__(self, time=0, duration=1):
+        super().__init__(time, duration)
+
+    def flatten(self):
+        return []
+
+    def to_json(self):
+        return None
+
+    def retime(self, time, duration):
+        return self.__class__(time, duration)
+
+
+class Transposable:
+    def transpose(self, pitch):
+        pass
+
+
+class Note(Event, Transposable):
     def __init__(self, pitch, time=0, duration=1):
         super().__init__(time, duration)
         self.pitch = pitch
 
-    def is_rest(self):
-        return self.pitch is None
-
-    def flatten(self):
-        return [self]
 
     def transpose(self, pitch):
         self.pitch = self.pitch + pitch
@@ -56,8 +131,19 @@ class Note(MusicBase):
     def __repr__(self):
         return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.pitch, self.time, self.duration)
 
+    def to_json(self):
+        result = super().to_json()
+        result.update({
+            "type": "note",
+            "pitch": list(self.pitch),
+        })
+        return result
 
-class Pattern(MusicBase):
+    def retime(self, time, duration):
+        return self.__class__(array(self.pitch), time, duration)
+
+
+class Pattern(MusicBase, Transposable):
     def __init__(self, subpatterns=None, time=0, duration=1):
         super().__init__(time, duration)
         if subpatterns is None:
@@ -67,6 +153,9 @@ class Pattern(MusicBase):
 
     def __bool__(self):
         return bool(self.subpatterns)
+
+    def insert(self, index, value):
+        self.subpatterns.insert(index, value)
 
     def append(self, subpattern):
         self.subpatterns.append(subpattern)
@@ -88,32 +177,33 @@ class Pattern(MusicBase):
         return result
 
     def flatten(self):
-        dilation = self.duration/self.logical_duration
+        logical_duration = self.logical_duration
+        if logical_duration == 0:
+            dilation = Fraction(0)
+        else:
+            dilation = self.duration/self.logical_duration
         result = []
         for subpattern in self.subpatterns:
-            for note in subpattern.flatten():
-                result.append(Note(
-                    note.pitch,
-                    self.time + note.time*dilation,
-                    note.duration*dilation
+            for event in subpattern.flatten():
+                result.append(event.retime(
+                    self.time + event.time*dilation,
+                    event.duration*dilation
                 ))
         return result
 
     def transpose(self, pitch):
         for subpattern in self.subpatterns:
-            subpattern.transpose(pitch)
+            if isinstance(subpattern, Transposable):
+                subpattern.transpose(pitch)
 
     def to_json(self):
         events = []
-        for note in self.flatten():
-            if note.pitch is not None:
-                events.append({
-                    "type": "note",
-                    "pitch": list(note.pitch),
-                    "time": str(note.time),
-                    "duration": str(note.duration),
-                })
+        for event in self.flatten():
+            events.append(event.to_json())
         return events
+
+    def retime(self, time, duration):
+        raise NotImplementedError("Pattern retiming not implemented")
 
     def __repr__(self):
         return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.subpatterns, self.time, self.duration)
@@ -160,6 +250,21 @@ for key, value in list(DEFAULT_INFLECTIONS.items()):
     DEFAULT_INFLECTIONS[key] = array(value + [0] * (PITCH_LENGTH - len(value)))
 
 
+DEFAULT_CONFIG = {
+    "a": 440,
+    "T": None,
+    "CL": [],
+    "SG": list(map(str, PRIMES)),
+    "C": [],
+    "CRD": 5,
+    "WF": None,
+    "L": Fraction(1, 4),
+    "beat_duration": Fraction(1),
+    "G": 1.0,
+    "F": []
+}
+
+
 def zero_pitch():
     return zeros(PITCH_LENGTH)
 
@@ -187,6 +292,7 @@ def parse_fraction(token):
         denominator = int(denominator)
         return number_to_pitch(numerator) - number_to_pitch(denominator)
     return number_to_pitch(int(token))
+
 
 BASIC_INTERVALS = {
     "d2": (19, -12),
@@ -415,6 +521,8 @@ class RepeatExpander:
 
 
 def consume_lexer(lexer):
+    config_mode = False
+    config_key = None
     time_mode = False
     repeat_mode = False
     pattern = Pattern()
@@ -423,77 +531,137 @@ def consume_lexer(lexer):
     transposed_pattern = None
     current_pitch = zero_pitch()
 
+    config = {}
+    config.update(DEFAULT_CONFIG)
+    tempo_spec = (Fraction(1, 4), 120)
+
     for token_obj in lexer:
         if token_obj.is_end():
             break
         token = token_obj.value
+
+        if token in CONFIGS:
+            config_key = token[:-1]
+            config_mode = True
+            continue
+
+        # TODO: Tuning and tempo as timed events
+        if config_mode:
+            if config_key == "a":
+                config[config_key] = float(token)
+            if config_key == "T":
+                comma_list, subgroup = TEMPERAMENTS[token.strip()]
+                config["CL"] = comma_list
+                config["SG"] = subgroup.split(".")
+            if config_key == "CL":
+                config[config_key] = [comma.strip() for comma in token.split(",")]
+            if config_key == "SG":
+                config[config_key] = [basis_fraction.strip() for basis_fraction in token.split(".")]
+            if config_key == "C":
+                config[config_key] = [constraint.strip() for constraint in token.split(",")]
+            if config_key == "CRD":
+                config[config_key] = int(token)
+            if config_key == "WF":
+                config[config_key] = token.strip()
+            if config_key == "L":
+                config[config_key] = Fraction(token)
+            if config_key == "Q":
+                unit, bpm = token.split("=")
+                tempo_spec = (Fraction(unit), Fraction(bpm))
+            if config_key == "G":
+                config[config_key] = float(token)
+            if config_key == "F":
+                config[config_key] = [flag.strip() for flag in token.split(",")]
+            config_mode = False
 
         if time_mode:
             if token == "]":
                 time_mode = False
             else:
                 pattern[-1].duration *= Fraction(token)
-        else:
-            if token == "(":
-                if pattern:
-                    time += pattern[-1].duration
-                stack.append((pattern, time))
-                pattern = Pattern([], time)
-                time = Fraction(0)
-            elif token == ")":
-                subpattern = pattern
-                pattern, time = stack.pop()
-                pattern.append(subpattern)
-            elif token == "[":
-                time_mode = True
-            elif token == "]":
-                raise ParsingError('Unmatched "]"')
-            elif token == "&":
-                transposed_pattern = pattern.pop()
-            elif token == ",":
-                time -= pattern[-1].duration
-            elif token.startswith("=") or ":" in token or ";" in token:
-                if token_obj.whitespace or not token.startswith("="):
-                    if pattern:
-                        time += pattern[-1].duration
-                    subpattern_time = time
-                    subpattern_duration = Fraction(1)
-                else:
-                    replaced = pattern.pop()
-                    subpattern_time = replaced.time
-                    subpattern_duration = replaced.duration
-                if token.startswith("="):
-                    token = token[1:]
-                subpattern = parse_chord(token, current_pitch, DEFAULT_INFLECTIONS, 12, 2)
-                subpattern.time = subpattern_time
-                subpattern.duration = subpattern_duration
-                pattern.append(subpattern)
-            elif token == "Z":
-                if pattern:
-                    time += pattern[-1].duration
-                note = Note(None, time)
-                pattern.append(note)
-            else:
-                floaty = False
-                if token.startswith("~"):
-                    floaty = True
-                    token = token[1:]
-                interval, absolute = parse_interval(token, DEFAULT_INFLECTIONS, 12, 2)
+            continue
 
-                if transposed_pattern:
-                    if absolute:
-                        raise ParsingError("Absolute transposition")
-                    transposed_pattern.transpose(interval)
-                    pattern.append(transposed_pattern)
-                    transposed_pattern = None
-                else:
-                    pitch = current_pitch + interval
-                    if not floaty:
-                        current_pitch = pitch
-                    if pattern:
-                        time += pattern[-1].duration
-                    note = Note(pitch, time)
-                    pattern.append(note)
+        if token == "(":
+            if pattern:
+                time += pattern[-1].duration
+            stack.append((pattern, time))
+            pattern = Pattern([], time)
+            time = Fraction(0)
+        elif token == ")":
+            subpattern = pattern
+            pattern, time = stack.pop()
+            pattern.append(subpattern)
+        elif token == "[":
+            time_mode = True
+        elif token == "]":
+            raise ParsingError('Unmatched "]"')
+        elif token == "&":
+            transposed_pattern = pattern.pop()
+        elif token == ",":
+            time -= pattern[-1].duration
+        elif token.startswith("=") or ":" in token or ";" in token:
+            if token_obj.whitespace or not token.startswith("="):
+                if pattern:
+                    time += pattern[-1].duration
+                subpattern_time = time
+                subpattern_duration = Fraction(1)
+            else:
+                replaced = pattern.pop()
+                subpattern_time = replaced.time
+                subpattern_duration = replaced.duration
+            if token.startswith("="):
+                token = token[1:]
+            subpattern = parse_chord(token, current_pitch, DEFAULT_INFLECTIONS, 12, 2)
+            subpattern.time = subpattern_time
+            subpattern.duration = subpattern_duration
+            pattern.append(subpattern)
+        elif token == "Z":
+            if pattern:
+                time += pattern[-1].duration
+            rest = Rest(time)
+            pattern.append(rest)
+        else:
+            floaty = False
+            if token.startswith("~"):
+                floaty = True
+                token = token[1:]
+            interval, absolute = parse_interval(token, DEFAULT_INFLECTIONS, 12, 2)
+
+            if transposed_pattern:
+                if absolute:
+                    raise ParsingError("Absolute transposition")
+                transposed_pattern.transpose(interval)
+                pattern.append(transposed_pattern)
+                transposed_pattern = None
+            else:
+                pitch = current_pitch + interval
+                if not floaty:
+                    current_pitch = pitch
+                if pattern:
+                    time += pattern[-1].duration
+                note = Note(pitch, time)
+                pattern.append(note)
+
+    unit, bpm = tempo_spec
+    beat_duration = Fraction(60) / bpm / unit * config["L"]
+    tempo = Tempo(beat_duration, config["L"])
+    pattern.insert(0, tempo)
+
+    subgroup = [parse_interval(basis_vector, DEFAULT_INFLECTIONS, 12, 2)[0] for basis_vector in config["SG"]]
+    comma_list = [parse_interval(comma, DEFAULT_INFLECTIONS, 12, 2)[0] for comma in config["CL"]]
+    constraints = [parse_interval(constraint, DEFAULT_INFLECTIONS, 12, 2)[0] for constraint in config["C"]]
+    JI = log(array(PRIMES))
+    mapping = temper_subgroup(
+        JI,
+        [comma[:len(JI)] for comma in comma_list],
+        [constraint[:len(JI)] for constraint in constraints],
+        [basis_vector[:len(JI)] for basis_vector in subgroup],
+    )
+    suggested_mapping = zero_pitch()
+    suggested_mapping[:len(JI)] = mapping
+    suggested_mapping[E_INDEX] = 1
+    tuning = Tuning(config["a"], comma_list, constraints, subgroup, suggested_mapping)
+    pattern.insert(0, tuning)
 
     pattern.duration = pattern.logical_duration
     return pattern
@@ -524,7 +692,11 @@ if __name__ == "__main__":
     if args.infile is not sys.stdin:
         args.infile.close()
 
-    json.dump(pattern.to_json(), args.outfile)
+    data = {
+        "semantic": SEMANTIC,
+        "events": pattern.to_json()
+    }
+    json.dump(data, args.outfile)
     if args.outfile is not sys.stdout:
         args.outfile.close()
     else:

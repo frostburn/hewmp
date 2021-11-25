@@ -4,7 +4,7 @@ from fractions import Fraction
 from lexer import Lexer, CONFIGS
 from chord_parser import expand_chord, separate_by_arrows
 from temperaments import TEMPERAMENTS
-from temperament import temper_subgroup
+from temperament import temper_subgroup, comma_reduce
 from notation import notate_fraction, notate_otonal_utonal
 
 
@@ -502,6 +502,14 @@ def parse_chord(token, trasposition, *conf):
     return result
 
 
+def comma_reduce_pattern(pattern, comma_list, persistence):
+    if isinstance(pattern, Note):
+        pattern.pitch = comma_reduce(pattern.pitch, comma_list, persistence)
+    if isinstance(pattern, Pattern):
+        for subpattern in pattern:
+            comma_reduce_pattern(subpattern, comma_list, persistence)
+
+
 class RepeatExpander:
     def __init__(self, lexer):
         self.lexer = lexer
@@ -539,7 +547,8 @@ class RepeatExpander:
                     if token.is_end():
                         raise ParsingError('Missing ":|"')
                     self.repeated_section.append(token)
-                return token
+                else:
+                    return token
 
 
 def consume_lexer(lexer):
@@ -689,6 +698,10 @@ def consume_lexer(lexer):
     pattern.insert(0, tuning)
 
     pattern.duration = pattern.logical_duration
+
+    if "CR" in config["F"]:
+        comma_reduce_pattern(pattern, comma_list, config["CRD"])
+
     return pattern
 
 
@@ -735,6 +748,8 @@ def simplify_events(events):
 
 
 def notate_pattern_as_fractions(pattern, main=False):
+    if pattern.duration == 0:
+        return ""
     suffix = ""
     if pattern.duration != 1 and not main:
         suffix = "[{}]".format(pattern.duration)

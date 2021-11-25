@@ -70,6 +70,62 @@ def temper_subgroup(just_mapping, comma_list, constraints, subgroup, num_iterati
     return mapping
 
 
+def is_less_complex(pitch_a, pitch_b):
+    """
+    Compare pitches to see which one is expressed using smaller primes ignoring octaves
+    """
+    for i in reversed(range(1, len(pitch_a))):
+        if abs(pitch_a[i]) < abs(pitch_b[i]):
+            return True
+        if abs(pitch_a[i]) > abs(pitch_b[i]):
+            return False
+
+    for i in reversed(range(1, len(pitch_a))):
+        if pitch_a[i] > 0 and pitch_b[i] < 0:
+            return True
+        if pitch_a[i] < 0 and pitch_b[i] > 0:
+            return False
+    return False
+
+
+def comma_reduce(pitch, comma_list, persistence=5):
+    """
+    Express the pitch using as small primes as possible by adding commas from the list
+    """
+    # Walk towards "zero"
+    current = pitch
+    did_advance = True
+    while did_advance:
+        did_advance = False
+        for comma in comma_list:
+            candidate = current + comma
+            if is_less_complex(candidate, current):
+                current = candidate
+                did_advance = True
+                continue
+            candidate = current - comma
+            if is_less_complex(candidate, current):
+                current = candidate
+                did_advance = True
+
+    # Search the vicinity of "zero" for simpler options
+    best = current
+    def combine(coefs):
+        nonlocal best
+        if len(coefs) == len(comma_list):
+            candidate = current + 0
+            for coef, comma in zip(coefs, comma_list):
+                candidate += coef*comma
+            if is_less_complex(candidate, best):
+                best = candidate
+            return
+        for i in range(-persistence, persistence+1):
+            combine(coefs + [i])
+
+    combine([])
+    return best
+
+
 if __name__ == "__main__":
     from numpy import log
     JI = log(array([2, 3, 5]))

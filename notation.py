@@ -2,15 +2,7 @@
 Tools for reversing parsed notation back into a standard form.
 In other words in combination with parsing translate relative intervals like M3- to ratio notation such as 5/4 or (absolute) pitch notation like C5#-
 """
-from functools import reduce
 from numpy import array, log, pi, maximum
-
-
-def gcd(a, b):
-    # pylint: disable=invalid-name
-    if b == 0:
-        return a
-    return gcd(b, a % b)
 
 
 def notate_extras(pitch, e_index=None, hz_index=None, rad_index=None):
@@ -62,9 +54,9 @@ def notate_otonal_utonal(pitches, primes):
     """
     if len(pitches) < 2:
         raise ValueError("Need at least two pitches to make a chord")
-    otonal_root = array(pitches[0])*0
-    utonal_root = otonal_root*0
-    for pitch in pitches:
+    otonal_root = -array(pitches[0])
+    utonal_root = array(pitches[0])
+    for pitch in pitches[1:]:
         otonal_root = maximum(otonal_root, -array(pitch))
         utonal_root = maximum(utonal_root, pitch)
 
@@ -80,11 +72,6 @@ def notate_otonal_utonal(pitches, primes):
             num_utonal *= prime**int(u - coord)
         otonal.append(num_otonal)
         utonal.append(num_utonal)
-
-    otonal = array(otonal)
-    utonal = array(utonal)
-    otonal //= reduce(gcd, otonal)
-    utonal //= reduce(gcd, utonal)
 
     if max(otonal) <= max(utonal):
         return ":".join(map(str, otonal))

@@ -752,6 +752,10 @@ def notate_pattern_as_fractions(pattern, main=False):
         return "(" + " ".join(filter(None, subnotations)) + ")" + suffix
     if isinstance(pattern, Note):
         return "@{}{}".format(notate_fraction(pattern.pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX), suffix)
+    if isinstance(pattern, Rest):
+        if pattern.emit:
+            return "Z{}".format(suffix)
+        return "z{}".format(suffix)
 
     return ""
 

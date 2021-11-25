@@ -5,6 +5,7 @@ from lexer import Lexer, CONFIGS
 from chord_parser import expand_chord, separate_by_arrows
 from temperaments import TEMPERAMENTS
 from temperament import temper_subgroup
+from notation import notate_fraction, notate_otonal_utonal
 
 
 # TODO:
@@ -178,6 +179,9 @@ class Pattern(MusicBase, Transposable):
     def __len__(self):
         return len(self.subpatterns)
 
+    def __iter__(self):
+        return iter(self.subpatterns)
+
     @property
     def logical_duration(self):
         result = 0
@@ -216,6 +220,14 @@ class Pattern(MusicBase, Transposable):
 
     def __repr__(self):
         return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.subpatterns, self.time, self.duration)
+
+    def is_chord(self):
+        for note in self:
+            if not isinstance(note, Note):
+                return False
+            if note.time != 0 or note.duration != 1:
+                return False
+        return True
 
 
 PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
@@ -722,6 +734,28 @@ def simplify_events(events):
     return semantic, events
 
 
+def notate_pattern_as_fractions(pattern, main=False):
+    suffix = ""
+    if pattern.duration != 1 and not main:
+        suffix = "[{}]".format(pattern.duration)
+    if isinstance(pattern, Pattern):
+        if pattern.is_chord():
+            pitches = []
+            for note in pattern:
+                pitches.append(note.pitch)
+            root_fraction = notate_fraction(pattern[0].pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX)
+            chord = notate_otonal_utonal(pitches, PRIMES)
+            return "@{}={}{}".format(root_fraction, chord, suffix)
+        subnotations = [notate_pattern_as_fractions(subpattern) for subpattern in pattern]
+        if main:
+            return " ".join(filter(None, subnotations))
+        return "(" + " ".join(filter(None, subnotations)) + ")" + suffix
+    if isinstance(pattern, Note):
+        return "@{}{}".format(notate_fraction(pattern.pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX), suffix)
+
+    return ""
+
+
 if __name__ == "__main__":
     import argparse
     import sys
@@ -732,21 +766,26 @@ if __name__ == "__main__":
     parser.add_argument('infile',  nargs='?', type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     parser.add_argument('--simplify', action='store_true')
+    parser.add_argument('--fractional', action='store_true')
     args = parser.parse_args()
 
     pattern = parse_file(args.infile)
     if args.infile is not sys.stdin:
         args.infile.close()
 
-    semantic = SEMANTIC
-    events = pattern.to_json()
-    if args.simplify:
-        semantic, events = simplify_events(events)
-    data = {
-        "semantic": semantic,
-        "events": events
-    }
-    json.dump(data, args.outfile)
+    if args.fractional:
+        args.outfile.write(notate_pattern_as_fractions(pattern, True))
+    else:
+        semantic = SEMANTIC
+        events = pattern.to_json()
+        if args.simplify:
+            semantic, events = simplify_events(events)
+        data = {
+            "semantic": semantic,
+            "events": events
+        }
+        json.dump(data, args.outfile)
+
     if args.outfile is not sys.stdout:
         args.outfile.close()
     else:

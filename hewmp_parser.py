@@ -540,6 +540,8 @@ class RepeatExpander:
                     num_repeats = int(num_repeats_token.value[1:])
                     self.repeated_section *= num_repeats
                     next(self.lexer)
+                else:
+                    self.repeated_section *= 2
                 self.record_mode = False
                 self.playback_mode = True
             else:
@@ -610,7 +612,16 @@ def consume_lexer(lexer):
             if token == "]":
                 time_mode = False
             else:
-                pattern[-1].duration *= Fraction(token)
+                duration_token = token
+                time_token = ""
+                if "@" in token:
+                    duration_token, time_token = token.split("@", 1)
+                if duration_token:
+                    pattern[-1].duration *= Fraction(duration_token)
+                if time_token:
+                    time = Fraction(time_token)
+                    pattern[-1].time = time
+                    time += pattern[-1].duration
             continue
 
         if token == "(":
@@ -747,12 +758,18 @@ def simplify_events(events):
     return semantic, events
 
 
-def notate_pattern_as_fractions(pattern, main=False):
+def notate_pattern_as_fractions(pattern, main=False, absolute_time=False):
     if pattern.duration == 0:
         return ""
     suffix = ""
-    if pattern.duration != 1 and not main:
-        suffix = "[{}]".format(pattern.duration)
+    if not main:
+        if pattern.duration != 1:
+            if absolute_time:
+                suffix = "[{}@{}]".format(pattern.duration, pattern.time)
+            else:
+                suffix = "[{}]".format(pattern.duration)
+        elif absolute_time:
+            suffix = "[@{}]".format(pattern.time)
     if isinstance(pattern, Pattern):
         if pattern.is_chord():
             pitches = []
@@ -761,7 +778,17 @@ def notate_pattern_as_fractions(pattern, main=False):
             root_fraction = notate_fraction(pattern[0].pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX)
             chord = notate_otonal_utonal(pitches, PRIMES)
             return "@{}={}{}".format(root_fraction, chord, suffix)
-        subnotations = [notate_pattern_as_fractions(subpattern) for subpattern in pattern]
+        subnotations = []
+        local_time = Fraction(0)
+        for subpattern in pattern:
+            if subpattern.duration == 0:
+                continue
+            local_absolute_time = False
+            if subpattern.time != local_time:
+                local_absolute_time = True
+                local_time = subpattern.time
+            subnotations.append(notate_pattern_as_fractions(subpattern, absolute_time=local_absolute_time))
+            local_time += subpattern.duration
         if main:
             return " ".join(filter(None, subnotations))
         return "(" + " ".join(filter(None, subnotations)) + ")" + suffix

@@ -29,7 +29,9 @@ from temperament import temper_subgroup
 #   - Arpeggiate up in sixteenth notes [^1/16]
 #   - Arpeggiate down evenly [v?] (In reverse listed order. Don't measure pitch. Remember to fix chord spellings for this.)
 #   - Arpeggiate up and down in a loop [^v1/16]
-# * r to repeat last pitched pattern
+# * Swing
+# * Dynamic tempo
+# * Dynamic tuning
 
 class MusicBase:
     def __init__(self, time, duration):
@@ -101,17 +103,24 @@ class Tempo(Event):
 
 
 class Rest(Event):
-    def __init__(self, time=0, duration=1):
+    def __init__(self, emit=False, time=0, duration=1):
         super().__init__(time, duration)
+        self.emit = emit
 
     def flatten(self):
+        if self.emit:
+            return super().flatten()
         return []
 
     def to_json(self):
+        if self.emit:
+            result = super().to_json()
+            result["type"] = "rest"
+            return result
         return None
 
     def retime(self, time, duration):
-        return self.__class__(time, duration)
+        return self.__class__(self.emit, time, duration)
 
 
 class Transposable:
@@ -209,7 +218,7 @@ class Pattern(MusicBase, Transposable):
         return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.subpatterns, self.time, self.duration)
 
 
-PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29)
+PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
 E_INDEX = len(PRIMES)
 HZ_INDEX = E_INDEX + 1
 RAD_INDEX = HZ_INDEX + 1
@@ -230,18 +239,19 @@ DEFAULT_INFLECTIONS = {
     "<": [-6, 2, 0, 1],
     "^": [-5, 1, 0, 0, 1],
     "v": [5, -1, 0, 0, -1],
-    "*": [-1, 3, 0, 0, 0, -1],
-    "%": [1, -3, 0, 0, 0, 1],
-    "u": [-12, 5, 0, 0, 0, 0, 1],
-    "d": [12, -5, 0, 0, 0, 0, -1],
-    "U": [-9, 3, 0, 0, 0, 0, 0, 1],
-    "D": [9, -3, 0, 0, 0, 0, 0, -1],
-    "A": [5, -6, 0, 0, 0, 0, 0, 0, 1],
-    "V": [-5, 6, 0, 0, 0, 0, 0, 0, -1],
-    "M": [-8, 2, 0, 0, 0, 0, 0, 0, 0, 1],
-    "W": [8, -2, 0, 0, 0, 0, 0, 0, 0, -1],
-    "i": [5, -4, -1, 0, 0, 1],
-    "!": [-5, 4, 1, 0, 0, -1],
+    # This particular inflection for 13 was chosen so that the barbados tetrad 10:13:15 is spelled P1:M3+i:P5 or just =Mi+ using the chord system
+    "i": [9, -8, 0, 0, 0, 1],
+    "!": [-9, 8, 0, 0, 0, -1],
+    "*": [-12, 5, 0, 0, 0, 0, 1],
+    "%": [12, -5, 0, 0, 0, 0, -1],
+    "A": [-9, 3, 0, 0, 0, 0, 0, 1],
+    "V": [9, -3, 0, 0, 0, 0, 0, -1],
+    "u": [5, -6, 0, 0, 0, 0, 0, 0, 1],
+    "d": [-5, 6, 0, 0, 0, 0, 0, 0, -1],
+    "U": [-8, 2, 0, 0, 0, 0, 0, 0, 0, 1],
+    "D": [8, -2, 0, 0, 0, 0, 0, 0, 0, -1],
+    "M": [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],
+    "W": [-5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
 }
 ARROWS = ""
 
@@ -616,10 +626,10 @@ def consume_lexer(lexer):
             subpattern.time = subpattern_time
             subpattern.duration = subpattern_duration
             pattern.append(subpattern)
-        elif token == "Z":
+        elif token in ("z", "Z"):
             if pattern:
                 time += pattern[-1].duration
-            rest = Rest(time)
+            rest = Rest((token=="Z"), time)
             pattern.append(rest)
         else:
             floaty = False
@@ -703,6 +713,7 @@ def simplify_events(events):
         if event["type"] == "note":
             event["pitch"] = simplify(event["pitch"])
 
+        # TODO: Drop zero subgroup vectors
         if event["type"] == "tuning":
             for key in ["commaList", "constraints", "subgroup"]:
                 event[key] = [simplify(vector) for vector in event[key]]

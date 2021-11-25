@@ -101,7 +101,7 @@ class Lexer:
                 if character != ":" and next_character in SPACERS:
                     return Token(token, whitespace)
 
-                if token in CONFIGS and (was_first_token or whitespace[0] == "\n"):
+                if token in CONFIGS and (was_first_token or "\n" in whitespace):
                     self.reading_config_value = True
                     return Token(token, whitespace)
 

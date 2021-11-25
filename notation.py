@@ -76,3 +76,88 @@ def notate_otonal_utonal(pitches, primes):
     if max(otonal) <= max(utonal):
         return ":".join(map(str, otonal))
     return ";".join(map(str, utonal))
+
+
+def rindex(lst, value):
+    lst = list(lst)
+    return len(lst) - lst[::-1].index(value) - 1
+
+
+def reverse_inflections(inflections):
+    result = []
+    for arrow, comma in inflections.items():
+        index = 0
+        if 1 in comma:
+            index = rindex(comma, 1)
+        if -1 in comma:
+            index = max(index, rindex(comma, -1))
+        result.append((index, arrow, comma))
+    return result
+
+
+PYTHAGOREAN_QUALITIES = ("m", "m", "m", "m", "P", "P", "P", "M", "M", "M", "M")
+PYTHAGOREAN_INDEX_P1 = 5
+
+
+def notate_interval(pitch, inflections, *extra_indices):
+    """
+    Notate (relative) pitch monzo using the inflections provided
+
+    Assumes that the first two coordinates form the pythagorean basis
+    """
+    twos = pitch[0]
+    threes = pitch[1]
+    arrow_counts = {}
+    for index, arrow, comma in inflections:
+        direction = comma[index]
+        if pitch[index]*direction > 0:
+            count = pitch[index]
+            arrow_counts[arrow] = count
+            twos -= comma[0]*count
+            threes -= comma[1]*count
+
+    if twos != int(twos) or threes != int(threes):
+        raise ValueError("Non-integral monzo")
+
+    twos = int(twos)
+    threes = int(threes)
+
+    arrow_str = ""
+    for arrow, count in arrow_counts.items():
+        arrow_str += arrow
+        if count > 1:
+            arrow_str += str(count)
+
+    index = threes + PYTHAGOREAN_INDEX_P1
+    if index >= 0 and index < len(PYTHAGOREAN_QUALITIES):
+        quality = PYTHAGOREAN_QUALITIES[index]
+    elif index < 0:
+        quality = ""
+        while index < 0:
+            quality += "d"
+            index += 7
+    else:
+        index -= len(PYTHAGOREAN_QUALITIES)
+        quality = ""
+        while index >= 0:
+            quality += "A"
+            index -= 7
+
+    value = 7*twos + 11*threes
+    sign = "-" if value < 0 else ""
+    value = abs(value) + 1
+
+    return "{}{}{}{}{}".format(sign, quality, value, arrow_str, notate_extras(pitch, *extra_indices))
+
+
+if __name__ == "__main__":
+    import argparse
+    from hewmp_parser import DEFAULT_INFLECTIONS, PRIMES, zero_pitch, parse_fraction, E_INDEX, HZ_INDEX, RAD_INDEX
+
+    parser = argparse.ArgumentParser(description='Display the HEWMP notation for the given fraction')
+    parser.add_argument('input', type=str)
+    args = parser.parse_args()
+
+    inflections = reverse_inflections(DEFAULT_INFLECTIONS)
+    pitch = parse_fraction(args.input)
+    print(notate_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))

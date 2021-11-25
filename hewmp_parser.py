@@ -781,8 +781,7 @@ if __name__ == "__main__":
     import json
 
     parser = argparse.ArgumentParser(description='Parse input file (or stdin) in HEWMP notation and output JSON to file (or stdout)')
-    parser = argparse.ArgumentParser()
-    parser.add_argument('infile',  nargs='?', type=argparse.FileType('r'), default=sys.stdin)
+    parser.add_argument('infile', nargs='?', type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     parser.add_argument('--simplify', action='store_true')
     parser.add_argument('--fractional', action='store_true')

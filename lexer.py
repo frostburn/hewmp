@@ -20,6 +20,7 @@ CONFIGS = [
     "WF:",  # Oscillator waveform
     "L:",  # Unit-length
     "Q:",  # Tempo
+    "SP:",  # Swing percentage
     "G:",  # Gain
     "F:",  # Flags
 ]

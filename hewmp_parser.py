@@ -1,5 +1,5 @@
 from io import StringIO
-from numpy import array, zeros, log
+from numpy import array, zeros, log, floor
 from fractions import Fraction
 from lexer import Lexer, CONFIGS
 from chord_parser import expand_chord, separate_by_arrows
@@ -85,10 +85,15 @@ class Tuning(Event):
 
 
 class Tempo(Event):
-    def __init__(self, beat_duration, unit, time=0, duration=0):
+    def __init__(self, beat_duration, unit, swing_amount=0, swing_unit=None, time=0, duration=0):
         super().__init__(time, duration)
         self.beat_duration = beat_duration
         self.unit = unit
+        self.swing_amount = swing_amount
+        if swing_unit is None:
+            self.swing_unit = self.unit
+        else:
+            self.swing_unit = swing_unit
 
     def to_json(self):
         result = super().to_json()
@@ -96,11 +101,23 @@ class Tempo(Event):
             "type": "tempo",
             "beatDuration": str(self.beat_duration),
             "unit": str(self.unit),
+            "swingAmount": str(self.swing_amount),
+            "swingUnit": str(self.swing_unit),
         })
         return result
 
     def retime(self, time, duration):
-        return self.__class__(self.beat_duration, self.unit, time, duration)
+        return self.__class__(self.beat_duration, self.unit, self.swing_amount, self.swing_unit, time, duration)
+
+    def to_realtime(self, time, duration):
+        end_beat = float(time + duration)
+        start_beat = float(time)
+        amount = float(self.swing_amount)
+        unit = float(self.swing_unit/self.unit)
+        start_time = start_beat + amount*abs(start_beat - floor(0.5*start_beat/unit + 0.5)*2*unit)
+        end_time = end_beat + amount*abs(end_beat - floor(0.5*end_beat/unit + 0.5)*2*unit)
+        beat_duration = float(self.beat_duration)
+        return start_time*beat_duration, (end_time - start_time)*beat_duration
 
 
 class Rest(Event):
@@ -225,6 +242,7 @@ class Pattern(MusicBase, Transposable):
         start_time = None
         end_time = None
         flat = []
+        tempo = None
         for event in self.flatten():
             if isinstance(event, Playhead):
                 start_time = event.time
@@ -232,16 +250,23 @@ class Pattern(MusicBase, Transposable):
                 end_time = event.end_time
             else:
                 flat.append(event)
+            if isinstance(event, Tempo):
+                tempo = event
         events = []
+        # TODO: Integrate tempo changes
+        # TODO: Apply swing to playheads
         for event in flat:
             if start_time is not None and event.time < start_time:
                 continue
             if end_time is not None and event.end_time > end_time:
                 continue
             if start_time is not None:
-                events.append(event.retime(event.time - start_time, event.duration).to_json())
-            else:
-                events.append(event.to_json())
+                event = event.retime(event.time - start_time, event.duration)
+            data = event.to_json()
+            realtime, realduration = tempo.to_realtime(event.time, event.duration)
+            data["realtime"] = realtime
+            data["realduration"] = realduration
+            events.append(data)
         return events
 
     def retime(self, time, duration):
@@ -599,6 +624,7 @@ def consume_lexer(lexer):
     config = {}
     config.update(DEFAULT_CONFIG)
     tempo_spec = (Fraction(1, 4), 120)
+    swing_spec = (None, Fraction(0))
 
     for token_obj in lexer:
         if token_obj.is_end():
@@ -633,6 +659,14 @@ def consume_lexer(lexer):
             if config_key == "Q":
                 unit, bpm = token.split("=")
                 tempo_spec = (Fraction(unit), Fraction(bpm))
+            if config_key == "SP":
+                if "=" in token:
+                    unit, amount = token.split("=")
+                    unit = Fraction(unit)
+                else:
+                    unit = None
+                    amount = token
+                swing_spec = (unit, Fraction(amount.strip().strip("%"))/100)
             if config_key == "G":
                 config[config_key] = float(token)
             if config_key == "F":
@@ -649,7 +683,10 @@ def consume_lexer(lexer):
                 if "@" in token:
                     duration_token, time_token = token.split("@", 1)
                 if duration_token:
-                    pattern[-1].duration *= Fraction(duration_token)
+                    if duration_token.startswith("-") or duration_token.startswith("+"):
+                        pattern[-1].duration += Fraction(duration_token)
+                    else:
+                        pattern[-1].duration *= Fraction(duration_token)
                 if time_token:
                     if time_token == "T":
                         time = timestamp
@@ -734,8 +771,9 @@ def consume_lexer(lexer):
                 pattern.append(note)
 
     unit, bpm = tempo_spec
+    swing_unit, swing_amount = swing_spec
     beat_duration = Fraction(60) / bpm / unit * config["L"]
-    tempo = Tempo(beat_duration, config["L"])
+    tempo = Tempo(beat_duration, config["L"], swing_amount, swing_unit)
     pattern.insert(0, tempo)
 
     subgroup = [parse_interval(basis_vector, DEFAULT_INFLECTIONS, 12, 2)[0] for basis_vector in config["SG"]]

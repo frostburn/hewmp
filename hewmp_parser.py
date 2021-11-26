@@ -11,7 +11,6 @@ from notation import notate_fraction, notate_otonal_utonal
 # TODO:
 # * More chords
 # * Loop regions
-# * Parsing of absolute pitches
 # * Inline messages
 # * Dynamics
 # * Chance operators
@@ -461,12 +460,60 @@ def parse_arrows(token, inflections):
 # c - cents
 # d - diminished
 # f - forte
-ABSOLUTE_PITCH_LETTERS = "aBCDEFG"
+BASIC_PITCHES = {
+    "F": (6, -4),
+    "C": (4, -3),
+    "G": (3, -2),
+    "D": (1, -1),
+    "a": (0, 0),
+    "E": (-2, 1),
+    "B": (-3, 2),
+}
+REFERENCE_OCTAVE = 4
 
 
-# TODO:
-def parse_pitch(token):
-    pass
+def parse_pitch(token, inflections):
+    letter = token[0]
+    token = token[1:]
+    if token and token[0] == "-":
+        octave_token = token[0]
+        token = token[1:]
+    else:
+        octave_token = ""
+    while token and token[0].isdigit():
+        octave_token += token[0]
+        token = token[1:]
+    octave = int(octave_token)
+    sharp = 0
+    while token and token[0] == "#":
+        sharp += 1
+        token = token[1:]
+    while token and token[0] == "x":
+        sharp += 2
+        token = token[1:]
+    while token and token[0] == "b":
+        sharp -= 1
+        token = token[1:]
+
+
+    result = zero_pitch()
+    result[0] += AUGMENTED_INFLECTION[0] * sharp
+    result[1] += AUGMENTED_INFLECTION[1] * sharp
+
+    separated = separate_by_arrows(token)
+
+    for arrow_token in separated[1:]:
+        arrows = 1
+        if len(arrow_token) > 1:
+            arrows = int(arrow_token[1:])
+        result += inflections[arrow_token[0]]*arrows
+
+    basic_pitch = BASIC_PITCHES[letter]
+
+    result[0] += octave - REFERENCE_OCTAVE + basic_pitch[0]
+    result[1] += basic_pitch[1]
+
+    return result
 
 
 def parse_interval(token, inflections, edn_divisions, edn_divided):
@@ -509,7 +556,7 @@ def parse_interval(token, inflections, edn_divisions, edn_divided):
             pitch = parse_fraction(token)
     elif token[0] in INTERVAL_QUALITIES:
         pitch = parse_arrows(token, inflections)
-    elif token[0] in ABSOLUTE_PITCH_LETTERS:
+    elif token[0] in BASIC_PITCHES:
         if direction is not None:
             raise ParsingError("Signed absolute pitch")
         pitch = parse_pitch(token, inflections)

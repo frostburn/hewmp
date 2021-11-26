@@ -1,5 +1,5 @@
 from io import StringIO
-from numpy import array, zeros, log, floor
+from numpy import array, zeros, log, floor, pi
 from fractions import Fraction
 from lexer import Lexer, CONFIGS
 from chord_parser import expand_chord, separate_by_arrows
@@ -9,13 +9,10 @@ from notation import notate_fraction, notate_otonal_utonal
 
 
 # TODO:
-# * Ties using time addition commands [+2]
-# * Play control
-#   - Playhead (loop region start) |> (playhead only) |!>
-#   - Loop region end <|
-#   - Stop playing >|
+# * More chords
+# * Loop regions
 # * Parsing of absolute pitches
-# * Production of absolute pitches, intervals, ratios and monzos
+# * Production of absolute pitches
 # * Inline messages
 # * Dynamics
 # * Chance operators
@@ -30,7 +27,6 @@ from notation import notate_fraction, notate_otonal_utonal
 #   - Arpeggiate up in sixteenth notes [^1/16]
 #   - Arpeggiate down evenly [v?] (In reverse listed order. Don't measure pitch. Remember to fix chord spellings for this.)
 #   - Arpeggiate up and down in a loop [^v1/16]
-# * Swing
 # * Dynamic tempo
 # * Dynamic tuning
 
@@ -83,6 +79,18 @@ class Tuning(Event):
         # TODO: Deep copy
         return self.__class__(self.base_frequency, self.comma_list, self.constraints, self.subgroup, self.suggested_mapping, time, duration)
 
+    def __repr__(self):
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
+            self.__class__.__name__,
+            self.base_frequency,
+            self.comma_list,
+            self.constraints,
+            self.subgroup,
+            self.suggested_mapping,
+            self.time,
+            self.duration,
+        )
+
 
 class Tempo(Event):
     def __init__(self, beat_duration, unit, swing_amount=0, swing_unit=None, time=0, duration=0):
@@ -118,6 +126,17 @@ class Tempo(Event):
         end_time = end_beat + amount*abs(end_beat - floor(0.5*end_beat/unit + 0.5)*2*unit)
         beat_duration = float(self.beat_duration)
         return start_time*beat_duration, (end_time - start_time)*beat_duration
+
+    def __repr__(self):
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
+            self.__class__.__name__,
+            self.beat_duration,
+            self.unit,
+            self.swing_amount,
+            self.swing_unit,
+            self.time,
+            self.duration,
+        )
 
 
 class Rest(Event):
@@ -759,6 +778,8 @@ def consume_lexer(lexer):
                 transposed_pattern.transpose(interval)
                 pattern.append(transposed_pattern)
                 transposed_pattern = None
+                if not floaty:
+                    current_pitch += interval
             else:
                 if absolute:
                     current_pitch = zero_pitch()
@@ -833,7 +854,7 @@ def simplify_events(events):
         if event["type"] == "note":
             event["pitch"] = simplify(event["pitch"])
 
-        # TODO: Drop zero subgroup vectors
+        # TODO: Convert to fractions when simplifying
         if event["type"] == "tuning":
             for key in ["commaList", "constraints", "subgroup"]:
                 event[key] = [simplify(vector) for vector in event[key]]

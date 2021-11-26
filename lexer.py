@@ -8,6 +8,8 @@ COMMENT = "$"
 
 SPACERS = "|"
 
+PLAY_CONTROL = ("|:", ":|", "|>", ">|")
+
 CONFIGS = [
     "a:",  # Frequency of a4 and @P1
     "T:",  # Temperament
@@ -79,9 +81,9 @@ class Lexer:
                     return Token(token, whitespace)
                 continue
 
-            if character == "|" and next_character == ":":
+            if character == "|" and next_character in (":", ">"):
                 token += character
-            elif character.isspace() or (character in SPACERS and token != ":"):
+            elif character.isspace() or (character in SPACERS and token not in (":", ">")):
                 if character == "\n":
                     commenting = False
                 whitespace += character
@@ -94,11 +96,11 @@ class Lexer:
                 whitespace += character
 
             if token:
-                if token in ("|:", ":|"):
+                if token in PLAY_CONTROL:
                     return Token(token, whitespace)
-                if next_character == ":" and next_but_one_character == "|":
+                if next_character in (":", ">") and next_but_one_character == "|":
                     return Token(token, whitespace)
-                if character != ":" and next_character in SPACERS:
+                if character not in (":", ">") and next_character in SPACERS:
                     return Token(token, whitespace)
 
                 if token in CONFIGS and (was_first_token or "\n" in whitespace):
@@ -123,6 +125,9 @@ if __name__ == "__main__":
         P1 M3-=m7+ m3+[0] (P1 M3- P5)[2] m9+2v5&10c&-5Hz 1,5/4,3/2
         |: P1 | P5 | -P4 :|
         |:M3i|-M2:|  $ comment
+        $ Play from here instead
+        |> P1 P4 P4 >|
+        $ Stop before you reach here
         P1[1/2]
     """)
     lexer = Lexer(reader)

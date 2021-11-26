@@ -124,6 +124,18 @@ class Rest(Event):
         return self.__class__(self.emit, time, duration)
 
 
+class Playhead(Event):
+    def __init__(self, time=0, duration=0):
+        super().__init__(time, duration)
+
+    def retime(self, time, duration):
+        return self.__class__(time, duration)
+
+
+class Playstop(Playhead):
+    pass
+
+
 class Transposable:
     def transpose(self, pitch):
         pass
@@ -210,9 +222,26 @@ class Pattern(MusicBase, Transposable):
                 subpattern.transpose(pitch)
 
     def to_json(self):
-        events = []
+        start_time = None
+        end_time = None
+        flat = []
         for event in self.flatten():
-            events.append(event.to_json())
+            if isinstance(event, Playhead):
+                start_time = event.time
+            elif isinstance(event, Playstop):
+                end_time = event.end_time
+            else:
+                flat.append(event)
+        events = []
+        for event in flat:
+            if start_time is not None and event.time < start_time:
+                continue
+            if end_time is not None and event.end_time > end_time:
+                continue
+            if start_time is not None:
+                events.append(event.retime(event.time - start_time, event.duration).to_json())
+            else:
+                events.append(event.to_json())
         return events
 
     def retime(self, time, duration):
@@ -563,6 +592,9 @@ def consume_lexer(lexer):
     stack = []
     transposed_pattern = None
     current_pitch = zero_pitch()
+    timestamp = None
+    playhead = None
+    playstop = None
 
     config = {}
     config.update(DEFAULT_CONFIG)
@@ -619,7 +651,10 @@ def consume_lexer(lexer):
                 if duration_token:
                     pattern[-1].duration *= Fraction(duration_token)
                 if time_token:
-                    time = Fraction(time_token)
+                    if time_token == "T":
+                        time = timestamp
+                    else:
+                        time = Fraction(time_token)
                     pattern[-1].time = time
                     time += pattern[-1].duration
             continue
@@ -663,6 +698,17 @@ def consume_lexer(lexer):
                 time += pattern[-1].duration
             rest = Rest((token=="Z"), time)
             pattern.append(rest)
+        elif token == "T":
+            if pattern:
+                timestamp = time + pattern[-1].duration
+            else:
+                timestamp = time
+        elif token == "|>":
+            playhead = Playhead(time)
+            pattern.append(playhead)
+        elif token == ">|":
+            playstop = Playstop(time)
+            pattern.append(playstop)
         else:
             floaty = False
             if token.startswith("~"):

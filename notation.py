@@ -95,16 +95,7 @@ def reverse_inflections(inflections):
     return result
 
 
-PYTHAGOREAN_QUALITIES = ("m", "m", "m", "m", "P", "P", "P", "M", "M", "M", "M")
-PYTHAGOREAN_INDEX_P1 = 5
-
-
-def notate_interval(pitch, inflections, *extra_indices):
-    """
-    Notate (relative) pitch monzo using the inflections provided
-
-    Assumes that the first two coordinates form the pythagorean basis
-    """
+def pythagoras_and_arrows(pitch, inflections):
     twos = pitch[0]
     threes = pitch[1]
     arrow_counts = {}
@@ -128,6 +119,20 @@ def notate_interval(pitch, inflections, *extra_indices):
         if count > 1:
             arrow_str += str(count)
 
+    return twos, threes, arrow_str
+
+PYTHAGOREAN_QUALITIES = ("m", "m", "m", "m", "P", "P", "P", "M", "M", "M", "M")
+PYTHAGOREAN_INDEX_P1 = 5
+
+
+def notate_interval(pitch, inflections, *extra_indices):
+    """
+    Notate (relative) pitch monzo using the inflections provided
+
+    Assumes that the first two coordinates form the pythagorean basis
+    """
+    twos, threes, arrow_str = pythagoras_and_arrows(pitch, inflections)
+
     index = threes + PYTHAGOREAN_INDEX_P1
     if index >= 0 and index < len(PYTHAGOREAN_QUALITIES):
         quality = PYTHAGOREAN_QUALITIES[index]
@@ -150,14 +155,52 @@ def notate_interval(pitch, inflections, *extra_indices):
     return "{}{}{}{}{}".format(sign, quality, value, arrow_str, notate_extras(pitch, *extra_indices))
 
 
+LYDIAN = ("F", "C", "G", "D", "a", "E", "B")
+LYDIAN_INDEX_A = 4
+REFERENCE_OCTAVE = 4
+INDEX_A_12EDO = 9
+
+
+def notate_pitch(pitch, inflections, *extra_indices):
+    """
+    Notate (absolute) pitch monzo using the inflections provided
+
+    Assumes that the first two coordinates form the pythagorean basis
+    """
+    twos, threes, arrow_str = pythagoras_and_arrows(pitch, inflections)
+
+    index = threes + LYDIAN_INDEX_A
+    letter = LYDIAN[index%len(LYDIAN)]
+    accidental = ""
+    while index < 0:
+        accidental += "b"
+        index += 7
+    while index >= len(LYDIAN):
+        if index >= 2*len(LYDIAN):
+            accidental += "x"
+            index -= 2*len(LYDIAN)
+        else:
+            accidental = "#" + accidental
+            index -= len(LYDIAN)
+
+    edo12 = 12*twos + 19*threes
+    octave = REFERENCE_OCTAVE + (edo12 + INDEX_A_12EDO)//12
+
+    return "{}{}{}{}{}".format(letter, octave, accidental, arrow_str, notate_extras(pitch, *extra_indices))
+
+
 if __name__ == "__main__":
     import argparse
     from hewmp_parser import DEFAULT_INFLECTIONS, PRIMES, zero_pitch, parse_fraction, E_INDEX, HZ_INDEX, RAD_INDEX
 
     parser = argparse.ArgumentParser(description='Display the HEWMP notation for the given fraction')
     parser.add_argument('input', type=str)
+    parser.add_argument('--absolute', action="store_true")
     args = parser.parse_args()
 
     inflections = reverse_inflections(DEFAULT_INFLECTIONS)
     pitch = parse_fraction(args.input)
-    print(notate_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+    if args.absolute:
+        print(notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+    else:
+        print(notate_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))

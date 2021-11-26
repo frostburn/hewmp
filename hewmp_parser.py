@@ -12,7 +12,6 @@ from notation import notate_fraction, notate_otonal_utonal
 # * More chords
 # * Loop regions
 # * Parsing of absolute pitches
-# * Production of absolute pitches
 # * Inline messages
 # * Dynamics
 # * Chance operators

@@ -10,7 +10,6 @@ from notation import notate_fraction, notate_otonal_utonal
 
 # TODO:
 # * Inline messages
-# * Dynamics
 # * Chance operators
 # * Vibrato
 # * Tremolo
@@ -168,6 +167,36 @@ class Playstop(Playhead):
     pass
 
 
+class Dynamic(Event):
+    def __init__(self, velocity, time=0, duration=0):
+        super().__init__(time, duration)
+        self.velocity = velocity
+
+    def retime(self, time, duration):
+        return self.__class__(self.velocity, time ,duration)
+
+    def to_json(self):
+        result = super().to_json()
+        result["type"] = "dynamic"
+        result["velocity"] = str(self.velocity)
+        return result
+
+
+class Articulation(Event):
+    def __init__(self, gate_ratio, time=0, duration=0):
+        super().__init__(time, duration)
+        self.gate_ratio = gate_ratio
+
+    def retime(self, time, duration):
+        return self.__class__(self.gate_ratio, time ,duration)
+
+    def to_json(self):
+        result = super().to_json()
+        result["type"] = "articulation"
+        result["gateRatio"] = str(self.gate_ratio)
+        return result
+
+
 class Transposable:
     def transpose(self, pitch):
         pass
@@ -177,7 +206,6 @@ class Note(Event, Transposable):
     def __init__(self, pitch, time=0, duration=1):
         super().__init__(time, duration)
         self.pitch = pitch
-
 
     def transpose(self, pitch):
         self.pitch = self.pitch + pitch
@@ -269,8 +297,14 @@ class Pattern(MusicBase, Transposable):
                 tempo = event
         events = []
         # TODO: Integrate tempo changes
-        # TODO: Apply swing to playheads
+        # TODO: Offset swing according to playheads
+        articulation = None
+        dynamic = None
         for event in flat:
+            if isinstance(event, Articulation):
+                articulation = event
+            if isinstance(event, Dynamic):
+                dynamic = event
             if start_time is not None and event.time < start_time:
                 continue
             if end_time is not None and event.end_time > end_time:
@@ -281,6 +315,9 @@ class Pattern(MusicBase, Transposable):
             realtime, realduration = tempo.to_realtime(event.time, event.duration)
             data["realtime"] = realtime
             data["realduration"] = realduration
+            if isinstance(event, Note):
+                _, real_gate_length = tempo.to_realtime(event.time, event.duration * articulation.gate_ratio)
+                data["realGateLength"] = float(real_gate_length)
             events.append(data)
         return events
 
@@ -671,6 +708,25 @@ class RepeatExpander:
                     return token
 
 
+ARTICULATIONS = {
+    ".": Fraction(1, 2),  # Staccato
+    "_": Fraction(1),  # Tenuto
+    ";": Fraction(9, 10),  # Normal
+}
+
+
+DYNAMICS = {
+    "ppp": Fraction(1, 8),
+    "pp": Fraction(1, 4),
+    "p": Fraction(1, 3),
+    "mp": Fraction(1, 2),
+    "mf": Fraction(2, 3),
+    "f": Fraction(3, 4),
+    "ff": Fraction(7, 8),
+    "fff": Fraction(1),
+}
+
+
 def consume_lexer(lexer):
     config_mode = False
     config_key = None
@@ -778,6 +834,16 @@ def consume_lexer(lexer):
             transposed_pattern = pattern.pop()
         elif token == ",":
             time -= pattern[-1].duration
+        elif token in ARTICULATIONS:
+            articulation = Articulation(ARTICULATIONS[token], time)
+            if pattern:
+                time += pattern[-1].duration
+            pattern.append(articulation)
+        elif token in DYNAMICS:
+            dynamic = Dynamic(DYNAMICS[token], time)
+            if pattern:
+                time += pattern[-1].duration
+            pattern.append(dynamic)
         elif token.startswith("=") or ":" in token or ";" in token:
             if token_obj.whitespace or not token.startswith("="):
                 if pattern:
@@ -835,6 +901,9 @@ def consume_lexer(lexer):
                     time += pattern[-1].duration
                 note = Note(pitch, time)
                 pattern.append(note)
+
+    pattern.insert(0, Articulation(ARTICULATIONS[";"]))
+    pattern.insert(0, Dynamic(DYNAMICS["mf"]))
 
     unit, bpm = tempo_spec
     swing_unit, swing_amount = swing_spec

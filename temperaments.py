@@ -1,3 +1,4 @@
+# coding: utf-8
 WA = "2.3"
 WA_TEMPERAMENTS = {
     "blackwood": ["256/243"],

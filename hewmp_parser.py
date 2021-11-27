@@ -9,8 +9,6 @@ from notation import notate_fraction, notate_otonal_utonal
 
 
 # TODO:
-# * More chords
-# * Loop regions
 # * Inline messages
 # * Dynamics
 # * Chance operators
@@ -414,6 +412,7 @@ BASIC_INTERVALS = {
     "A3": (-17, 11),
     "A7": (-18, 12),
 }
+
 
 AUGMENTED_INFLECTION = (-11, 7)
 INTERVAL_QUALITIES = "dmPMA"

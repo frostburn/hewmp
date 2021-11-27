@@ -1,13 +1,11 @@
+from extra_chords import EXTRA_CHORDS
+
 ARROWS = "+-><^vudUDAVMWi!*%"
 OPPOSITE = {}
 for i in range(0, len(ARROWS), 2):
     OPPOSITE[ARROWS[i]] = ARROWS[i+1]
     OPPOSITE[ARROWS[i+1]] = ARROWS[i]
 
-# TODO
-EXTRA_CHORDS = {
-    "o": ["P1", "m3+", "d5+2"],
-}
 
 ADDED_QUALITIES = {
     1: "P",
@@ -18,6 +16,7 @@ ADDED_QUALITIES = {
     6: "M",
     7: "M",
 }
+
 
 def separate_by_arrows(token):
     separated = []
@@ -58,6 +57,8 @@ FLAVOR_CHORDS = {
 
     "11": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0), ("P11", 0)),
 
+    "#11": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0), ("A11", 0)),
+
     "13": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0), ("P11", 0), ("M13", 0)),
 }
 
@@ -92,6 +93,7 @@ BASIC_CHORDS = {
     "m9": (("P1", "m3", "P5", "m7", "M9"), (1, 3)),
     "mb9": (("P1", "m3", "P5", "m7", "m9"), (1, 3, 4)),
     "dom9": (("P1", "M3", "P5", "m7", "M9"), (1,)),
+    "domb9": (("P1", "M3", "P5", "m7", "m9"), (1,)),
 
     "M11": (("P1", "M3", "P5", "M7", "M9", "P11"), (1, 3, 5)),
     "m11": (("P1", "m3", "P5", "m7+", "M9", "P11"), (1, 3, 5)),
@@ -114,9 +116,11 @@ SUS_CHORDS = {
     "quintal": (("P1", "P5", "M9"), (2,)),
 }
 
+
 BASIC_CHORDS_ = {}
 BASIC_CHORDS_.update(BASIC_CHORDS)
 BASIC_CHORDS_.update(SUS_CHORDS)
+
 
 def make_basic_chord(base, arrow_tokens):
     inflection = "".join(arrow_tokens)

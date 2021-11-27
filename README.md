@@ -140,11 +140,11 @@ To specify a timestamp use `T`. To jump to the timestamp us `@T` inside square b
 ### Chords
 | symbol  | pronunciation         | notes                                                                                 |
 |:-------:|:---------------------:| ------------------------------------------------------------------------------------- |
-| =sus2   | sus two               | same as `P1,M2,P5` or `8:9:12` |
+| =sus2   | sus two               | same as `P1,M2,P5` or `9;8;6` or `8:9:12` |
 | =sus4   | sus four              | same as `P1,P4,P5` or `6:8:9` |
-| =M      | major                 | same as `P1,M3,P5` or `64:81:96`                                                      |
+| =M      | major                 | same as `P1,M3,P5` or `81;64;54` or `64:81:96`                                                      |
 | =M-     | major minus           | same as `P1,M3-,P5` or `4:5:6` |
-| =m      | minor                 | same as `P1,m3,P5` or `96;81;64`                                                      |
+| =m      | minor                 | same as `P1,m3,P5` or `54:64:81`                                                      |
 | =m+     | minor plus            | same as `P1,m3+,P5` or `6;5;4` |
 | =M7     | major-seventh         | the major third and the major seventh use the same inflection                         |
 | =m7     | minor-seventh         | the minor third and the minor seventh use the same inflection                         |
@@ -166,7 +166,7 @@ To specify a timestamp use `T`. To jump to the timestamp us `@T` inside square b
 | =13     | thirteenth            | the major thirteenth is not inflected |
 | =M#15   | major-sharp-fifteenth | the major thirteenth is inflected, the augmented fifteenth is not |
 
-## <a name="phase"></a> Phase offset
+## <a name="phase"></a> Phase Offset
 To control when the beats of two similarly tuned notes occur use a phase offset defined in degrees.
 ```
 (1,1Hz&90deg)[5]

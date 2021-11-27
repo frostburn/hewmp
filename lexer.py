@@ -45,6 +45,8 @@ class Lexer:
         self.peeked_token = None
         self.reading_config_value = False
         self.reading_first_token = True
+        self.reading_string = False
+        self.reading_escape = False
 
     def __iter__(self):
         return self
@@ -82,6 +84,17 @@ class Lexer:
                     return Token(token, whitespace)
                 continue
 
+            if self.reading_string:
+                if character == '"' and not self.reading_escape:
+                    self.reading_string = False
+                    return Token(token, whitespace)
+                if character == "$" and not self.reading_escape:
+                    self.reading_escape = True
+                else:
+                    token += character
+                    self.reading_escape = False
+                continue
+
             if character == "|" and next_character in (":", ">"):
                 token += character
             elif character.isspace() or (character in SPACERS and token not in (":", ">")):
@@ -93,6 +106,9 @@ class Lexer:
                 whitespace += character
             elif not commenting:
                 token += character
+                if character == '"':
+                    self.reading_string = True
+                    self.reading_escape = False
             else:
                 whitespace += character
 
@@ -129,7 +145,7 @@ if __name__ == "__main__":
         $ Play from here instead
         |> P1 P4 P4 >|
         $ Stop before you reach here
-        P1[1/2]
+        P1[1/2] "User $$ $"message$"!" P4
     """)
     lexer = Lexer(reader)
     for token in lexer:

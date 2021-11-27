@@ -9,7 +9,6 @@ from notation import notate_fraction, notate_otonal_utonal
 
 
 # TODO:
-# * Inline messages
 # * Chance operators
 # * Vibrato
 # * Tremolo
@@ -194,6 +193,21 @@ class Articulation(Event):
         result = super().to_json()
         result["type"] = "articulation"
         result["gateRatio"] = str(self.gate_ratio)
+        return result
+
+
+class UserMessage(Event):
+    def __init__(self, message, time, duration=0):
+        super().__init__(time, duration)
+        self.message = message
+
+    def retime(self, time, duration):
+        return self.__class__(self.message, time, duration)
+
+    def to_json(self):
+        result = super().to_json()
+        result["type"] = "userMessage"
+        result["message"] = self.message
         return result
 
 
@@ -871,11 +885,17 @@ def consume_lexer(lexer):
             else:
                 timestamp = time
         elif token == "|>":
+            # TODO: Is there a bug here? Should time be advanced on every token?
             playhead = Playhead(time)
             pattern.append(playhead)
         elif token == ">|":
             playstop = Playstop(time)
             pattern.append(playstop)
+        elif token.startswith('"'):
+            if pattern:
+                time += pattern[-1].duration
+            message = UserMessage(token[1:], time)
+            pattern.append(message)
         else:
             floaty = False
             if token.startswith("~"):

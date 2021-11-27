@@ -102,7 +102,7 @@ def pythagoras_and_arrows(pitch, inflections):
     for index, arrow, comma in inflections:
         direction = comma[index]
         if pitch[index]*direction > 0:
-            count = pitch[index]
+            count = pitch[index]*direction
             arrow_counts[arrow] = count
             twos -= comma[0]*count
             threes -= comma[1]*count
@@ -116,8 +116,10 @@ def pythagoras_and_arrows(pitch, inflections):
     arrow_str = ""
     for arrow, count in arrow_counts.items():
         arrow_str += arrow
+        if count != int(count):
+            raise ValueError("Non-integral monzo")
         if count > 1:
-            arrow_str += str(count)
+            arrow_str += str(int(count))
 
     return twos, threes, arrow_str
 
@@ -158,7 +160,16 @@ def notate_interval(pitch, inflections, *extra_indices):
 LYDIAN = ("F", "C", "G", "D", "a", "E", "B")
 LYDIAN_INDEX_A = 4
 REFERENCE_OCTAVE = 4
-INDEX_A_12EDO = 9
+LETTER_OCTAVES = {
+    "F": -6,
+    "C": -4,
+    "G": -3,
+    "D": -1,
+    "a": 0,
+    "E": 2,
+    "B": 3,
+}
+SHARP_INFLECTION = (-11, 7)
 
 
 def notate_pitch(pitch, inflections, *extra_indices):
@@ -175,16 +186,21 @@ def notate_pitch(pitch, inflections, *extra_indices):
     while index < 0:
         accidental += "b"
         index += 7
+        twos += SHARP_INFLECTION[0]
+        threes += SHARP_INFLECTION[1]
     while index >= len(LYDIAN):
         if index >= 2*len(LYDIAN):
             accidental += "x"
             index -= 2*len(LYDIAN)
+            twos -= 2*SHARP_INFLECTION[0]
+            threes -= 2*SHARP_INFLECTION[1]
         else:
             accidental = "#" + accidental
             index -= len(LYDIAN)
+            twos -= SHARP_INFLECTION[0]
+            threes -= SHARP_INFLECTION[1]
 
-    edo12 = 12*twos + 19*threes
-    octave = REFERENCE_OCTAVE + (edo12 + INDEX_A_12EDO)//12
+    octave = REFERENCE_OCTAVE + twos + LETTER_OCTAVES[letter]
 
     return "{}{}{}{}{}".format(letter, octave, accidental, arrow_str, notate_extras(pitch, *extra_indices))
 

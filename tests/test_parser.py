@@ -1,5 +1,6 @@
 from numpy import array, dot
-from hewmp_parser import parse_text, parse_interval, DEFAULT_INFLECTIONS, Note
+from hewmp_parser import parse_text, parse_interval, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX
+from notation import notate_pitch, reverse_inflections, notate_interval
 
 
 def test_parse_interval():
@@ -10,6 +11,15 @@ def test_parse_interval():
 
     assert (parse_interval("M3-", DEFAULT_INFLECTIONS, 12, 2)[0][:3] == array([-2, 0, 1])).all()
     assert (parse_interval("d7+2", DEFAULT_INFLECTIONS, 12, 2)[0][:3] == array([7, -1, -2])).all()
+
+
+def test_parse_pitch():
+    mapping = array([12, 19, 28])
+    scale = ["C4", "C4#", "D4", "E4b", "F4b", "F4", "G4b", "F4x", "F4#x", "a4", "C5bb", "B4"]
+    edo12 = [dot(mapping, parse_interval(s, DEFAULT_INFLECTIONS, 12, 2)[0][:len(mapping)]) for s in scale]
+    assert edo12 == list(range(-9, 3))
+
+    assert (parse_interval("a-2x<", DEFAULT_INFLECTIONS, 12, 2)[0][:4] == array([-34, 16, 0, 1])).all()
 
 
 def test_transposition():
@@ -54,8 +64,39 @@ def test_floaty_transposition():
     assert (note_a.pitch == note_b.pitch).all()
 
 
+def test_pitch_translation():
+    inflections = reverse_inflections(DEFAULT_INFLECTIONS)
+    for letter in "aBCDEFG":
+        for octave in ("3", "4"):
+            for accidental in ("" ,"b", "#", "x"):
+                for arrow in ("", "-", "<2", "+2^3"):
+                    token = letter + octave + accidental + arrow
+                    pitch = parse_interval(token, DEFAULT_INFLECTIONS, 12, 2)[0]
+                    retoken = notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
+                    assert token == retoken
+
+
+def test_interval_translation():
+    inflections = reverse_inflections(DEFAULT_INFLECTIONS)
+    for value in range(1, 12):
+        qualities = ["dd", "d", "A", "AA"]
+        if value in (1, 4, 5, 8, 11):
+            qualities.append("P")
+        else:
+            qualities.extend(["m", "M"])
+        for quality in qualities:
+            for arrow in ("", "-", "<2", "+2^3"):
+                token = "{}{}{}".format(quality, value, arrow)
+                pitch = parse_interval(token, DEFAULT_INFLECTIONS, 12, 2)[0]
+                retoken = notate_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
+                assert token == retoken
+
+
 if __name__ == '__main__':
     test_parse_interval()
+    test_parse_pitch()
     test_transposition()
     test_transposition_persistence()
     test_floaty_transposition()
+    test_pitch_translation()
+    test_interval_translation()

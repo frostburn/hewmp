@@ -3,6 +3,68 @@ HEWMP is a machine-readable notation system for writing music in (tempered) just
 
 The acronym stands for Helmholtz / Ellis / Wolf / Monzo / Pakkanen notation.
 
+## Writing Music Using Ratios
+
+You can use HEWMP with minimal knowledge of music theory by writing melodies using fractional numbers
+```
+1/1 5/4 6/5 4/3
+```
+Frequency of the notes is initialized to 440Hz and each ratio is used to multiply it. Here's the same melody spelled using frequencies.
+```
+a:0
+@440Hz @550Hz @660Hz @880Hz
+```
+Or as *absolute* ratios that don't multiply together and are always calculated from the base frequency.
+```
+@1/1 @5/4 @3/2 @2/1
+```
+Denominators of one can be dropped.
+```
+@1 @5/4 @3/2 @2
+```
+
+## Note Duration
+Note duration is specified using square brackets `[`, `]` after a note
+```
+1/1[2] 6/5 5/4 6/5 10/9[2]
+```
+
+## Rests
+To advance time without playing a note use the rest symbol `z`. If you want to include the rest in the output use a capital letter `Z`.
+
+## Comments
+Anything after a `$` sign is ignored.
+
+## Barlines
+Barlines `|` can be used to visually organize your music. They have no effect on the sound.
+
+### Repeats
+Sections can be repeated by placing them between `|:` and `:|` and optional `x` can be attached onto `:|` to specify the number of repeats other than the default two. `x1` has no effect and `x0` effectively removes the section.
+
+### Previewing a Section
+You can place a playhead symbol `|>` to ignore all music written before it. Use a playstop symbol `>|` to ignore everything after it.
+
+### Ties
+To play a note across a barline use additive duration
+```
+1/1[2] 5/4[2]|[+4] | 5/6 4/3 1/2[2] ||
+```
+
+## Absolute Pitches
+Use `@`.
+
+## Floaty Pitches
+To play a note relative to the previous one, but ignore it going forward use `~`. This can be used to play local scales, only using non-floaty pitches to move the root note.
+
+## Hz Offset
+Beating of similarly tuned notes is a musical phenomenon that is percieved as a rhythm instead of a pitch. Use `Hz` to specify a frequency offset. See also [phase offset](#phase).
+
+## Transposing
+To combine two notes use the `&` symbol. This is mainly useful for specifying `Hz` offset along with a pitch.
+```
+1/1 3/2&1Hz
+```
+
 ## Inflections
 The system is based on small adjustements to Pythagorean intervals defined by their prime-factors and their exponents.
 
@@ -23,6 +85,32 @@ Currently these inflections are fixed but an option to define your own will be a
 The vectors associated with the primes 5, 7 and 11 follow Joe Monzo's original proposition.
 The monzo for `i` and `!` was particularly chosen so that the barbados third `13/10` can be spelled as `M3i+`. This in turn makes it possible to write the barbados terrad `10:13:15` as `=Mi+` using the chord system (pronounced "major island" see [pronunciation](#pronunciation) for details).
 The inflections are supposed to resemble arrows pointing in opposite directions while the u and d pairs bring to mind the words up and down.
+
+## Chords
+HEWMP has multiple ways of specifying groups of notes that sound together.
+### Otonal Chords
+`4:5:6`
+### Utonal Chords
+`6;5;4`
+### Chord Symbol
+`=M7-`
+### Comma-separated Pitches
+`P1,M3-,P5,M7-`
+### Chord Inversions
+Chords spelled in otonal, utonal or symbolic style can be inverted using `_`. A three note chord has three inversions `_0` root position, `_1` first inversion and `_2` second inversion.
+### Chord duration
+Duration can be attached to otonal, utonal and symbolic chords. Comma-separated pitches need to be wrapped in parenthesis `(P1,P5)[2]`
+
+## Time Rewind
+The comma operator `,` is actually a time rewind operator that turns back time based on the duration of the last note played.
+
+## Tuplets
+Parenthesis `(`, `)` are actually used to define tuplets. Anything placed inside parenthesis will have total duration of one.
+
+## Absolute Time
+To rewind time a specific beat use the `@` symbol followed by a number inside square brackets `[`, `]`.
+### Timestamp
+To specify a timestamp use `T`. To jump to the timestamp us `@T` inside square brackets.
 
 ## <a name="pronunciation"></a> Pronunciation
 ### Inflections
@@ -77,3 +165,9 @@ The inflections are supposed to resemble arrows pointing in opposite directions 
 | =dom13  | dominant-thirteenth   | only the third is inflected |
 | =13     | thirteenth            | the major thirteenth is not inflected |
 | =M#15   | major-sharp-fifteenth | the major thirteenth is inflected, the augmented fifteenth is not |
+
+## <a name="phase"></a> Phase offset
+To control when the beats of two similarly tuned notes occur use a phase offset defined in degrees.
+```
+(1,1Hz&90deg)[5]
+```

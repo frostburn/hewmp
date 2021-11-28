@@ -132,8 +132,18 @@ class Tuning(Event):
         return result
 
     def retime(self, time, duration):
-        # TODO: Deep copy
-        return self.__class__(self.base_frequency, self.comma_list, self.constraints, self.subgroup, self.suggested_mapping, time, duration)
+        comma_list = [array(comma) for comma in self.comma_list]
+        constraints = [array(constraint) for constraint in self.constraints]
+        subgroup = [array(basis_vector) for basis_vector in self.subgroup]
+        return self.__class__(
+            self.base_frequency,
+            comma_list,
+            constraints,
+            subgroup,
+            array(self.suggested_mapping),
+            time,
+            duration
+        )
 
     def __repr__(self):
         return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(

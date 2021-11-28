@@ -1,3 +1,4 @@
+from fractions import Fraction
 from numpy import array, dot
 from hewmp_parser import parse_text, parse_interval, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX
 from notation import notate_pitch, reverse_inflections, notate_interval
@@ -92,6 +93,29 @@ def test_interval_translation():
                 assert token == retoken
 
 
+def test_playhead():
+    text = """
+    P1=M- ~M3- ~P5 | M2=m+ ~m3+ ~P5 |> M2-=m+ ~m3+ ~P5 ||
+    """
+    pattern = parse_text(text)
+    data = pattern.to_json()
+    assert Fraction(data["time"]) == 6
+    assert Fraction(data["duration"]) == 3
+    has_tempo = False
+    has_tuning = False
+    num_notes = 0
+    for event in data["events"]:
+        if event["type"] == "tempo":
+            has_tempo = True
+        if event["type"] == "tuning":
+            has_tuning = True
+        if event["type"] == "note":
+            num_notes += 1
+    assert has_tempo
+    assert has_tuning
+    assert num_notes == 5
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_pitch()
@@ -100,3 +124,4 @@ if __name__ == '__main__':
     test_floaty_transposition()
     test_pitch_translation()
     test_interval_translation()
+    test_playhead()

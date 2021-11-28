@@ -302,6 +302,7 @@ class Pattern(MusicBase, Transposable):
         end_time = None
         flat = []
         tempo = None
+        tuning = None
         for event in self.flatten():
             if isinstance(event, Playhead):
                 start_time = event.time
@@ -311,9 +312,12 @@ class Pattern(MusicBase, Transposable):
                 flat.append(event)
             if isinstance(event, Tempo):
                 tempo = event
+            if isinstance(event, Tuning):
+                tuning = event
         events = []
         # TODO: Integrate tempo changes
         # TODO: Offset swing according to playheads
+        # TODO: Insert correct articulation and dynamic when using playhead
         articulation = None
         dynamic = None
         for event in flat:
@@ -336,14 +340,19 @@ class Pattern(MusicBase, Transposable):
                 data["realGateLength"] = float(real_gate_length)
             events.append(data)
 
-        time = self.time if start_time is None else start_time
+
+        if start_time is None:
+            start_time = self.time
         if end_time is None:
-            duration = self.duration - (self.time - time)
-        else:
-            duration = start_time - end_time
-        realtime, realduration = tempo.to_realtime(time, duration)
+            end_time = self.end_time
+        if start_time > tempo.time:
+            events.insert(0, tempo.to_json())
+        if start_time > tuning.time:
+            events.insert(0, tuning.to_json())
+        duration = end_time - start_time
+        realtime, realduration = tempo.to_realtime(start_time, duration)
         result = {
-            "time": str(time),
+            "time": str(start_time),
             "duration": str(duration),
             "realtime": realtime,
             "realduration": realduration,
@@ -830,6 +839,7 @@ def consume_lexer(lexer):
             else:
                 duration_token = token
                 time_token = ""
+                time -= pattern[-1].duration
                 if "@" in token:
                     duration_token, time_token = token.split("@", 1)
                 if duration_token:
@@ -843,12 +853,10 @@ def consume_lexer(lexer):
                     else:
                         time = Fraction(time_token)
                     pattern[-1].time = time
-                    time += pattern[-1].duration
+                time += pattern[-1].duration
             continue
 
         if token == "(":
-            if pattern:
-                time += pattern[-1].duration
             stack.append((pattern, time))
             pattern = Pattern([], time)
             time = Fraction(0)
@@ -856,6 +864,7 @@ def consume_lexer(lexer):
             subpattern = pattern
             pattern, time = stack.pop()
             pattern.append(subpattern)
+            time += subpattern.duration
         elif token == "[":
             time_mode = True
         elif token == "]":
@@ -866,18 +875,12 @@ def consume_lexer(lexer):
             time -= pattern[-1].duration
         elif token in ARTICULATIONS:
             articulation = Articulation(ARTICULATIONS[token], time)
-            if pattern:
-                time += pattern[-1].duration
             pattern.append(articulation)
         elif token in DYNAMICS:
             dynamic = Dynamic(DYNAMICS[token], time)
-            if pattern:
-                time += pattern[-1].duration
             pattern.append(dynamic)
         elif token.startswith("=") or ":" in token or ";" in token:
             if token_obj.whitespace or not token.startswith("="):
-                if pattern:
-                    time += pattern[-1].duration
                 subpattern_time = time
                 subpattern_duration = Fraction(1)
             else:
@@ -886,30 +889,23 @@ def consume_lexer(lexer):
                 subpattern_duration = replaced.duration
             if token.startswith("="):
                 token = token[1:]
-            subpattern = parse_chord(token, current_pitch, DEFAULT_INFLECTIONS, 12, 2)
+            subpattern = parse_chord(token, current_pitch, DEFAULT_INFLECTIONS, 12, 2)  # TODO: EDN
             subpattern.time = subpattern_time
             subpattern.duration = subpattern_duration
             pattern.append(subpattern)
         elif token in ("z", "Z"):
-            if pattern:
-                time += pattern[-1].duration
             rest = Rest((token=="Z"), time)
             pattern.append(rest)
+            time += rest.duration
         elif token == "T":
-            if pattern:
-                timestamp = time + pattern[-1].duration
-            else:
-                timestamp = time
+            timestamp = time
         elif token == "|>":
-            # TODO: Is there a bug here? Should time be advanced on every token?
             playhead = Playhead(time)
             pattern.append(playhead)
         elif token == ">|":
             playstop = Playstop(time)
             pattern.append(playstop)
         elif token.startswith('"'):
-            if pattern:
-                time += pattern[-1].duration
             message = UserMessage(token[1:], time)
             pattern.append(message)
         else:
@@ -933,10 +929,9 @@ def consume_lexer(lexer):
                 pitch = current_pitch + interval
                 if not floaty:
                     current_pitch = pitch
-                if pattern:
-                    time += pattern[-1].duration
                 note = Note(pitch, time)
                 pattern.append(note)
+                time += note.duration
 
     pattern.insert(0, Articulation(ARTICULATIONS[";"]))
     pattern.insert(0, Dynamic(DYNAMICS["mf"]))

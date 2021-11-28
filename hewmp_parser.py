@@ -24,6 +24,8 @@ from notation import notate_fraction, notate_otonal_utonal, notate_pitch, revers
 #   - Arpeggiate up and down in a loop [^v1/16]
 # * Dynamic tempo
 # * Dynamic tuning
+# * Preserve whitespace when translating
+# * Translation to relative fractions
 
 
 PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
@@ -1055,7 +1057,42 @@ def simplify_events(events):
     return semantic, events
 
 
-def notate_pattern_as_fractions(pattern, main=False, absolute_time=False):
+def _notate_fractions_chord(pattern):
+    pitches = []
+    for note in pattern:
+        pitches.append(note.pitch)
+    root_fraction = notate_fraction(pattern[0].pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX)
+    chord = notate_otonal_utonal(pitches, PRIMES)
+    return "@{}={}".format(root_fraction, chord)
+
+
+def _notate_fractions_pitch(pitch):
+    return "@{}".format(notate_fraction(pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX))
+
+
+def _notate_absolute_chord(pattern, inflections):
+    pitches = []
+    for note in pattern:
+        pitches.append(note.pitch)
+    pitches = [notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX) for pitch in pitches]
+    return "({})".format(",".join(pitches))
+
+
+def _notate_absolute_pitch(pitch, inflections):
+    return notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
+
+
+def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_time=False):
+    if isinstance(pattern, Articulation):
+        for symbol, value in ARTICULATIONS.items():
+            if value == pattern.gate_ratio:
+                return symbol
+        raise ValueError("Innotable articulation")
+    if isinstance(pattern, Dynamic):
+        for symbol, value in DYNAMICS.items():
+            if value == pattern.velocity:
+                return symbol
+        raise ValueError("Innotable dynamic")
     if pattern.duration == 0:
         return ""
     suffix = ""
@@ -1069,17 +1106,21 @@ def notate_pattern_as_fractions(pattern, main=False, absolute_time=False):
             suffix = "[@{}]".format(pattern.time)
     if isinstance(pattern, Pattern):
         if pattern.is_chord():
-            pitches = []
-            for note in pattern:
-                pitches.append(note.pitch)
-            root_fraction = notate_fraction(pattern[0].pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX)
-            chord = notate_otonal_utonal(pitches, PRIMES)
-            return "@{}={}{}".format(root_fraction, chord, suffix)
+            return _notate_chord(pattern) + suffix
         subnotations = []
         previous_time = None
         local_time = Fraction(0)
         for subpattern in pattern:
-            if subpattern.duration == 0:
+            force_notate = False
+            if isinstance(subpattern, Articulation):
+                force_notate = True
+                if main and subpattern.time == 0 and subpattern.gate_ratio == ARTICULATIONS[";"]:
+                    force_notate = False
+            if isinstance(subpattern, Dynamic):
+                force_notate = True
+                if main and subpattern.time == 0 and subpattern.velocity == DYNAMICS["mf"]:
+                    force_notate = False
+            if subpattern.duration == 0 and not force_notate:
                 continue
             local_absolute_time = False
             if subpattern.time != local_time:
@@ -1088,62 +1129,14 @@ def notate_pattern_as_fractions(pattern, main=False, absolute_time=False):
                 else:
                     local_absolute_time = True
                 local_time = subpattern.time
-            subnotations.append(notate_pattern_as_fractions(subpattern, absolute_time=local_absolute_time))
+            subnotations.append(notate_pattern(subpattern, _notate_chord, _notate_pitch, absolute_time=local_absolute_time))
             previous_time = local_time
             local_time += subpattern.duration
         if main:
             return " ".join(filter(None, subnotations))
         return "(" + " ".join(filter(None, subnotations)) + ")" + suffix
     if isinstance(pattern, Note):
-        return "@{}{}".format(notate_fraction(pattern.pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX), suffix)
-    if isinstance(pattern, Rest):
-        if pattern.emit:
-            return "Z{}".format(suffix)
-        return "z{}".format(suffix)
-
-    return ""
-
-
-def notate_pattern_as_absolute_pitches(pattern, inflections, main=False, absolute_time=False):
-    if pattern.duration == 0:
-        return ""
-    suffix = ""
-    if not main:
-        if pattern.duration != 1:
-            if absolute_time:
-                suffix = "[{}@{}]".format(pattern.duration, pattern.time)
-            else:
-                suffix = "[{}]".format(pattern.duration)
-        elif absolute_time:
-            suffix = "[@{}]".format(pattern.time)
-    if isinstance(pattern, Pattern):
-        if pattern.is_chord():
-            pitches = []
-            for note in pattern:
-                pitches.append(note.pitch)
-            pitches = [notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX) for pitch in pitches]
-            return "({}){}".format(",".join(pitches), suffix)
-        subnotations = []
-        previous_time = None
-        local_time = Fraction(0)
-        for subpattern in pattern:
-            if subpattern.duration == 0:
-                continue
-            local_absolute_time = False
-            if subpattern.time != local_time:
-                if subpattern.time == previous_time:
-                    subnotations.append(",")
-                else:
-                    local_absolute_time = True
-                local_time = subpattern.time
-            subnotations.append(notate_pattern_as_absolute_pitches(subpattern, inflections, absolute_time=local_absolute_time))
-            previous_time = local_time
-            local_time += subpattern.duration
-        if main:
-            return " ".join(filter(None, subnotations))
-        return "(" + " ".join(filter(None, subnotations)) + ")" + suffix
-    if isinstance(pattern, Note):
-        return "{}{}".format(notate_pitch(pattern.pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX), suffix)
+        return _notate_pitch(pattern.pitch) + suffix
     if isinstance(pattern, Rest):
         if pattern.emit:
             return "Z{}".format(suffix)
@@ -1169,13 +1162,13 @@ if __name__ == "__main__":
     if args.infile is not sys.stdin:
         args.infile.close()
 
-    # TODO: Notate dynamics and articulations
     if args.fractional:
-        # TODO: Default to relative fractions
-        args.outfile.write(notate_pattern_as_fractions(pattern, True))
+        args.outfile.write(notate_pattern(pattern, _notate_fractions_chord, _notate_fractions_pitch, True))
     elif args.absolute:
         inflections = reverse_inflections(DEFAULT_INFLECTIONS)
-        args.outfile.write(notate_pattern_as_absolute_pitches(pattern, inflections, True))
+        _chord = lambda pattern: _notate_absolute_chord(pattern, inflections)
+        _pitch = lambda pattern: _notate_absolute_pitch(pattern, inflections)
+        args.outfile.write(notate_pattern(pattern, _chord, _pitch, True))
     else:
         semantic = SEMANTIC
         data = pattern.to_json()

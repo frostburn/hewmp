@@ -9,6 +9,7 @@ from notation import notate_fraction, notate_otonal_utonal
 
 
 # TODO:
+# * Check for time bugs
 # * Chance operators
 # * Vibrato
 # * Tremolo
@@ -59,6 +60,7 @@ class Tuning(Event):
 
     def to_json(self):
         result = super().to_json()
+        # TODO: Convert to fractions
         result.update({
             "type": "tuning",
             "baseFrequency": self.base_frequency,
@@ -333,7 +335,21 @@ class Pattern(MusicBase, Transposable):
                 _, real_gate_length = tempo.to_realtime(event.time, event.duration * articulation.gate_ratio)
                 data["realGateLength"] = float(real_gate_length)
             events.append(data)
-        return events
+
+        time = self.time if start_time is None else start_time
+        if end_time is None:
+            duration = self.duration - (self.time - time)
+        else:
+            duration = start_time - end_time
+        realtime, realduration = tempo.to_realtime(time, duration)
+        result = {
+            "time": str(time),
+            "duration": str(duration),
+            "realtime": realtime,
+            "realduration": realduration,
+            "events": events,
+        }
+        return result
 
     def retime(self, time, duration):
         raise NotImplementedError("Pattern retiming not implemented")
@@ -1061,13 +1077,11 @@ if __name__ == "__main__":
         args.outfile.write(notate_pattern_as_fractions(pattern, True))
     else:
         semantic = SEMANTIC
-        events = pattern.to_json()
+        data = pattern.to_json()
         if args.simplify:
-            semantic, events = simplify_events(events)
-        data = {
-            "semantic": semantic,
-            "events": events
-        }
+            semantic, events = simplify_events(data["events"])
+            data["events"] = events
+        data["semantic"] = semantic
         json.dump(data, args.outfile)
 
     if args.outfile is not sys.stdout:

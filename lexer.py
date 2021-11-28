@@ -22,6 +22,8 @@ CONFIGS = [
     "Q:",  # Tempo
     "SP:",  # Swing percentage
     "G:",  # Gain
+    "EDN:",  # Equal divisions of harmonic N
+    "EDO:",  # ED2
     "F:",  # Flags
 ]
 

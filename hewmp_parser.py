@@ -1,5 +1,5 @@
 from io import StringIO
-from numpy import array, zeros, log, floor, pi
+from numpy import array, zeros, log, floor, pi, around
 from fractions import Fraction
 from lexer import Lexer, CONFIGS
 from chord_parser import expand_chord, separate_by_arrows
@@ -656,12 +656,12 @@ def parse_interval(token, inflections, edn_divisions, edn_divided):
             divisions = edn_divisions
             divided = edn_divided
             step_spec = token.split("\\")
-            steps = int(step_spec[0])
+            steps = Fraction(step_spec[0])
             if len(step_spec) >= 2:
-                divisions = int(step_spec[1])
+                divisions = Fraction(step_spec[1])
             if len(step_spec) == 3:
-                divided = int(step_spec[2])
-            pitch[E_INDEX] = steps / divisions * log(divided)
+                divided = Fraction(step_spec[2])
+            pitch[E_INDEX] = float(steps) / float(divisions) * log(float(divided))
         else:
             pitch = parse_fraction(token)
     elif token[0] in INTERVAL_QUALITIES:
@@ -819,6 +819,9 @@ def consume_lexer(lexer):
     config.update(DEFAULT_CONFIG)
     tempo_spec = (Fraction(1, 4), 120)
     swing_spec = (None, Fraction(0))
+    edn_divisions = Fraction(12)
+    edn_divided = Fraction(2)
+    map_edn = False
 
     for token_obj in lexer:
         if token_obj.is_end():
@@ -830,7 +833,6 @@ def consume_lexer(lexer):
             config_mode = True
             continue
 
-        # TODO: Tuning and tempo as timed events
         if config_mode:
             if config_key == "a":
                 config[config_key] = float(token)
@@ -863,6 +865,15 @@ def consume_lexer(lexer):
                 swing_spec = (unit, Fraction(amount.strip().strip("%"))/100)
             if config_key == "G":
                 config[config_key] = float(token)
+            if config_key == "EDN":
+                divisions_token, divided_token = token.split(",", 1)
+                edn_divisions = Fraction(divisions_token)
+                edn_divided = Fraction(divided_token)
+                map_edn = True
+            if config_key == "EDO":
+                edn_divisions = Fraction(token)
+                edn_divided = Fraction(2)
+                map_edn = True
             if config_key == "F":
                 config[config_key] = [flag.strip() for flag in token.split(",")]
             config_mode = False
@@ -924,7 +935,7 @@ def consume_lexer(lexer):
                 subpattern_duration = replaced.duration
             if token.startswith("="):
                 token = token[1:]
-            subpattern = parse_chord(token, current_pitch, DEFAULT_INFLECTIONS, 12, 2)  # TODO: EDN
+            subpattern = parse_chord(token, current_pitch, DEFAULT_INFLECTIONS, edn_divisions, edn_divided)
             subpattern.time = subpattern_time
             subpattern.duration = subpattern_duration
             pattern.append(subpattern)
@@ -948,7 +959,7 @@ def consume_lexer(lexer):
             if token.startswith("~"):
                 floaty = True
                 token = token[1:]
-            interval, absolute = parse_interval(token, DEFAULT_INFLECTIONS, 12, 2)
+            interval, absolute = parse_interval(token, DEFAULT_INFLECTIONS, edn_divisions, edn_divided)
 
             if transposed_pattern:
                 if absolute:
@@ -981,12 +992,16 @@ def consume_lexer(lexer):
     comma_list = [parse_interval(comma, DEFAULT_INFLECTIONS, 12, 2)[0] for comma in config["CL"]]
     constraints = [parse_interval(constraint, DEFAULT_INFLECTIONS, 12, 2)[0] for constraint in config["C"]]
     JI = log(array(PRIMES))
-    mapping = temper_subgroup(
-        JI,
-        [comma[:len(JI)] for comma in comma_list],
-        [constraint[:len(JI)] for constraint in constraints],
-        [basis_vector[:len(JI)] for basis_vector in subgroup],
-    )
+    if map_edn and "unmapEDN" not in config["F"]:
+        generator = log(float(edn_divided)) / float(edn_divisions)
+        mapping = generator * around(JI/generator)
+    else:
+        mapping = temper_subgroup(
+            JI,
+            [comma[:len(JI)] for comma in comma_list],
+            [constraint[:len(JI)] for constraint in constraints],
+            [basis_vector[:len(JI)] for basis_vector in subgroup],
+        )
     suggested_mapping = zero_pitch()
     suggested_mapping[:len(JI)] = mapping
     suggested_mapping[E_INDEX] = 1

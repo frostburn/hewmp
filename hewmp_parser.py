@@ -385,28 +385,52 @@ class Pattern(MusicBase, Transposable):
             if isinstance(event, Tuning):
                 tuning = event
         events = []
-        # TODO: Offset swing according to playheads
-        # TODO: Insert correct articulation and dynamic when using playhead
+
         articulation = None
         dynamic = None
+        missing_dynamic = None
+        missing_articulation = None
+        if start_time is not None:
+            start_realtime, _ = tempo.to_realtime(start_time, 0)
+        else:
+            start_realtime = 0.0
         for event in flat:
             if isinstance(event, Articulation):
                 articulation = event
             if isinstance(event, Dynamic):
                 dynamic = event
+            realtime, realduration = tempo.to_realtime(event.time, event.duration)
+            if isinstance(event, Note):
+                _, real_gate_length = tempo.to_realtime(event.time, event.duration * articulation.gate_ratio)
+            else:
+                real_gate_length = None
             if start_time is not None and event.time < start_time:
+                if isinstance(event, Dynamic):
+                    missing_dynamic = event
+                if isinstance(event, Articulation):
+                    missing_articulation = event
                 continue
             if end_time is not None and event.end_time > end_time:
                 continue
             if start_time is not None:
                 event = event.retime(event.time - start_time, event.duration)
             data = event.to_json()
-            realtime, realduration = tempo.to_realtime(event.time, event.duration)
-            data["realtime"] = realtime
+            data["realtime"] = realtime - start_realtime
             data["realduration"] = realduration
-            if isinstance(event, Note):
-                _, real_gate_length = tempo.to_realtime(event.time, event.duration * articulation.gate_ratio)
+            if real_gate_length is not None:
                 data["realGateLength"] = float(real_gate_length)
+            if missing_dynamic is not None:
+                extra = missing_dynamic.retime(event.time, 0)
+                extra_data = extra.to_json()
+                extra_data["realtime"] = data["realtime"]
+                events.append(extra_data)
+                missing_dynamic = None
+            if missing_articulation is not None:
+                extra = missing_articulation.retime(event.time, 0)
+                extra_data = extra.to_json()
+                extra_data["realtime"] = data["realtime"]
+                events.append(extra_data)
+                missing_articulation = None
             events.append(data)
 
         if start_time is None:

@@ -25,6 +25,64 @@ from notation import notate_fraction, notate_otonal_utonal, notate_pitch, revers
 # * Dynamic tempo
 # * Dynamic tuning
 
+
+PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
+E_INDEX = len(PRIMES)
+HZ_INDEX = E_INDEX + 1
+RAD_INDEX = HZ_INDEX + 1
+PITCH_LENGTH = RAD_INDEX + 1
+
+SEMANTIC = []
+for prime in PRIMES:
+    SEMANTIC.append(str(prime))
+SEMANTIC.append("e")
+SEMANTIC.append("Hz")
+SEMANTIC.append("rad")
+SEMANTIC = tuple(SEMANTIC)
+
+DEFAULT_INFLECTIONS = {
+    "+": [-4, 4, -1],
+    "-": [4, -4, 1],
+    ">": [6, -2, 0, -1],
+    "<": [-6, 2, 0, 1],
+    "^": [-5, 1, 0, 0, 1],
+    "v": [5, -1, 0, 0, -1],
+    # This particular inflection for 13 was chosen so that the barbados tetrad 10:13:15 is spelled P1:M3+i:P5 or just =Mi+ using the chord system
+    "i": [9, -8, 0, 0, 0, 1],
+    "!": [-9, 8, 0, 0, 0, -1],
+    "*": [-12, 5, 0, 0, 0, 0, 1],
+    "%": [12, -5, 0, 0, 0, 0, -1],
+    "A": [-9, 3, 0, 0, 0, 0, 0, 1],
+    "V": [9, -3, 0, 0, 0, 0, 0, -1],
+    "u": [5, -6, 0, 0, 0, 0, 0, 0, 1],
+    "d": [-5, 6, 0, 0, 0, 0, 0, 0, -1],
+    "U": [-8, 2, 0, 0, 0, 0, 0, 0, 0, 1],
+    "D": [8, -2, 0, 0, 0, 0, 0, 0, 0, -1],
+    "M": [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],
+    "W": [-5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+}
+ARROWS = ""
+
+for key, value in list(DEFAULT_INFLECTIONS.items()):
+    ARROWS += key
+    DEFAULT_INFLECTIONS[key] = array(value + [0] * (PITCH_LENGTH - len(value)))
+
+
+DEFAULT_CONFIG = {
+    "a": 440,
+    "T": None,
+    "CL": [],
+    "SG": list(map(str, PRIMES)),
+    "C": [],
+    "CRD": 5,
+    "WF": None,
+    "L": Fraction(1, 4),
+    "beat_duration": Fraction(1),
+    "G": 1.0,
+    "F": []
+}
+
+
 class MusicBase:
     def __init__(self, time, duration):
         self.time = Fraction(time)
@@ -60,13 +118,15 @@ class Tuning(Event):
 
     def to_json(self):
         result = super().to_json()
-        # TODO: Convert to fractions
+        comma_list = ",".join(notate_fraction(comma, PRIMES) for comma in self.comma_list)
+        constraints = ",".join(notate_fraction(constraint, PRIMES) for constraint in self.constraints)
+        subgroup = ".".join(notate_fraction(basis_vector, PRIMES) for basis_vector in self.subgroup)
         result.update({
             "type": "tuning",
             "baseFrequency": self.base_frequency,
-            "commaList": [list(comma) for comma in self.comma_list],
-            "constraints": [list(constraint) for constraint in self.constraints],
-            "subgroup": [list(basis_vector) for basis_vector in self.subgroup],
+            "commaList": comma_list,
+            "constraints": constraints,
+            "subgroup": subgroup,
             "suggestedMapping": list(self.suggested_mapping),
         })
         return result
@@ -371,63 +431,6 @@ class Pattern(MusicBase, Transposable):
             if note.time != 0 or note.duration != 1:
                 return False
         return True
-
-
-PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
-E_INDEX = len(PRIMES)
-HZ_INDEX = E_INDEX + 1
-RAD_INDEX = HZ_INDEX + 1
-PITCH_LENGTH = RAD_INDEX + 1
-
-SEMANTIC = []
-for prime in PRIMES:
-    SEMANTIC.append(str(prime))
-SEMANTIC.append("e")
-SEMANTIC.append("Hz")
-SEMANTIC.append("rad")
-SEMANTIC = tuple(SEMANTIC)
-
-DEFAULT_INFLECTIONS = {
-    "+": [-4, 4, -1],
-    "-": [4, -4, 1],
-    ">": [6, -2, 0, -1],
-    "<": [-6, 2, 0, 1],
-    "^": [-5, 1, 0, 0, 1],
-    "v": [5, -1, 0, 0, -1],
-    # This particular inflection for 13 was chosen so that the barbados tetrad 10:13:15 is spelled P1:M3+i:P5 or just =Mi+ using the chord system
-    "i": [9, -8, 0, 0, 0, 1],
-    "!": [-9, 8, 0, 0, 0, -1],
-    "*": [-12, 5, 0, 0, 0, 0, 1],
-    "%": [12, -5, 0, 0, 0, 0, -1],
-    "A": [-9, 3, 0, 0, 0, 0, 0, 1],
-    "V": [9, -3, 0, 0, 0, 0, 0, -1],
-    "u": [5, -6, 0, 0, 0, 0, 0, 0, 1],
-    "d": [-5, 6, 0, 0, 0, 0, 0, 0, -1],
-    "U": [-8, 2, 0, 0, 0, 0, 0, 0, 0, 1],
-    "D": [8, -2, 0, 0, 0, 0, 0, 0, 0, -1],
-    "M": [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],
-    "W": [-5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-}
-ARROWS = ""
-
-for key, value in list(DEFAULT_INFLECTIONS.items()):
-    ARROWS += key
-    DEFAULT_INFLECTIONS[key] = array(value + [0] * (PITCH_LENGTH - len(value)))
-
-
-DEFAULT_CONFIG = {
-    "a": 440,
-    "T": None,
-    "CL": [],
-    "SG": list(map(str, PRIMES)),
-    "C": [],
-    "CRD": 5,
-    "WF": None,
-    "L": Fraction(1, 4),
-    "beat_duration": Fraction(1),
-    "G": 1.0,
-    "F": []
-}
 
 
 def zero_pitch():
@@ -998,8 +1001,6 @@ def simplify_events(events):
             event["pitch"] = simplify(event["pitch"])
 
         if event["type"] == "tuning":
-            for key in ["commaList", "constraints", "subgroup"]:
-                event[key] = [simplify(vector) for vector in event[key]]
             event["suggestedMapping"] = simplify(event["suggestedMapping"])
 
     return semantic, events

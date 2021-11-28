@@ -5,16 +5,16 @@ from lexer import Lexer, CONFIGS
 from chord_parser import expand_chord, separate_by_arrows
 from temperaments import TEMPERAMENTS
 from temperament import temper_subgroup, comma_reduce
-from notation import notate_fraction, notate_otonal_utonal
+from notation import notate_fraction, notate_otonal_utonal, notate_pitch, reverse_inflections
 
 
 # TODO:
-# * Check for time bugs
+# * User-specified gate length
+# * User-specified velocity
 # * Chance operators
 # * Vibrato
 # * Tremolo
 # * Pitch-bends
-# * It's probably a good idea to attach most of these things to the notes themselves even if treated as events in Python
 # * Arpeggios
 #   - Arpeggiate and hold [~]
 #   - Arpeggiate and hold in sixteenth notes [~1/16]
@@ -315,7 +315,6 @@ class Pattern(MusicBase, Transposable):
             if isinstance(event, Tuning):
                 tuning = event
         events = []
-        # TODO: Integrate tempo changes
         # TODO: Offset swing according to playheads
         # TODO: Insert correct articulation and dynamic when using playhead
         articulation = None
@@ -339,7 +338,6 @@ class Pattern(MusicBase, Transposable):
                 _, real_gate_length = tempo.to_realtime(event.time, event.duration * articulation.gate_ratio)
                 data["realGateLength"] = float(real_gate_length)
             events.append(data)
-
 
         if start_time is None:
             start_time = self.time
@@ -999,7 +997,6 @@ def simplify_events(events):
         if event["type"] == "note":
             event["pitch"] = simplify(event["pitch"])
 
-        # TODO: Convert to fractions when simplifying
         if event["type"] == "tuning":
             for key in ["commaList", "constraints", "subgroup"]:
                 event[key] = [simplify(vector) for vector in event[key]]
@@ -1029,21 +1026,74 @@ def notate_pattern_as_fractions(pattern, main=False, absolute_time=False):
             chord = notate_otonal_utonal(pitches, PRIMES)
             return "@{}={}{}".format(root_fraction, chord, suffix)
         subnotations = []
+        previous_time = None
         local_time = Fraction(0)
         for subpattern in pattern:
             if subpattern.duration == 0:
                 continue
             local_absolute_time = False
             if subpattern.time != local_time:
-                local_absolute_time = True
+                if subpattern.time == previous_time:
+                    subnotations.append(",")
+                else:
+                    local_absolute_time = True
                 local_time = subpattern.time
             subnotations.append(notate_pattern_as_fractions(subpattern, absolute_time=local_absolute_time))
+            previous_time = local_time
             local_time += subpattern.duration
         if main:
             return " ".join(filter(None, subnotations))
         return "(" + " ".join(filter(None, subnotations)) + ")" + suffix
     if isinstance(pattern, Note):
         return "@{}{}".format(notate_fraction(pattern.pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX), suffix)
+    if isinstance(pattern, Rest):
+        if pattern.emit:
+            return "Z{}".format(suffix)
+        return "z{}".format(suffix)
+
+    return ""
+
+
+def notate_pattern_as_absolute_pitches(pattern, inflections, main=False, absolute_time=False):
+    if pattern.duration == 0:
+        return ""
+    suffix = ""
+    if not main:
+        if pattern.duration != 1:
+            if absolute_time:
+                suffix = "[{}@{}]".format(pattern.duration, pattern.time)
+            else:
+                suffix = "[{}]".format(pattern.duration)
+        elif absolute_time:
+            suffix = "[@{}]".format(pattern.time)
+    if isinstance(pattern, Pattern):
+        if pattern.is_chord():
+            pitches = []
+            for note in pattern:
+                pitches.append(note.pitch)
+            pitches = [notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX) for pitch in pitches]
+            return "({}){}".format(",".join(pitches), suffix)
+        subnotations = []
+        previous_time = None
+        local_time = Fraction(0)
+        for subpattern in pattern:
+            if subpattern.duration == 0:
+                continue
+            local_absolute_time = False
+            if subpattern.time != local_time:
+                if subpattern.time == previous_time:
+                    subnotations.append(",")
+                else:
+                    local_absolute_time = True
+                local_time = subpattern.time
+            subnotations.append(notate_pattern_as_absolute_pitches(subpattern, inflections, absolute_time=local_absolute_time))
+            previous_time = local_time
+            local_time += subpattern.duration
+        if main:
+            return " ".join(filter(None, subnotations))
+        return "(" + " ".join(filter(None, subnotations)) + ")" + suffix
+    if isinstance(pattern, Note):
+        return "{}{}".format(notate_pitch(pattern.pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX), suffix)
     if isinstance(pattern, Rest):
         if pattern.emit:
             return "Z{}".format(suffix)
@@ -1062,14 +1112,20 @@ if __name__ == "__main__":
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     parser.add_argument('--simplify', action='store_true')
     parser.add_argument('--fractional', action='store_true')
+    parser.add_argument('--absolute', action='store_true')
     args = parser.parse_args()
 
     pattern = parse_file(args.infile)
     if args.infile is not sys.stdin:
         args.infile.close()
 
+    # TODO: Notate dynamics and articulations
     if args.fractional:
+        # TODO: Default to relative fractions
         args.outfile.write(notate_pattern_as_fractions(pattern, True))
+    elif args.absolute:
+        inflections = reverse_inflections(DEFAULT_INFLECTIONS)
+        args.outfile.write(notate_pattern_as_absolute_pitches(pattern, inflections, True))
     else:
         semantic = SEMANTIC
         data = pattern.to_json()

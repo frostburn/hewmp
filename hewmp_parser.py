@@ -1,6 +1,10 @@
 from io import StringIO
 from collections import Counter
-from numpy import array, zeros, log, floor, pi, around
+from numpy import array, zeros, log, floor, pi, around, dot
+try:
+    import mido
+except ImportError:
+    mido = None
 from fractions import Fraction
 from lexer import Lexer, CONFIGS
 from chord_parser import expand_chord, separate_by_arrows
@@ -1044,7 +1048,9 @@ def consume_lexer(lexer):
     if "CR" in config["F"]:
         comma_reduce_pattern(pattern, comma_list, config["CRD"])
 
-    return pattern
+    if map_edn:
+        return pattern, mapping / generator
+    return pattern, None
 
 
 def parse_text(text):
@@ -1174,6 +1180,40 @@ def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_t
     return ""
 
 
+def save_pattern_as_midi(file, pattern, val, reference_pitch=64, resolution=960):
+    midi = mido.MidiFile()
+    track = mido.MidiTrack()
+    midi.tracks.append(track)
+    data = pattern.to_json()
+    velocity = 85
+    events = []
+    max_index = float("-inf")
+    min_index = float("inf")
+    for event in data["events"]:
+        if event["type"] == "dynamic":
+            velocity = int(round(float(127 * Fraction(event["velocity"]))))
+        if event["type"] == "note":
+            index = int(round(dot(val, event["pitch"][:len(val)]))) + reference_pitch
+            time = int(round(float(resolution * Fraction(event["realtime"]))))
+            duration = int(round(float(resolution * Fraction(event["realGateLength"]))))
+            if duration > 0:
+                events.append((time, "note_on", index, velocity))
+                events.append((time+duration, "note_off", index, velocity))
+                max_index = max(max_index, index)
+                min_index = min(min_index, index)
+    if min_index < 0:
+        raise ValueError("Note index {} too small. Consider positive --midi-transpose".format(min_index))
+    if max_index > 127:
+        raise ValueError("Note index {} too large. Consider negative --midi-transpose".format(max_index))
+    current_time = 0
+    for event in sorted(events):
+        time, msg_type, index, velocity = event
+        message = mido.Message(msg_type, note=index, velocity=velocity, time=(time - current_time))
+        track.append(message)
+        current_time = time
+    midi.save(file=file)
+
+
 if __name__ == "__main__":
     import argparse
     import sys
@@ -1185,9 +1225,11 @@ if __name__ == "__main__":
     parser.add_argument('--simplify', action='store_true')
     parser.add_argument('--fractional', action='store_true')
     parser.add_argument('--absolute', action='store_true')
+    parser.add_argument('--midi', action='store_true')
+    parser.add_argument('--midi-transpose', type=int, default=0)
     args = parser.parse_args()
 
-    pattern = parse_file(args.infile)
+    pattern, val = parse_file(args.infile)
     if args.infile is not sys.stdin:
         args.infile.close()
 
@@ -1198,6 +1240,18 @@ if __name__ == "__main__":
         _chord = lambda pattern: _notate_absolute_chord(pattern, inflections)
         _pitch = lambda pattern: _notate_absolute_pitch(pattern, inflections)
         args.outfile.write(notate_pattern(pattern, _chord, _pitch, True))
+    elif args.midi:
+        if mido is None:
+            raise ValueError("Missing mido package")
+        if val is None:
+            raise ValueError("Must be in EDO or EDN mode to output MIDI")
+        if args.outfile is sys.stdout:
+            outfile = args.outfile
+        else:
+            filename = args.outfile.name
+            args.outfile.close()
+            outfile = open(filename, "wb")
+        save_pattern_as_midi(outfile, pattern, val, 64 + args.midi_transpose)
     else:
         semantic = SEMANTIC
         data = pattern.to_json()

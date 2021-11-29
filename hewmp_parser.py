@@ -1,6 +1,6 @@
 from io import StringIO
 from collections import Counter
-from numpy import array, zeros, log, floor, pi, around, dot
+from numpy import array, zeros, log, floor, pi, around, dot, exp
 try:
     import mido
 except ImportError:
@@ -32,6 +32,7 @@ from notation import notate_fraction, notate_otonal_utonal, notate_pitch, revers
 # * Preserve whitespace when translating
 # * Translation to relative fractions
 # * Integrate comma root solver through a flag
+# * Include EDN steps in plain MIDI
 
 
 PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
@@ -1181,6 +1182,11 @@ def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_t
 
 
 def save_pattern_as_midi(file, pattern, val, reference_pitch=64, resolution=960):
+    """
+    Save pattern as a midi file using steps based on the size of the EDO/EDN parameter.
+
+    No tuning information is added to the midi data. You'll have to use the corresponding EDO mode in your DAW.
+    """
     midi = mido.MidiFile()
     track = mido.MidiTrack()
     midi.tracks.append(track)
@@ -1194,11 +1200,11 @@ def save_pattern_as_midi(file, pattern, val, reference_pitch=64, resolution=960)
             velocity = int(round(float(127 * Fraction(event["velocity"]))))
         if event["type"] == "note":
             index = int(round(dot(val, event["pitch"][:len(val)]))) + reference_pitch
-            time = int(round(float(resolution * Fraction(event["realtime"]))))
-            duration = int(round(float(resolution * Fraction(event["realGateLength"]))))
+            time = int(round(resolution * event["realtime"]))
+            duration = int(round(resolution * event["realGateLength"]))
             if duration > 0:
                 events.append((time, "note_on", index, velocity))
-                events.append((time+duration, "note_off", index, velocity))
+                events.append((time + duration, "note_off", index, velocity))
                 max_index = max(max_index, index)
                 min_index = min(min_index, index)
     if min_index < 0:
@@ -1209,6 +1215,55 @@ def save_pattern_as_midi(file, pattern, val, reference_pitch=64, resolution=960)
     for event in sorted(events):
         time, msg_type, index, velocity = event
         message = mido.Message(msg_type, note=index, velocity=velocity, time=(time - current_time))
+        track.append(message)
+        current_time = time
+    midi.save(file=file)
+
+
+FREQ_C3 = 440 / 2**(9/12)
+INDEX_C3 = 60
+MIDI128_STEP = 2**(1/128)
+
+def freq_to_midi128(frequency):
+    ratio = frequency / FREQ_C3
+    steps = int(round(log(ratio) / log(MIDI128_STEP)))
+    steps += INDEX_C3
+    return steps%128, 7 + steps//128
+
+
+def save_pattern_as_midi128(file, pattern, resolution=960):
+    """
+    Save pattern as a midi file quantized to 128EDO using channels for octaves.
+
+    Assumes that middle C (index 60) on channel 8 is in standard tuning.
+    """
+    data = pattern.to_json()
+    base_frequency = None
+    mapping = None
+    velocity = 85
+    events = []
+    for event in data["events"]:
+        if event["type"] == "tuning":
+            base_frequency = event["baseFrequency"]
+            mapping = event["suggestedMapping"]
+        if event["type"] == "dynamic":
+            velocity = int(round(float(127 * Fraction(event["velocity"]))))
+        if event["type"] == "note":
+            frequency = base_frequency*exp(dot(mapping, event["pitch"])) + event["pitch"][HZ_INDEX]
+            index, channel = freq_to_midi128(frequency)
+            time = int(round(resolution * event["realtime"]))
+            duration = int(round(resolution * event["realGateLength"]))
+            if duration > 0:
+                events.append((time, "note_on", index, channel, velocity))
+                events.append((time + duration, "note_off", index, channel, velocity))
+
+    midi = mido.MidiFile()
+    track = mido.MidiTrack()
+    midi.tracks.append(track)
+    current_time = 0
+    for event in sorted(events):
+        time, msg_type, index, channel, velocity = event
+        message = mido.Message(msg_type, note=index, channel=channel, velocity=velocity, time=(time - current_time))
         track.append(message)
         current_time = time
     midi.save(file=file)
@@ -1227,6 +1282,7 @@ if __name__ == "__main__":
     parser.add_argument('--absolute', action='store_true')
     parser.add_argument('--midi', action='store_true')
     parser.add_argument('--midi-transpose', type=int, default=0)
+    parser.add_argument('--midi128', action='store_true')
     args = parser.parse_args()
 
     pattern, val = parse_file(args.infile)
@@ -1240,18 +1296,21 @@ if __name__ == "__main__":
         _chord = lambda pattern: _notate_absolute_chord(pattern, inflections)
         _pitch = lambda pattern: _notate_absolute_pitch(pattern, inflections)
         args.outfile.write(notate_pattern(pattern, _chord, _pitch, True))
-    elif args.midi:
+    elif args.midi or args.midi128:
         if mido is None:
             raise ValueError("Missing mido package")
-        if val is None:
-            raise ValueError("Must be in EDO or EDN mode to output MIDI")
         if args.outfile is sys.stdout:
             outfile = args.outfile
         else:
             filename = args.outfile.name
             args.outfile.close()
             outfile = open(filename, "wb")
-        save_pattern_as_midi(outfile, pattern, val, 64 + args.midi_transpose)
+        if args.midi:
+            if val is None:
+                raise ValueError("Must be in EDO or EDN mode to output MIDI")
+            save_pattern_as_midi(outfile, pattern, val, 64 + args.midi_transpose)
+        elif args.midi128:
+            save_pattern_as_midi128(outfile, pattern)
     else:
         semantic = SEMANTIC
         data = pattern.to_json()

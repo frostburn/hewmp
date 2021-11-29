@@ -1,4 +1,5 @@
 from io import StringIO
+from collections import Counter
 from numpy import array, zeros, log, floor, pi, around
 from fractions import Fraction
 from lexer import Lexer, CONFIGS
@@ -837,6 +838,7 @@ def consume_lexer(lexer):
     swing_spec = (None, Fraction(0))
     edn_divisions = Fraction(12)
     edn_divided = Fraction(2)
+    warts = Counter()
     map_edn = False
 
     for token_obj in lexer:
@@ -881,14 +883,19 @@ def consume_lexer(lexer):
                 swing_spec = (unit, Fraction(amount.strip().strip("%"))/100)
             if config_key == "G":
                 config[config_key] = float(token)
-            if config_key == "EDN":
-                divisions_token, divided_token = token.split(",", 1)
-                edn_divisions = Fraction(divisions_token)
-                edn_divided = Fraction(divided_token)
-                map_edn = True
-            if config_key == "EDO":
-                edn_divisions = Fraction(token)
-                edn_divided = Fraction(2)
+            if config_key in ("EDO", "EDN"):
+                token = token.strip()
+                while token[-1].isalpha():
+                    wart = token[-1].lower()
+                    warts[ord(wart) - ord("a")] += 1
+                    token = token[:-1]
+                if config_key == "EDN":
+                    divisions_token, divided_token = token.split(",", 1)
+                    edn_divisions = Fraction(divisions_token)
+                    edn_divided = Fraction(divided_token)
+                if config_key == "EDO":
+                    edn_divisions = Fraction(token)
+                    edn_divided = Fraction(2)
                 map_edn = True
             if config_key == "F":
                 config[config_key] = [flag.strip() for flag in token.split(",")]
@@ -1011,6 +1018,14 @@ def consume_lexer(lexer):
     if map_edn and "unmapEDN" not in config["F"]:
         generator = log(float(edn_divided)) / float(edn_divisions)
         mapping = generator * around(JI/generator)
+        for index, count in warts.items():
+            modification = ((count + 1)//2) * (2*(count%2) - 1)
+            steps = round(JI[index]/generator)
+            if mapping[index] > JI[index]:
+                steps -= modification
+            else:
+                steps += modification
+            mapping[index] = generator * steps
     else:
         mapping = temper_subgroup(
             JI,

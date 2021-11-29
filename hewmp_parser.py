@@ -26,6 +26,7 @@ from notation import notate_fraction, notate_otonal_utonal, notate_pitch, revers
 # * Dynamic tuning
 # * Preserve whitespace when translating
 # * Translation to relative fractions
+# * Integrate comma root solver through a flag
 
 
 PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
@@ -628,7 +629,7 @@ def parse_pitch(token, inflections):
     return result
 
 
-def parse_interval(token, inflections, edn_divisions, edn_divided):
+def parse_interval(token, inflections, edn_divisions, edn_divided, return_root_degree=False):
     absolute = False
     if token.startswith("@"):
         absolute = True
@@ -643,6 +644,17 @@ def parse_interval(token, inflections, edn_divisions, edn_divided):
         token = token[1:]
 
     pitch = zero_pitch()
+
+    while token[0] == "c":
+        pitch[0] += 1
+        token = token[1:]
+
+    root_degree = 1
+    if "/" in token:
+        maybe_token, degree_token = token.rsplit("/", 1)
+        if not maybe_token.isdigit():  # Not a simple fraction
+            token = maybe_token
+            root_degree = int(degree_token)
 
     if token[0].isdigit():
         if token.endswith("c"):
@@ -665,19 +677,21 @@ def parse_interval(token, inflections, edn_divisions, edn_divided):
                 divided = Fraction(step_spec[2])
             pitch[E_INDEX] = float(steps) / float(divisions) * log(float(divided))
         else:
-            pitch = parse_fraction(token)
+            pitch += parse_fraction(token)
     elif token[0] in INTERVAL_QUALITIES:
-        pitch = parse_arrows(token, inflections)
+        pitch += parse_arrows(token, inflections)
     elif token[0] in BASIC_PITCHES:
         if direction is not None:
             raise ParsingError("Signed absolute pitch")
-        pitch = parse_pitch(token, inflections)
+        pitch += parse_pitch(token, inflections)
         absolute = True
 
     if direction is not None:
         pitch *= direction
 
-    return pitch, absolute
+    if return_root_degree:
+        return pitch, absolute, root_degree
+    return pitch / root_degree, absolute
 
 
 def parse_otonal(token, trasposition, *conf):

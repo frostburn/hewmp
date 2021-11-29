@@ -126,6 +126,34 @@ def comma_reduce(pitch, comma_list, persistence=5):
     return best
 
 
+def comma_root(pitch, degree, comma_list, persistence=5):
+    """
+    Find the nth degree root of a pitch using commas from the list.
+    Has the same frequency as the nth fraction of the pitch, but with integral representation.
+
+    Returns None if the root couldn't be found.
+    """
+    best = None
+    def combine(coefs):
+        nonlocal best
+        if len(coefs) == len(comma_list):
+            candidate = pitch + 0
+            for coef, comma in zip(coefs, comma_list):
+                candidate += coef*comma
+            if (candidate % degree == 0).all():
+                candidate //= degree
+            else:
+                return
+            if best is None or is_less_complex(candidate, best):
+                best = candidate
+            return
+        for i in range(-persistence, persistence+1):
+            combine(coefs + [i])
+
+    combine([])
+    return best
+
+
 if __name__ == "__main__":
     from numpy import log
     JI = log(array([2, 3, 5]))
@@ -156,3 +184,7 @@ if __name__ == "__main__":
     subgroup_2_3_13_per_15 = [array([1, 0, 0, 0, 0, 0]), array([0, 1, 0, 0, 0, 0]), array([0, 0, -1, 0, 0, 1])]
     barbados = temper_subgroup(JI, [island_comma], [], subgroup_2_3_13_per_15)
     assert(isclose(dot(barbados, island_comma), 0))
+
+    assert (comma_reduce(array([1, -2, 1]), [syntonic_comma]) == array([-3, 2, 0])).all()
+
+    assert (comma_root(array([0, 0, 1]), 4, [syntonic_comma]) == array([-1, 1, 0])).all()

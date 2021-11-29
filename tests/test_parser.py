@@ -116,6 +116,22 @@ def test_playhead():
     assert num_notes == 5
 
 
+def test_split_fifth():
+    pitch = parse_interval("P5/2", DEFAULT_INFLECTIONS, 12, 0)[0]
+    assert (pitch[:2] == array([-0.5, 0.5])).all()
+    pitch = parse_interval("3/2", DEFAULT_INFLECTIONS, 12, 0)[0]
+    assert (pitch[:2] == array([-1, 1])).all()
+    pitch = parse_interval("3/2/2", DEFAULT_INFLECTIONS, 12, 0)[0]
+    assert (pitch[:2] == array([-0.5, 0.5])).all()
+
+
+def test_compound():
+    pitch = parse_interval("M6", DEFAULT_INFLECTIONS, 12, 0)[0]
+    assert (pitch[:2] == array([-4, 3])).all()
+    pitch = parse_interval("-cM6", DEFAULT_INFLECTIONS, 12, 0)[0]
+    assert (pitch[:2] == array([3, -3])).all()
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_pitch()
@@ -125,3 +141,5 @@ if __name__ == '__main__':
     test_pitch_translation()
     test_interval_translation()
     test_playhead()
+    test_split_fifth()
+    test_compound()

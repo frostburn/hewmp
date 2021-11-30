@@ -11,6 +11,7 @@ from chord_parser import expand_chord, separate_by_arrows
 from temperaments import TEMPERAMENTS
 from temperament import temper_subgroup, comma_reduce
 from notation import notate_fraction, notate_otonal_utonal, notate_pitch, reverse_inflections
+from percussion import PERCUSSION_SHORTHANDS
 
 
 # TODO:
@@ -320,6 +321,28 @@ class Note(Event, Transposable):
         return self.__class__(array(self.pitch), time, duration)
 
 
+class Percussion(Event):
+    def __init__(self, name, index=None, time=0, duration=1):
+        super().__init__(time, duration)
+        self.name = name
+        self.index = index
+
+    def __repr__(self):
+        return "{}({!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.name, self.index, self.time, self.duration)
+
+    def to_json(self):
+        result = super().to_json()
+        result.update({
+            "type": "percussion",
+            "name": self.name,
+            "index": self.index,
+        })
+        return result
+
+    def retime(self, time, duration):
+        return self.__class__(self.name, self.index, time, duration)
+
+
 class Pattern(MusicBase, Transposable):
     def __init__(self, subpatterns=None, time=0, duration=1):
         super().__init__(time, duration)
@@ -409,7 +432,7 @@ class Pattern(MusicBase, Transposable):
             if isinstance(event, Dynamic):
                 dynamic = event
             realtime, realduration = tempo.to_realtime(event.time, event.duration)
-            if isinstance(event, Note):
+            if isinstance(event, Note) or isinstance(event, Percussion):
                 _, real_gate_length = tempo.to_realtime(event.time, event.duration * articulation.gate_ratio)
             else:
                 real_gate_length = None
@@ -845,6 +868,7 @@ def consume_lexer(lexer):
     edn_divided = Fraction(2)
     warts = Counter()
     map_edn = False
+    current_notation = None
 
     for token_obj in lexer:
         if token_obj.is_end():
@@ -902,6 +926,8 @@ def consume_lexer(lexer):
                     edn_divisions = Fraction(token)
                     edn_divided = Fraction(2)
                 map_edn = True
+            if config_key == "N":
+                current_notation = token.strip()
             if config_key == "F":
                 config[config_key] = [flag.strip() for flag in token.split(",")]
             config_mode = False
@@ -954,6 +980,7 @@ def consume_lexer(lexer):
             dynamic = Dynamic(DYNAMICS[token], time)
             pattern.append(dynamic)
         elif token.startswith("=") or ":" in token or ";" in token:
+            # TODO: Don't parse chords when using percussion notation.
             if token_obj.whitespace or not token.startswith("="):
                 subpattern_time = time
                 subpattern_duration = Fraction(1)
@@ -982,6 +1009,11 @@ def consume_lexer(lexer):
         elif token.startswith('"'):
             message = UserMessage(token[1:], time)
             pattern.append(message)
+        elif current_notation == "percussion":
+            index, name = PERCUSSION_SHORTHANDS[token]
+            percussion = Percussion(name, index, time)
+            pattern.append(percussion)
+            time += percussion.duration
         else:
             floaty = False
             if token.startswith("~"):
@@ -1286,7 +1318,7 @@ def freq_to_midi(frequency, pitch_bend_depth):
     return index, bend
 
 
-def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, num_channels=15, use_channel_10=False, transpose=0, resolution=960):
+def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, num_channels=15, reserve_channel_10=True, transpose=0, resolution=960):
     """
     Save pattern as a midi file quantized to 128EDO using channels for octaves.
 
@@ -1311,9 +1343,24 @@ def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, num_channels=15, use
             time = int(round(resolution * event["realtime"]))
             duration = int(round(resolution * event["realGateLength"]))
             if duration > 0:
-                events.append((time, "note_on", index, bend, velocity, channel))
-                events.append((time + duration, "note_off", index, bend, velocity, channel))
+                channel_ = channel
+                if reserve_channel_10 and channel >= 9:
+                    channel_ += 1
+                events.append((time, "note_on", index, bend, velocity, channel_))
+                events.append((time + duration, "note_off", index, bend, velocity, channel_))
                 channel = (channel + 1) % num_channels
+        if event["type"] == "percussion":
+            index = event["index"]
+            time = int(round(resolution * event["realtime"]))
+            duration = int(round(resolution * event["realGateLength"]))
+            if duration > 0:
+                if reserve_channel_10:
+                    channel_ = 9
+                else:
+                    channel_ = channel
+                    channel = (channel + 1) % num_channels
+                events.append((time, "note_on", index, None, velocity, channel_))
+                events.append((time + duration, "note_off", index, None, velocity, channel_))
 
     midi = mido.MidiFile()
     track = mido.MidiTrack()
@@ -1321,9 +1368,7 @@ def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, num_channels=15, use
     current_time = 0
     for event in sorted(events):
         time, msg_type, index, bend, velocity, channel = event
-        if not use_channel_10 and channel >= 9:
-            channel += 1
-        if msg_type == "note_on":
+        if msg_type == "note_on" and bend is not None:
             message = mido.Message("pitchwheel", pitch=bend, channel=channel, time=(time - current_time))
             track.append(message)
             current_time = time
@@ -1347,7 +1392,7 @@ if __name__ == "__main__":
     parser.add_argument('--midi', action='store_true')
     parser.add_argument('--pitch-bend-depth', type=int, default=2)
     parser.add_argument('--num-channels', type=int, default=15)
-    parser.add_argument('--use-channel-10', action='store_true')
+    parser.add_argument('--override-channel-10', action='store_true')
     parser.add_argument('--midi-transpose', type=int, default=0)
     parser.add_argument('--midi-edn', action='store_true')
     parser.add_argument('--midi128', action='store_true')
@@ -1374,7 +1419,7 @@ if __name__ == "__main__":
             args.outfile.close()
             outfile = open(filename, "wb")
         if args.midi:
-            save_pattern_as_midi(outfile, pattern, args.pitch_bend_depth, args.num_channels, args.use_channel_10, args.midi_transpose)
+            save_pattern_as_midi(outfile, pattern, args.pitch_bend_depth, args.num_channels, not args.override_channel_10, args.midi_transpose)
         if args.midi_edn:
             if val is None:
                 raise ValueError("Must be in EDO or EDN mode to output MIDI")

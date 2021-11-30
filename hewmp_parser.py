@@ -1181,7 +1181,7 @@ def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_t
     return ""
 
 
-def save_pattern_as_midi(file, pattern, val, reference_pitch=64, resolution=960):
+def save_pattern_as_midi_edn(file, pattern, val, reference_pitch=64, resolution=960):
     """
     Save pattern as a midi file using steps based on the size of the EDO/EDN parameter.
 
@@ -1269,6 +1269,68 @@ def save_pattern_as_midi128(file, pattern, resolution=960):
     midi.save(file=file)
 
 
+FREQ_A4 = 440
+INDEX_A4 = 69
+MIDI_STEP = 2**(1/12)
+
+def freq_to_midi(frequency, pitch_bend_depth):
+    ratio = frequency / FREQ_A4
+    steps = log(ratio) / log(MIDI_STEP)
+    steps += INDEX_A4
+    index = int(round(steps))
+    bend = steps - index
+    if bend < 0:
+        bend = int(round(8192*bend/pitch_bend_depth))
+    else:
+        bend = int(round(8191*bend/pitch_bend_depth))
+    return index, bend
+
+
+def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, transpose=0, resolution=960):
+    """
+    Save pattern as a midi file quantized to 128EDO using channels for octaves.
+
+    Assumes that A4 is in standard tuning 440Hz.
+    """
+    data = pattern.to_json()
+    base_frequency = None
+    mapping = None
+    velocity = 85
+    events = []
+    channel = 0  # TODO: Better time-awarenes in channel distribution
+    for event in data["events"]:
+        if event["type"] == "tuning":
+            base_frequency = event["baseFrequency"]
+            mapping = event["suggestedMapping"]
+        if event["type"] == "dynamic":
+            velocity = int(round(float(127 * Fraction(event["velocity"]))))
+        if event["type"] == "note":
+            frequency = base_frequency*exp(dot(mapping, event["pitch"])) + event["pitch"][HZ_INDEX]
+            index, bend = freq_to_midi(frequency, pitch_bend_depth)
+            index += transpose
+            time = int(round(resolution * event["realtime"]))
+            duration = int(round(resolution * event["realGateLength"]))
+            if duration > 0:
+                events.append((time, "note_on", index, bend, velocity, channel))
+                events.append((time + duration, "note_off", index, bend, velocity, channel))
+                channel = (channel + 1) % 16
+
+    midi = mido.MidiFile()
+    track = mido.MidiTrack()
+    midi.tracks.append(track)
+    current_time = 0
+    for event in sorted(events):
+        time, msg_type, index, bend, velocity, channel = event
+        if msg_type == "note_on":
+            message = mido.Message("pitchwheel", pitch=bend, channel=channel, time=(time - current_time))
+            track.append(message)
+            current_time = time
+        message = mido.Message(msg_type, note=index, channel=channel, velocity=velocity, time=(time - current_time))
+        track.append(message)
+        current_time = time
+    midi.save(file=file)
+
+
 if __name__ == "__main__":
     import argparse
     import sys
@@ -1281,7 +1343,9 @@ if __name__ == "__main__":
     parser.add_argument('--fractional', action='store_true')
     parser.add_argument('--absolute', action='store_true')
     parser.add_argument('--midi', action='store_true')
+    parser.add_argument('--pitch-bend-depth', type=int, default=2)
     parser.add_argument('--midi-transpose', type=int, default=0)
+    parser.add_argument('--midi-edn', action='store_true')
     parser.add_argument('--midi128', action='store_true')
     args = parser.parse_args()
 
@@ -1296,7 +1360,7 @@ if __name__ == "__main__":
         _chord = lambda pattern: _notate_absolute_chord(pattern, inflections)
         _pitch = lambda pattern: _notate_absolute_pitch(pattern, inflections)
         args.outfile.write(notate_pattern(pattern, _chord, _pitch, True))
-    elif args.midi or args.midi128:
+    elif args.midi or args.midi_edn or args.midi128:
         if mido is None:
             raise ValueError("Missing mido package")
         if args.outfile is sys.stdout:
@@ -1306,9 +1370,11 @@ if __name__ == "__main__":
             args.outfile.close()
             outfile = open(filename, "wb")
         if args.midi:
+            save_pattern_as_midi(outfile, pattern, args.pitch_bend_depth, args.midi_transpose)
+        if args.midi_edn:
             if val is None:
                 raise ValueError("Must be in EDO or EDN mode to output MIDI")
-            save_pattern_as_midi(outfile, pattern, val, 64 + args.midi_transpose)
+            save_pattern_as_midi_edn(outfile, pattern, val, 64 + args.midi_transpose)
         elif args.midi128:
             save_pattern_as_midi128(outfile, pattern)
     else:

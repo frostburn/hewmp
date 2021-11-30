@@ -1286,7 +1286,7 @@ def freq_to_midi(frequency, pitch_bend_depth):
     return index, bend
 
 
-def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, transpose=0, resolution=960):
+def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, num_channels=15, use_channel_10=False, transpose=0, resolution=960):
     """
     Save pattern as a midi file quantized to 128EDO using channels for octaves.
 
@@ -1313,7 +1313,7 @@ def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, transpose=0, resolut
             if duration > 0:
                 events.append((time, "note_on", index, bend, velocity, channel))
                 events.append((time + duration, "note_off", index, bend, velocity, channel))
-                channel = (channel + 1) % 16
+                channel = (channel + 1) % num_channels
 
     midi = mido.MidiFile()
     track = mido.MidiTrack()
@@ -1321,6 +1321,8 @@ def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, transpose=0, resolut
     current_time = 0
     for event in sorted(events):
         time, msg_type, index, bend, velocity, channel = event
+        if not use_channel_10 and channel >= 9:
+            channel += 1
         if msg_type == "note_on":
             message = mido.Message("pitchwheel", pitch=bend, channel=channel, time=(time - current_time))
             track.append(message)
@@ -1344,6 +1346,8 @@ if __name__ == "__main__":
     parser.add_argument('--absolute', action='store_true')
     parser.add_argument('--midi', action='store_true')
     parser.add_argument('--pitch-bend-depth', type=int, default=2)
+    parser.add_argument('--num-channels', type=int, default=15)
+    parser.add_argument('--use-channel-10', action='store_true')
     parser.add_argument('--midi-transpose', type=int, default=0)
     parser.add_argument('--midi-edn', action='store_true')
     parser.add_argument('--midi128', action='store_true')
@@ -1370,7 +1374,7 @@ if __name__ == "__main__":
             args.outfile.close()
             outfile = open(filename, "wb")
         if args.midi:
-            save_pattern_as_midi(outfile, pattern, args.pitch_bend_depth, args.midi_transpose)
+            save_pattern_as_midi(outfile, pattern, args.pitch_bend_depth, args.num_channels, args.use_channel_10, args.midi_transpose)
         if args.midi_edn:
             if val is None:
                 raise ValueError("Must be in EDO or EDN mode to output MIDI")

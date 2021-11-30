@@ -12,6 +12,7 @@ from temperaments import TEMPERAMENTS
 from temperament import temper_subgroup, comma_reduce
 from notation import notate_fraction, notate_otonal_utonal, notate_pitch, reverse_inflections
 from percussion import PERCUSSION_SHORTHANDS
+from gm_programs import GM_PROGRAMS
 
 
 # TODO:
@@ -293,6 +294,23 @@ class UserMessage(Event):
         return result
 
 
+class ProgramChange(Event):
+    def __init__(self, name, program, time, duration=0):
+        super().__init__(time, duration)
+        self.name = name
+        self.program = program
+
+    def retime(self, time, duration):
+        return self.__class__(self.name, self.program, time, duration)
+
+    def to_json(self):
+        result = super().to_json()
+        result["type"] = "programChange"
+        result["name"] = self.name
+        result["program"] = self.program
+        return result
+
+
 class Transposable:
     def transpose(self, pitch):
         pass
@@ -422,6 +440,7 @@ class Pattern(MusicBase, Transposable):
         dynamic = None
         missing_dynamic = None
         missing_articulation = None
+        missing_program_change = None
         if start_time is not None:
             start_realtime, _ = tempo.to_realtime(start_time, 0)
         else:
@@ -441,6 +460,8 @@ class Pattern(MusicBase, Transposable):
                     missing_dynamic = event
                 if isinstance(event, Articulation):
                     missing_articulation = event
+                if isinstance(event, ProgramChange):
+                    missing_program_change = event
                 continue
             if end_time is not None and event.end_time > end_time:
                 continue
@@ -463,6 +484,11 @@ class Pattern(MusicBase, Transposable):
                 extra_data["realtime"] = data["realtime"]
                 events.append(extra_data)
                 missing_articulation = None
+            if missing_program_change is not None:
+                extra = missing_program_change.retime(event.time, 0)
+                extra_data = extra.to_json()
+                extra_data["realtime"] = data["realtime"]
+                events.append(extra_data)
             events.append(data)
 
         if start_time is None:
@@ -928,6 +954,11 @@ def consume_lexer(lexer):
                 map_edn = True
             if config_key == "N":
                 current_notation = token.strip()
+            if config_key == "I":
+                name = token.strip()
+                program = GM_PROGRAMS.get(name)
+                program_change = ProgramChange(name, program, time)
+                pattern.append(program_change)
             if config_key == "F":
                 config[config_key] = [flag.strip() for flag in token.split(",")]
             config_mode = False
@@ -1330,37 +1361,43 @@ def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, num_channels=15, res
     velocity = 85
     events = []
     channel = 0  # TODO: Better time-awarenes in channel distribution
+    time_offset = 0
     for event in data["events"]:
         if event["type"] == "tuning":
             base_frequency = event["baseFrequency"]
             mapping = event["suggestedMapping"]
         if event["type"] == "dynamic":
             velocity = int(round(float(127 * Fraction(event["velocity"]))))
+        if event["type"] in ("note", "percussion", "programChange"):
+            time = int(round(resolution * event["realtime"]))
+        if event["type"] in ("note", "percussion"):
+            duration = int(round(resolution * event["realGateLength"]))
+            if duration <= 0:
+                continue
         if event["type"] == "note":
             frequency = base_frequency*exp(dot(mapping, event["pitch"])) + event["pitch"][HZ_INDEX]
             index, bend = freq_to_midi(frequency, pitch_bend_depth)
             index += transpose
-            time = int(round(resolution * event["realtime"]))
-            duration = int(round(resolution * event["realGateLength"]))
-            if duration > 0:
-                channel_ = channel
-                if reserve_channel_10 and channel >= 9:
-                    channel_ += 1
-                events.append((time, "note_on", index, bend, velocity, channel_))
-                events.append((time + duration, "note_off", index, bend, velocity, channel_))
-                channel = (channel + 1) % num_channels
+            channel_ = channel
+            if reserve_channel_10 and channel >= 9:
+                channel_ += 1
+            events.append((time, "note_on", index, bend, velocity, channel_))
+            events.append((time + duration, "note_off", index, bend, velocity, channel_))
+            channel = (channel + 1) % num_channels
         if event["type"] == "percussion":
             index = event["index"]
-            time = int(round(resolution * event["realtime"]))
-            duration = int(round(resolution * event["realGateLength"]))
-            if duration > 0:
-                if reserve_channel_10:
-                    channel_ = 9
-                else:
-                    channel_ = channel
-                    channel = (channel + 1) % num_channels
-                events.append((time, "note_on", index, None, velocity, channel_))
-                events.append((time + duration, "note_off", index, None, velocity, channel_))
+            if reserve_channel_10:
+                channel_ = 9
+            else:
+                channel_ = channel
+                channel = (channel + 1) % num_channels
+            events.append((time, "note_on", index, None, velocity, channel_))
+            events.append((time + duration, "note_off", index, None, velocity, channel_))
+        if event["type"] == "programChange":
+            change_time = time - 1
+            events.append((change_time, "program_change", event["program"], None, None, None))
+            if change_time < 0:
+                time_offset = -change_time
 
     midi = mido.MidiFile()
     track = mido.MidiTrack()
@@ -1368,13 +1405,22 @@ def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, num_channels=15, res
     current_time = 0
     for event in sorted(events):
         time, msg_type, index, bend, velocity, channel = event
-        if msg_type == "note_on" and bend is not None:
-            message = mido.Message("pitchwheel", pitch=bend, channel=channel, time=(time - current_time))
+        time += time_offset
+        if msg_type == "program_change":
+            for ch in range(num_channels):
+                if reserve_channel_10 and ch >= 9:
+                    ch += 1
+                message = mido.Message(msg_type, program=index, channel=ch, time=(time - current_time))
+                track.append(message)
+                current_time = time
+        else:
+            if msg_type == "note_on" and bend is not None:
+                message = mido.Message("pitchwheel", pitch=bend, channel=channel, time=(time - current_time))
+                track.append(message)
+                current_time = time
+            message = mido.Message(msg_type, note=index, channel=channel, velocity=velocity, time=(time - current_time))
             track.append(message)
             current_time = time
-        message = mido.Message(msg_type, note=index, channel=channel, velocity=velocity, time=(time - current_time))
-        track.append(message)
-        current_time = time
     midi.save(file=file)
 
 

@@ -25,6 +25,7 @@ CONFIGS = [
     "EDN:",  # Equal divisions of harmonic N
     "EDO:",  # ED2
     "N:",  # Notation
+    "I:",  # Instrument (Program Change)
     "F:",  # Flags
 ]
 

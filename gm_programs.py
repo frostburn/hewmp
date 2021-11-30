@@ -1,3 +1,5 @@
+# coding: utf-8
+
 GM_PROGRAMS = {
     "Acoustic Grand Piano": 0,
     "Bright Acoustic Piano": 1,
@@ -113,6 +115,7 @@ GM_PROGRAMS = {
     "Shanai": 111,
     "Tinkle Bell": 112,
     "Agogô": 113,
+    "Agogo": 113,
     "Steel Drums": 114,
     "Woodblock": 115,
     "Taiko Drum": 116,

@@ -32,6 +32,8 @@ YA_TEMPERAMENTS = {
     "sensipent": ["78732/78125"],
     "passion": ["262144/253125"],
     "würschmidt": ["393216/390625"],
+    "wurschmidt": ["393216/390625"],
+    "wuerschmidt": ["393216/390625"],
     "amity": ["1600000/1594323"],
     "orson": ["2109375/2097152"],
     # Bonus

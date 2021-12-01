@@ -331,11 +331,37 @@ class Articulation(Event):
         return result
 
 
-# TODO: Integrate into MIDI
-class TrackVolume(Event):
-    def __init__(self, volume, time=0, duration=0):
+class ControlChange(Event):
+    def __init__(self, control, value, time=0, duration=0):
         super().__init__(time, duration)
+        self.control = control
+        self.value = value
+
+    def retime(self, time, duration):
+        return self.__class__(self.control, self.value, time, duration)
+
+    def to_json(self):
+        result = super().to_json()
+        result["type"] = "controlChange"
+        result["subtype"] = "controlChange"
+        result["control"] = self.control
+        result["value"] = self.value
+        return result
+
+
+class TrackVolume(ControlChange):
+    def __init__(self, volume, time=0, duration=0):
+        super().__init__(7, None, time, duration)
         self.volume = volume
+
+    @property
+    def volume(self):
+        return self._volume
+
+    @volume.setter
+    def volume(self, value):
+        self.value = int(round(127*value))
+        self._volume = value
 
     def retime(self, time, duration):
         return self.__class__(self.volume, time ,duration)
@@ -1454,7 +1480,7 @@ def save_tracks_as_midi(file, tracks, pitch_bend_depth=2, reserve_channel_10=Tru
                 mapping = event["suggestedMapping"]
             if event["type"] == "dynamic":
                 velocity = int(round(float(127 * Fraction(event["velocity"]))))
-            if event["type"] in ("note", "percussion", "programChange"):
+            if event["type"] in ("note", "percussion", "programChange") or event.get("subtype") == "controlChange":
                 time = int(round(resolution * event["realtime"]))
             if event["type"] in ("note", "percussion"):
                 duration = int(round(resolution * event["realGateLength"]))
@@ -1484,6 +1510,11 @@ def save_tracks_as_midi(file, tracks, pitch_bend_depth=2, reserve_channel_10=Tru
                 events.append((change_time, "program_change", event["program"], None, None, None))
                 if change_time < 0:
                     time_offset = -change_time
+            if event.get("subtype") == "controlChange":
+                change_time = time - 1
+                events.append((change_time, "control_change", event["control"], None, event["value"], None))
+                if change_time < 0:
+                    time_offset = -change_time
 
         current_time = 0
         for event in sorted(events):
@@ -1495,6 +1526,14 @@ def save_tracks_as_midi(file, tracks, pitch_bend_depth=2, reserve_channel_10=Tru
                     if reserve_channel_10 and ch >= 9:
                         ch += 1
                     message = mido.Message(msg_type, program=index, channel=ch, time=(time - current_time))
+                    track.append(message)
+                    current_time = time
+            elif msg_type == "control_change":
+                for ch in range(pattern.max_polyphony):
+                    ch += channel_offset
+                    if reserve_channel_10 and ch >= 9:
+                        ch += 1
+                    message = mido.Message(msg_type, control=index, value=velocity, channel=ch, time=(time - current_time))
                     track.append(message)
                     current_time = time
             else:

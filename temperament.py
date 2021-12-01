@@ -88,7 +88,7 @@ def is_less_complex(pitch_a, pitch_b):
     return False
 
 
-def comma_reduce(pitch, comma_list, persistence=5):
+def comma_reduce(pitch, comma_list, persistence=5, cache=None):
     """
     Express the pitch using as small primes as possible by adding commas from the list
     """
@@ -109,6 +109,10 @@ def comma_reduce(pitch, comma_list, persistence=5):
                 did_advance = True
 
     # Search the vicinity of "zero" for simpler options
+    if cache is not None:
+        cache_key = tuple(current)
+        if cache_key in cache:
+            return array(cache[cache_key])
     best = current
     def combine(coefs):
         nonlocal best
@@ -123,6 +127,8 @@ def comma_reduce(pitch, comma_list, persistence=5):
             combine(coefs + [i])
 
     combine([])
+    if cache is not None:
+        cache[cache_key] = array(best)
     return best
 
 

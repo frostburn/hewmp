@@ -802,12 +802,14 @@ def parse_chord(token, trasposition, *conf):
     return result
 
 
-def comma_reduce_pattern(pattern, comma_list, persistence):
+def comma_reduce_pattern(pattern, comma_list, persistence, cache=None):
+    if cache is None:
+        cache = {}
     if isinstance(pattern, Note):
-        pattern.pitch = comma_reduce(pattern.pitch, comma_list, persistence)
+        pattern.pitch = comma_reduce(pattern.pitch, comma_list, persistence, cache)
     if isinstance(pattern, Pattern):
         for subpattern in pattern:
-            comma_reduce_pattern(subpattern, comma_list, persistence)
+            comma_reduce_pattern(subpattern, comma_list, persistence, cache)
 
 
 class RepeatExpander:

@@ -99,7 +99,7 @@ class Lexer:
                     self.reading_escape = False
                 continue
 
-            if character == "|" and next_character in (":", ">"):
+            if character == "|" and next_character in (":", ">") and not commenting:
                 token += character
             elif character.isspace() or (character in SPACERS and token not in (":", ">")):
                 if character == "\n":
@@ -150,6 +150,8 @@ if __name__ == "__main__":
         |> P1 P4 P4 >|
         $ Stop before you reach here
         P1[1/2] "User $$ $"message$"!" P4
+        $|: P1 M2 :|
+        |: P1 M3 :|
     """)
     lexer = Lexer(reader)
     for token in lexer:

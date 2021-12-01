@@ -16,7 +16,7 @@ YA_TEMPERAMENTS = {
     "father": ["15/16"],
     "bug": ["27/25"],
     # Main sequence
-    "dicot": ["25/26"],
+    "dicot": ["25/24"],
     "meantone": ["81/80"],
     "mavila": ["135/128"],
     "porcupine": ["250/243"],

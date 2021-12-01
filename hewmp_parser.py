@@ -123,7 +123,7 @@ class Tuning(Event):
 
     def suggest_mapping(self):
         JI = log(array(PRIMES))
-        if self.edn_divisions is None or self.edn_divided is None:
+        if self.edn_divisions is None or self.edn_divided is None or self.warts is None:
             mapping = temper_subgroup(
                 JI,
                 [comma[:len(JI)] for comma in self.comma_list],
@@ -166,7 +166,7 @@ class Tuning(Event):
         comma_list = [array(comma) for comma in self.comma_list]
         constraints = [array(constraint) for constraint in self.constraints]
         subgroup = [array(basis_vector) for basis_vector in self.subgroup]
-        warts = None if self.warts is None else array(self.warts)
+        warts = None if self.warts is None else list(self.warts)
         return self.__class__(
             self.base_frequency,
             comma_list,
@@ -581,15 +581,13 @@ class Pattern(MusicBase, Transposable):
 
 
 DEFAULT_CONFIG = {
-    "tuning": Tuning(440.0, (), (), (), ()),
+    "tuning": Tuning(440.0, (), (), (), Fraction(12), Fraction(2), None),  # warts is None so it's JI
     "tempo": Tempo(Fraction(1, 4), Fraction(1, 2), Fraction(1, 4)),
     "track_volume": TrackVolume(Fraction(1)),
     "program_change": None,
     "CRD": 5,
     "WF": None,
     "N": "hewmp",
-    "edn_divisions": Fraction(12),  # parsed from EDO or EDN
-    "edn_divided": Fraction(2),  # parsed from EDN
     "flags": ("unmapEDN",),  # default to just intonation
 }
 
@@ -964,9 +962,8 @@ def parse_track(lexer, default_config):
     config["tuning"] = config["tuning"].copy()
     config["tempo"] = config["tempo"].copy()
     config["flags"] = list(config["flags"])
-    edn_divisions = config["edn_divisions"]
-    edn_divided = config["edn_divided"]
-    warts = None
+    edn_divisions = config["tuning"].edn_divisions
+    edn_divided = config["tuning"].edn_divided
     current_notation = config["N"]
     base_frequency = None
     comma_list = None
@@ -1023,7 +1020,7 @@ def parse_track(lexer, default_config):
                     wart = token[-1].lower()
                     warts[ord(wart) - ord("a")] += 1
                     token = token[:-1]
-                warts = [warts[i] for i in len(PRIMES)]
+                config["tuning"].warts = [warts[i] for i in range(len(PRIMES))]
                 if config_key in ("EDN", "EDO"):
                     if config_key == "EDN":
                         divisions_token, divided_token = token.split(",", 1)
@@ -1032,10 +1029,10 @@ def parse_track(lexer, default_config):
                     if config_key == "EDO":
                         edn_divisions = Fraction(token)
                         edn_divided = Fraction(2)
-                    config["edn_divisions"] = edn_divisions
-                    config["edn_divided"] = edn_divided
-                    if "unmapEDN" in config["flags"]:
-                        config["flags"].remove("unmapEDN")
+                    config["tuning"].edn_divisions = edn_divisions
+                    config["tuning"].edn_divided = edn_divided
+                if "unmapEDN" in config["flags"]:
+                    config["flags"].remove("unmapEDN")
             if config_key == "N":
                 current_notation = token.strip()
                 config[config_key] = current_notation
@@ -1173,13 +1170,7 @@ def parse_track(lexer, default_config):
         config["tuning"].constraints = [parse_interval(constraint, DEFAULT_INFLECTIONS, 12, 2)[0] for constraint in constraints]
 
     if "unmapEDN" in config["flags"]:
-        config["tuning"].edn_divisions = None
-        config["tuning"].edn_divided = None
         config["tuning"].warts = None
-    else:
-        config["tuning"].edn_divisions = edn_divisions
-        config["tuning"].edn_divided = edn_divided
-        config["tuning"].warts = warts
     config["tuning"].suggest_mapping()
     pattern.insert(0, config["tuning"])
 

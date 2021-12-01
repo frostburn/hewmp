@@ -57,6 +57,7 @@ def temper_subgroup(just_mapping, comma_list, constraints, subgroup, num_iterati
     if not isclose(array([dot(subgroup_just_mapping, constraint) for constraint in constraints]), constraint_sizes).all():
         raise ValueError("Non-orthogonal subgroup or constraint outside subgroup")
 
+    # TODO: Rescale when only one constraint
     subgroup_mapping = temper(subgroup_just_mapping, comma_list, constraints, num_iterations, step_size)
     if not constraints:
         subgroup_mapping = minimax(subgroup_just_mapping, subgroup_mapping)

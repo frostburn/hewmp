@@ -1,12 +1,13 @@
 from io import StringIO
 from collections import Counter
-from numpy import array, zeros, log, floor, pi, around, dot, exp
+from numpy import array, zeros, log, floor, pi, around, dot, exp, cumsum, linspace, concatenate
+from scipy.interpolate import interp1d
 try:
     import mido
 except ImportError:
     mido = None
 from fractions import Fraction
-from lexer import Lexer, CONFIGS
+from lexer import Lexer, CONFIGS, TRACK_START
 from chord_parser import expand_chord, separate_by_arrows
 from temperaments import TEMPERAMENTS
 from temperament import temper_subgroup, comma_reduce
@@ -35,6 +36,7 @@ from gm_programs import GM_PROGRAMS
 # * Translation to relative fractions
 # * Integrate comma root solver through a flag
 # * Include EDN steps in plain MIDI
+# * Playhead control across tracks
 
 
 PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
@@ -79,19 +81,8 @@ for key, value in list(DEFAULT_INFLECTIONS.items()):
     DEFAULT_INFLECTIONS[key] = array(value + [0] * (PITCH_LENGTH - len(value)))
 
 
-DEFAULT_CONFIG = {
-    "a": 440,
-    "T": None,
-    "CL": [],
-    "SG": list(map(str, PRIMES)),
-    "C": [],
-    "CRD": 5,
-    "WF": None,
-    "L": Fraction(1, 4),
-    "beat_duration": Fraction(1),
-    "G": 1.0,
-    "F": []
-}
+def zero_pitch():
+    return zeros(PITCH_LENGTH)
 
 
 class MusicBase:
@@ -119,13 +110,40 @@ class Event(MusicBase):
 
 
 class Tuning(Event):
-    def __init__(self, base_frequency, comma_list, constraints, subgroup, suggested_mapping, time=0, duration=0):
+    def __init__(self, base_frequency, comma_list, constraints, subgroup, edn_divisions=None, edn_divided=None, warts=None, suggested_mapping=None, time=0, duration=0):
         super().__init__(time, duration)
         self.base_frequency = base_frequency
         self.comma_list = comma_list
         self.constraints = constraints
         self.subgroup = subgroup
+        self.edn_divisions = edn_divisions
+        self.edn_divided = edn_divided
+        self.warts = warts
         self.suggested_mapping = suggested_mapping
+
+    def suggest_mapping(self):
+        JI = log(array(PRIMES))
+        if self.edn_divisions is None or self.edn_divided is None:
+            mapping = temper_subgroup(
+                JI,
+                [comma[:len(JI)] for comma in self.comma_list],
+                [constraint[:len(JI)] for constraint in self.constraints],
+                [basis_vector[:len(JI)] for basis_vector in self.subgroup],
+            )
+        else:
+            generator = log(float(self.edn_divided)) / float(self.edn_divisions)
+            steps = around(JI/generator)
+            mapping = steps*generator
+            for index, count in enumerate(self.warts):
+                modification = ((count + 1)//2) * (2*(count%2) - 1)
+                if mapping[index] > JI[index]:
+                    steps[index] -= modification
+                else:
+                    steps[index] += modification
+            mapping = steps*generator
+        self.suggested_mapping = zero_pitch()
+        self.suggested_mapping[:len(JI)] = mapping
+        self.suggested_mapping[E_INDEX] = 1
 
     def to_json(self):
         result = super().to_json()
@@ -138,6 +156,8 @@ class Tuning(Event):
             "commaList": comma_list,
             "constraints": constraints,
             "subgroup": subgroup,
+            "edn": [None if self.edn_divisions is None else str(self.edn_divisions), None if self.edn_divided is None else str(self.edn_divided)],
+            "warts": None if self.warts is None else list(self.warts),
             "suggestedMapping": list(self.suggested_mapping),
         })
         return result
@@ -146,23 +166,33 @@ class Tuning(Event):
         comma_list = [array(comma) for comma in self.comma_list]
         constraints = [array(constraint) for constraint in self.constraints]
         subgroup = [array(basis_vector) for basis_vector in self.subgroup]
+        warts = None if self.warts is None else array(self.warts)
         return self.__class__(
             self.base_frequency,
             comma_list,
             constraints,
             subgroup,
+            self.edn_divisions,
+            self.edn_divided,
+            warts,
             array(self.suggested_mapping),
             time,
             duration
         )
 
+    def copy(self):
+        return self.retime(self.time, self.duration)
+
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
             self.__class__.__name__,
             self.base_frequency,
             self.comma_list,
             self.constraints,
             self.subgroup,
+            self.edn_divisions,
+            self.edn_divided,
+            self.warts,
             self.suggested_mapping,
             self.time,
             self.duration,
@@ -170,47 +200,69 @@ class Tuning(Event):
 
 
 class Tempo(Event):
-    def __init__(self, beat_duration, unit, swing_amount=0, swing_unit=None, time=0, duration=0):
+    def __init__(self, tempo_unit, tempo_duration, beat_unit, groove_pattern=None, groove_span=None, time=0, duration=0):
         super().__init__(time, duration)
-        self.beat_duration = beat_duration
-        self.unit = unit
-        self.swing_amount = swing_amount
-        if swing_unit is None:
-            self.swing_unit = self.unit
-        else:
-            self.swing_unit = swing_unit
+        self.tempo_unit = tempo_unit
+        self.tempo_duration = tempo_duration
+        self.beat_unit = beat_unit
+        self.groove_pattern = groove_pattern
+        self.groove_span = groove_span
+        self.calculate_groove()
+
+    @property
+    def beat_duration(self):
+        return self.tempo_duration * self.beat_unit / self.tempo_unit
+
+    def calculate_groove(self):
+        if self.groove_span is None or self.groove_pattern is None:
+            self.groove = lambda x: x
+            return
+        beat_times = concatenate(([0], cumsum(list(map(float, self.groove_pattern)))))
+        beat_times /= beat_times.max()
+        beats = linspace(0, 1, len(beat_times))
+        self.groove = interp1d(beats, beat_times)
 
     def to_json(self):
         result = super().to_json()
         result.update({
             "type": "tempo",
+            "tempoUnit": str(self.tempo_unit),
+            "tempoDuration": str(self.tempo_duration),
+            "beatUnit": str(self.beat_unit),
             "beatDuration": str(self.beat_duration),
-            "unit": str(self.unit),
-            "swingAmount": str(self.swing_amount),
-            "swingUnit": str(self.swing_unit),
+            "groovePattern": list(map(str, self.groove_pattern)),
+            "grooveSpan": str(self.groove_span),
         })
         return result
 
     def retime(self, time, duration):
-        return self.__class__(self.beat_duration, self.unit, self.swing_amount, self.swing_unit, time, duration)
+        return self.__class__(self.tempo_unit, self.tempo_duration, self.beat_unit, self.groove_pattern, self.groove_span, time, duration)
+
+    def copy(self):
+        return self.retime(self.time, self.duration)
 
     def to_realtime(self, time, duration):
-        end_beat = float(time + duration)
         start_beat = float(time)
-        amount = float(self.swing_amount)
-        unit = float(self.swing_unit/self.unit)
-        start_time = start_beat + amount*abs(start_beat - floor(0.5*start_beat/unit + 0.5)*2*unit)
-        end_time = end_beat + amount*abs(end_beat - floor(0.5*end_beat/unit + 0.5)*2*unit)
+        end_beat = float(time + duration)
+        unit = float(self.groove_span/self.beat_unit)
+
+        groove_bars, groove_beat = divmod(start_beat, unit)
+        start_time = (groove_bars + self.groove(groove_beat/unit)) * unit
+
+        groove_bars, groove_beat = divmod(end_beat, unit)
+        end_time = (groove_bars + self.groove(groove_beat/unit)) * unit
+
         beat_duration = float(self.beat_duration)
         return start_time*beat_duration, (end_time - start_time)*beat_duration
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
             self.__class__.__name__,
-            self.beat_duration,
-            self.unit,
-            self.swing_amount,
-            self.swing_unit,
+            self.tempo_unit,
+            self.tempo_duration,
+            self.beat_unit,
+            self.groove_pattern,
+            self.groove_span,
             self.time,
             self.duration,
         )
@@ -276,6 +328,22 @@ class Articulation(Event):
         result = super().to_json()
         result["type"] = "articulation"
         result["gateRatio"] = str(self.gate_ratio)
+        return result
+
+
+# TODO: Integrate into MIDI
+class TrackVolume(Event):
+    def __init__(self, volume, time=0, duration=0):
+        super().__init__(time, duration)
+        self.volume = volume
+
+    def retime(self, time, duration):
+        return self.__class__(self.volume, time ,duration)
+
+    def to_json(self):
+        result = super().to_json()
+        result["type"] = "trackVolume"
+        result["volume"] = str(self.volume)
         return result
 
 
@@ -437,10 +505,12 @@ class Pattern(MusicBase, Transposable):
         events = []
 
         articulation = None
-        dynamic = None
-        missing_dynamic = None
-        missing_articulation = None
-        missing_program_change = None
+        missing = {
+            Articulation: None,
+            Dynamic: None,
+            ProgramChange: None,
+            TrackVolume: None,
+        }
         if start_time is not None:
             start_realtime, _ = tempo.to_realtime(start_time, 0)
         else:
@@ -448,20 +518,15 @@ class Pattern(MusicBase, Transposable):
         for event in flat:
             if isinstance(event, Articulation):
                 articulation = event
-            if isinstance(event, Dynamic):
-                dynamic = event
             realtime, realduration = tempo.to_realtime(event.time, event.duration)
             if isinstance(event, Note) or isinstance(event, Percussion):
                 _, real_gate_length = tempo.to_realtime(event.time, event.duration * articulation.gate_ratio)
             else:
                 real_gate_length = None
             if start_time is not None and event.time < start_time:
-                if isinstance(event, Dynamic):
-                    missing_dynamic = event
-                if isinstance(event, Articulation):
-                    missing_articulation = event
-                if isinstance(event, ProgramChange):
-                    missing_program_change = event
+                for type_ in missing:
+                    if isinstance(event, type_):
+                        missing[type_] = event
                 continue
             if end_time is not None and event.end_time > end_time:
                 continue
@@ -472,23 +537,13 @@ class Pattern(MusicBase, Transposable):
             data["realduration"] = realduration
             if real_gate_length is not None:
                 data["realGateLength"] = float(real_gate_length)
-            if missing_dynamic is not None:
-                extra = missing_dynamic.retime(event.time, 0)
-                extra_data = extra.to_json()
-                extra_data["realtime"] = data["realtime"]
-                events.append(extra_data)
-                missing_dynamic = None
-            if missing_articulation is not None:
-                extra = missing_articulation.retime(event.time, 0)
-                extra_data = extra.to_json()
-                extra_data["realtime"] = data["realtime"]
-                events.append(extra_data)
-                missing_articulation = None
-            if missing_program_change is not None:
-                extra = missing_program_change.retime(event.time, 0)
-                extra_data = extra.to_json()
-                extra_data["realtime"] = data["realtime"]
-                events.append(extra_data)
+            for type_, missing_event in list(missing.items()):
+                if missing_event is not None:
+                    extra = missing_event.retime(event.time, 0)
+                    extra_data = extra.to_json()
+                    extra_data["realtime"] = data["realtime"]
+                    events.append(extra_data)
+                    missing[type_] = None
             events.append(data)
 
         if start_time is None:
@@ -525,8 +580,20 @@ class Pattern(MusicBase, Transposable):
         return True
 
 
-def zero_pitch():
-    return zeros(PITCH_LENGTH)
+DEFAULT_CONFIG = {
+    "tuning": Tuning(440.0, (), (), (), ()),
+    "tempo": Tempo(Fraction(1, 4), Fraction(1, 2), Fraction(1, 4)),
+    "track_volume": TrackVolume(Fraction(1)),
+    "program_change": None,
+    "CRD": 5,
+    "WF": None,
+    "N": "hewmp",
+    "edn_divisions": Fraction(12),  # parsed from EDO or EDN
+    "edn_divided": Fraction(2),  # parsed from EDN
+    "flags": ("unmapEDN",),  # default to just intonation
+}
+
+DEFAULT_CONFIG["tuning"].suggest_mapping()
 
 
 class ParsingError(Exception):
@@ -848,11 +915,15 @@ class RepeatExpander:
                 self.playback_mode = True
             else:
                 if self.record_mode:
-                    if token.is_end():
+                    if token.is_end() or token.value == TRACK_START:
                         raise ParsingError('Missing ":|"')
                     self.repeated_section.append(token)
                 else:
                     return token
+
+    @property
+    def done(self):
+        return self.lexer.done and not self.repeated_section
 
 
 ARTICULATIONS = {
@@ -874,7 +945,7 @@ DYNAMICS = {
 }
 
 
-def consume_lexer(lexer):
+def parse_track(lexer, default_config):
     config_mode = False
     config_key = None
     time_mode = False
@@ -889,19 +960,26 @@ def consume_lexer(lexer):
     playstop = None
 
     config = {}
-    config.update(DEFAULT_CONFIG)
-    tempo_spec = (Fraction(1, 4), 120)
-    swing_spec = (None, Fraction(0))
-    edn_divisions = Fraction(12)
-    edn_divided = Fraction(2)
-    warts = Counter()
-    map_edn = False
-    current_notation = None
+    config.update(default_config)
+    config["tuning"] = config["tuning"].copy()
+    config["tempo"] = config["tempo"].copy()
+    config["flags"] = list(config["flags"])
+    edn_divisions = config["edn_divisions"]
+    edn_divided = config["edn_divided"]
+    warts = None
+    current_notation = config["N"]
+    base_frequency = None
+    comma_list = None
+    subgroup = None
+    constraints = None
+    max_polyphony = None
 
     for token_obj in lexer:
         if token_obj.is_end():
             break
         token = token_obj.value
+        if token == TRACK_START:
+            break
 
         if token in CONFIGS:
             config_key = token[:-1]
@@ -910,59 +988,67 @@ def consume_lexer(lexer):
 
         if config_mode:
             if config_key == "a":
-                config[config_key] = float(token)
+                base_frequency = float(token)
             if config_key == "T":
                 comma_list, subgroup = TEMPERAMENTS[token.strip()]
-                config["CL"] = comma_list
-                config["SG"] = subgroup.split(".")
+                subgroup = subgroup.split(".")
             if config_key == "CL":
-                config[config_key] = [comma.strip() for comma in token.split(",")]
+                comma_list = [comma.strip() for comma in token.split(",")]
             if config_key == "SG":
-                config[config_key] = [basis_fraction.strip() for basis_fraction in token.split(".")]
+                subgroup = [basis_fraction.strip() for basis_fraction in token.split(".")]
             if config_key == "C":
-                config[config_key] = [constraint.strip() for constraint in token.split(",")]
+                constraints = [constraint.strip() for constraint in token.split(",")]
             if config_key == "CRD":
                 config[config_key] = int(token)
             if config_key == "WF":
                 config[config_key] = token.strip()
             if config_key == "L":
-                config[config_key] = Fraction(token)
+                config["tempo"].beat_unit = Fraction(token)
             if config_key == "Q":
                 unit, bpm = token.split("=")
-                tempo_spec = (Fraction(unit), Fraction(bpm))
-            if config_key == "SP":
-                if "=" in token:
-                    unit, amount = token.split("=")
-                    unit = Fraction(unit)
-                else:
-                    unit = None
-                    amount = token
-                swing_spec = (unit, Fraction(amount.strip().strip("%"))/100)
+                config["tempo"].tempo_unit = Fraction(unit)
+                config["tempo"].tempo_duration = Fraction(60) / Fraction(bpm)
             if config_key == "G":
-                config[config_key] = float(token)
+                span_token, pattern_token = token.split("=")
+                config["tempo"].groove_span = Fraction(span_token)
+                config["tempo"].groove_pattern = list(map(Fraction, pattern_token.split(" ")))
+            if config_key == "V":
+                track_volume = TrackVolume(Fraction(token), time)
+                pattern.append(track_volume)
+                config[config_key] = track_volume.volume
             if config_key in ("EDO", "EDN"):
                 token = token.strip()
+                warts = Counter()
                 while token[-1].isalpha():
                     wart = token[-1].lower()
                     warts[ord(wart) - ord("a")] += 1
                     token = token[:-1]
-                if config_key == "EDN":
-                    divisions_token, divided_token = token.split(",", 1)
-                    edn_divisions = Fraction(divisions_token)
-                    edn_divided = Fraction(divided_token)
-                if config_key == "EDO":
-                    edn_divisions = Fraction(token)
-                    edn_divided = Fraction(2)
-                map_edn = True
+                warts = [warts[i] for i in len(PRIMES)]
+                if config_key in ("EDN", "EDO"):
+                    if config_key == "EDN":
+                        divisions_token, divided_token = token.split(",", 1)
+                        edn_divisions = Fraction(divisions_token)
+                        edn_divided = Fraction(divided_token)
+                    if config_key == "EDO":
+                        edn_divisions = Fraction(token)
+                        edn_divided = Fraction(2)
+                    config["edn_divisions"] = edn_divisions
+                    config["edn_divided"] = edn_divided
+                    if "unmapEDN" in config["flags"]:
+                        config["flags"].remove("unmapEDN")
             if config_key == "N":
                 current_notation = token.strip()
+                config[config_key] = current_notation
             if config_key == "I":
                 name = token.strip()
                 program = GM_PROGRAMS.get(name)
                 program_change = ProgramChange(name, program, time)
                 pattern.append(program_change)
+                config[config_key] = name
+            if config_key == "MP":
+                max_polyphony = int(token)
             if config_key == "F":
-                config[config_key] = [flag.strip() for flag in token.split(",")]
+                config["flags"] = [flag.strip() for flag in token.split(",")]
             config_mode = False
             continue
 
@@ -1075,60 +1161,54 @@ def consume_lexer(lexer):
     pattern.insert(0, Articulation(ARTICULATIONS[";"]))
     pattern.insert(0, Dynamic(DYNAMICS["mf"]))
 
-    unit, bpm = tempo_spec
-    swing_unit, swing_amount = swing_spec
-    beat_duration = Fraction(60) / bpm / unit * config["L"]
-    tempo = Tempo(beat_duration, config["L"], swing_amount, swing_unit)
-    pattern.insert(0, tempo)
+    pattern.insert(0, config["tempo"])
 
-    subgroup = [parse_interval(basis_vector, DEFAULT_INFLECTIONS, 12, 2)[0] for basis_vector in config["SG"]]
-    comma_list = [parse_interval(comma, DEFAULT_INFLECTIONS, 12, 2)[0] for comma in config["CL"]]
-    constraints = [parse_interval(constraint, DEFAULT_INFLECTIONS, 12, 2)[0] for constraint in config["C"]]
-    JI = log(array(PRIMES))
-    if map_edn and "unmapEDN" not in config["F"]:
-        generator = log(float(edn_divided)) / float(edn_divisions)
-        mapping = generator * around(JI/generator)
-        for index, count in warts.items():
-            modification = ((count + 1)//2) * (2*(count%2) - 1)
-            steps = round(JI[index]/generator)
-            if mapping[index] > JI[index]:
-                steps -= modification
-            else:
-                steps += modification
-            mapping[index] = generator * steps
+    if base_frequency is not None:
+        config["tuning"].base_frequency = base_frequency
+    if subgroup is not None:
+        config["tuning"].subgroup = [parse_interval(basis_vector, DEFAULT_INFLECTIONS, 12, 2)[0] for basis_vector in subgroup]
+    if comma_list is not None:
+        config["tuning"].comma_list = [parse_interval(comma, DEFAULT_INFLECTIONS, 12, 2)[0] for comma in comma_list]
+    if constraints is not None:
+        config["tuning"].constraints = [parse_interval(constraint, DEFAULT_INFLECTIONS, 12, 2)[0] for constraint in constraints]
+
+    if "unmapEDN" in config["flags"]:
+        config["tuning"].edn_divisions = None
+        config["tuning"].edn_divided = None
+        config["tuning"].warts = None
     else:
-        mapping = temper_subgroup(
-            JI,
-            [comma[:len(JI)] for comma in comma_list],
-            [constraint[:len(JI)] for constraint in constraints],
-            [basis_vector[:len(JI)] for basis_vector in subgroup],
-        )
-    suggested_mapping = zero_pitch()
-    suggested_mapping[:len(JI)] = mapping
-    suggested_mapping[E_INDEX] = 1
-    tuning = Tuning(config["a"], comma_list, constraints, subgroup, suggested_mapping)
-    pattern.insert(0, tuning)
+        config["tuning"].edn_divisions = edn_divisions
+        config["tuning"].edn_divided = edn_divided
+        config["tuning"].warts = warts
+    config["tuning"].suggest_mapping()
+    pattern.insert(0, config["tuning"])
 
     pattern.duration = pattern.logical_duration
 
-    if "CR" in config["F"]:
+    if "CR" in config["flags"]:
         comma_reduce_pattern(pattern, comma_list, config["CRD"])
 
-    if map_edn:
-        return pattern, mapping / generator
-    return pattern, None
-
-
-def parse_text(text):
-    return consume_lexer(RepeatExpander(Lexer(StringIO(text))))
+    pattern.max_polyphony = max_polyphony
+    return pattern, config
 
 
 def parse_file(file):
     if not file.seekable():
         file = StringIO(file.read())
-    return consume_lexer(RepeatExpander(Lexer(file)))
+    lexer = RepeatExpander(Lexer(file))
+    global_track, global_config = parse_track(lexer, DEFAULT_CONFIG)
+    results = [global_track]
+    while not lexer.done:
+        pattern, _ = parse_track(lexer, global_config)
+        results.append(pattern)
+    return results
 
 
+def parse_text(text):
+    return parse_file(StringIO(text))
+
+
+# TODO: Simplify across tracks
 def simplify_events(events):
     used = array([False] * len(SEMANTIC))
 
@@ -1183,6 +1263,7 @@ def _notate_absolute_pitch(pitch, inflections):
     return notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
 
 
+# TODO: Notate tracks
 def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_time=False):
     if isinstance(pattern, Articulation):
         for symbol, value in ARTICULATIONS.items():
@@ -1246,6 +1327,7 @@ def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_t
     return ""
 
 
+# TODO: Track support
 def save_pattern_as_midi_edn(file, pattern, val, reference_pitch=64, resolution=960):
     """
     Save pattern as a midi file using steps based on the size of the EDO/EDN parameter.
@@ -1296,6 +1378,7 @@ def freq_to_midi128(frequency):
     return steps%128, 7 + steps//128
 
 
+# TODO: Track support
 def save_pattern_as_midi128(file, pattern, resolution=960):
     """
     Save pattern as a midi file quantized to 128EDO using channels for octaves.
@@ -1351,78 +1434,87 @@ def freq_to_midi(frequency, pitch_bend_depth):
     return index, bend
 
 
-def save_pattern_as_midi(file, pattern, pitch_bend_depth=2, num_channels=15, reserve_channel_10=True, transpose=0, resolution=960):
+def save_tracks_as_midi(file, tracks, pitch_bend_depth=2, reserve_channel_10=True, transpose=0, resolution=960):
     """
-    Save pattern as a midi file quantized to 128EDO using channels for octaves.
+    Save tracks as a midi file with per-channel pitch-bend for microtones.
 
     Assumes that A4 is in standard tuning 440Hz.
     """
-    data = pattern.to_json()
-    base_frequency = None
-    mapping = None
-    velocity = 85
-    events = []
-    channel = 0  # TODO: Better time-awarenes in channel distribution
-    time_offset = 0
-    for event in data["events"]:
-        if event["type"] == "tuning":
-            base_frequency = event["baseFrequency"]
-            mapping = event["suggestedMapping"]
-        if event["type"] == "dynamic":
-            velocity = int(round(float(127 * Fraction(event["velocity"]))))
-        if event["type"] in ("note", "percussion", "programChange"):
-            time = int(round(resolution * event["realtime"]))
-        if event["type"] in ("note", "percussion"):
-            duration = int(round(resolution * event["realGateLength"]))
-            if duration <= 0:
-                continue
-        if event["type"] == "note":
-            frequency = base_frequency*exp(dot(mapping, event["pitch"])) + event["pitch"][HZ_INDEX]
-            index, bend = freq_to_midi(frequency, pitch_bend_depth)
-            index += transpose
-            channel_ = channel
-            if reserve_channel_10 and channel >= 9:
-                channel_ += 1
-            events.append((time, "note_on", index, bend, velocity, channel_))
-            events.append((time + duration, "note_off", index, bend, velocity, channel_))
-            channel = (channel + 1) % num_channels
-        if event["type"] == "percussion":
-            index = event["index"]
-            if reserve_channel_10:
-                channel_ = 9
-            else:
-                channel_ = channel
-                channel = (channel + 1) % num_channels
-            events.append((time, "note_on", index, None, velocity, channel_))
-            events.append((time + duration, "note_off", index, None, velocity, channel_))
-        if event["type"] == "programChange":
-            change_time = time - 1
-            events.append((change_time, "program_change", event["program"], None, None, None))
-            if change_time < 0:
-                time_offset = -change_time
-
     midi = mido.MidiFile()
-    track = mido.MidiTrack()
-    midi.tracks.append(track)
-    current_time = 0
-    for event in sorted(events):
-        time, msg_type, index, bend, velocity, channel = event
-        time += time_offset
-        if msg_type == "program_change":
-            for ch in range(num_channels):
-                if reserve_channel_10 and ch >= 9:
-                    ch += 1
-                message = mido.Message(msg_type, program=index, channel=ch, time=(time - current_time))
+    channel_offset = 0
+    for pattern in tracks:
+        if pattern.duration <= 0:
+            continue
+        track = mido.MidiTrack()
+        midi.tracks.append(track)
+
+        data = pattern.to_json()
+        base_frequency = None
+        mapping = None
+        velocity = 85
+        events = []
+        channel = channel_offset
+        # TODO: Better time-awarenes in channel distribution
+        # Maybe by sorting (Attach velocities and frequencies first)
+        time_offset = 0
+        for event in data["events"]:
+            if event["type"] == "tuning":
+                base_frequency = event["baseFrequency"]
+                mapping = event["suggestedMapping"]
+            if event["type"] == "dynamic":
+                velocity = int(round(float(127 * Fraction(event["velocity"]))))
+            if event["type"] in ("note", "percussion", "programChange"):
+                time = int(round(resolution * event["realtime"]))
+            if event["type"] in ("note", "percussion"):
+                duration = int(round(resolution * event["realGateLength"]))
+                if duration <= 0:
+                    continue
+            if event["type"] == "note":
+                frequency = base_frequency*exp(dot(mapping, event["pitch"])) + event["pitch"][HZ_INDEX]
+                index, bend = freq_to_midi(frequency, pitch_bend_depth)
+                index += transpose
+                channel_ = channel
+                if reserve_channel_10 and channel >= 9:
+                    channel_ += 1
+                events.append((time, "note_on", index, bend, velocity, channel_))
+                events.append((time + duration, "note_off", index, bend, velocity, channel_))
+                channel = ((channel - channel_offset + 1) % pattern.max_polyphony) + channel_offset
+            if event["type"] == "percussion":
+                index = event["index"]
+                if reserve_channel_10:
+                    channel_ = 9
+                else:
+                    channel_ = channel
+                    channel = ((channel - channel_offset + 1) % pattern.max_polyphony) + channel_offset
+                events.append((time, "note_on", index, None, velocity, channel_))
+                events.append((time + duration, "note_off", index, None, velocity, channel_))
+            if event["type"] == "programChange":
+                change_time = time - 1
+                events.append((change_time, "program_change", event["program"], None, None, None))
+                if change_time < 0:
+                    time_offset = -change_time
+
+        current_time = 0
+        for event in sorted(events):
+            time, msg_type, index, bend, velocity, channel = event
+            time += time_offset
+            if msg_type == "program_change":
+                for ch in range(pattern.max_polyphony):
+                    ch += channel_offset
+                    if reserve_channel_10 and ch >= 9:
+                        ch += 1
+                    message = mido.Message(msg_type, program=index, channel=ch, time=(time - current_time))
+                    track.append(message)
+                    current_time = time
+            else:
+                if msg_type == "note_on" and bend is not None:
+                    message = mido.Message("pitchwheel", pitch=bend, channel=channel, time=(time - current_time))
+                    track.append(message)
+                    current_time = time
+                message = mido.Message(msg_type, note=index, channel=channel, velocity=velocity, time=(time - current_time))
                 track.append(message)
                 current_time = time
-        else:
-            if msg_type == "note_on" and bend is not None:
-                message = mido.Message("pitchwheel", pitch=bend, channel=channel, time=(time - current_time))
-                track.append(message)
-                current_time = time
-            message = mido.Message(msg_type, note=index, channel=channel, velocity=velocity, time=(time - current_time))
-            track.append(message)
-            current_time = time
+        channel_offset += pattern.max_polyphony
     midi.save(file=file)
 
 
@@ -1446,7 +1538,7 @@ if __name__ == "__main__":
     parser.add_argument('--midi128', action='store_true')
     args = parser.parse_args()
 
-    pattern, val = parse_file(args.infile)
+    patterns = parse_file(args.infile)
     if args.infile is not sys.stdin:
         args.infile.close()
 
@@ -1467,7 +1559,7 @@ if __name__ == "__main__":
             args.outfile.close()
             outfile = open(filename, "wb")
         if args.midi:
-            save_pattern_as_midi(outfile, pattern, args.pitch_bend_depth, args.num_channels, not args.override_channel_10, args.midi_transpose)
+            save_tracks_as_midi(outfile, patterns, args.pitch_bend_depth, not args.override_channel_10, args.midi_transpose)
         if args.midi_edn:
             if val is None:
                 raise ValueError("Must be in EDO or EDN mode to output MIDI")
@@ -1476,12 +1568,16 @@ if __name__ == "__main__":
             save_pattern_as_midi128(outfile, pattern)
     else:
         semantic = SEMANTIC
-        data = pattern.to_json()
+        result = {
+            "semantic": SEMANTIC,
+            "tracks": [],
+        }
+        for pattern in patterns:
+            result["tracks"].append(pattern.to_json())
         if args.simplify:
             semantic, events = simplify_events(data["events"])
             data["events"] = events
-        data["semantic"] = semantic
-        json.dump(data, args.outfile)
+        json.dump(result, args.outfile)
 
     if args.outfile is not sys.stdout:
         args.outfile.close()

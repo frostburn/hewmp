@@ -10,6 +10,8 @@ SPACERS = "|"
 
 PLAY_CONTROL = ("|:", ":|", "|>", ">|")
 
+TRACK_START = "---"
+
 CONFIGS = [
     "a:",  # Frequency of a4 and @P1
     "T:",  # Temperament
@@ -20,12 +22,13 @@ CONFIGS = [
     "WF:",  # Oscillator waveform
     "L:",  # Unit-length
     "Q:",  # Tempo
-    "SP:",  # Swing percentage
-    "G:",  # Gain
+    "G:",  # Groove
+    "V:",  # Volume
     "EDN:",  # Equal divisions of harmonic N
     "EDO:",  # ED2
     "N:",  # Notation
     "I:",  # Instrument (Program Change)
+    "MP:",  # Max polyphony
     "F:",  # Flags
 ]
 
@@ -117,6 +120,8 @@ class Lexer:
                 whitespace += character
 
             if token:
+                if token == TRACK_START and (was_first_token or "\n" in whitespace):
+                    return Token(token, whitespace)
                 if token in PLAY_CONTROL:
                     return Token(token, whitespace)
                 if next_character in (":", ">") and next_but_one_character == "|":
@@ -140,8 +145,11 @@ if __name__ == "__main__":
     from io import StringIO
 
     reader = StringIO("""
-        $ Test string
+        $ Global config
         T:whatever
+        Q:1/5=777
+        --- $ Start of first track
+        $ Test string
         CL:51/50,77/75
         P1 M3-=m7+ m3+[0] (P1 M3- P5)[2] m9+2v5&10c&-5Hz 1,5/4,3/2
         |: P1 | P5 | -P4 :|
@@ -152,6 +160,10 @@ if __name__ == "__main__":
         P1[1/2] "User $$ $"message$"!" P4
         $|: P1 M2 :|
         |: P1 M3 :|
+        --- $ Next track
+        M2 M2 M2
+        ---
+        P5,P4
     """)
     lexer = Lexer(reader)
     for token in lexer:

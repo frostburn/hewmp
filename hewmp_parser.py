@@ -1357,7 +1357,7 @@ def freq_to_midi(frequency, pitch_bend_depth):
     return index, bend
 
 
-def save_tracks_as_midi(file, tracks, pitch_bend_depth=2, reserve_channel_10=True, transpose=0, resolution=960):
+def tracks_to_midi(tracks, pitch_bend_depth=2, reserve_channel_10=True, transpose=0, resolution=960):
     """
     Save tracks as a midi file with per-channel pitch-bend for microtones.
 
@@ -1455,8 +1455,13 @@ def save_tracks_as_midi(file, tracks, pitch_bend_depth=2, reserve_channel_10=Tru
                 message = mido.Message(msg_type, note=index, channel=channel, velocity=velocity, time=(time - current_time))
                 track.append(message)
                 current_time = time
+        target_time = int(round(resolution * data["realduration"]))
+        message = mido.MetaMessage("end_of_track", time=(target_time - current_time))
+        track.append(message)
+
         channel_offset += pattern.max_polyphony
-    midi.save(file=file)
+
+    return midi
 
 
 if __name__ == "__main__":
@@ -1507,7 +1512,8 @@ if __name__ == "__main__":
             args.outfile.close()
             outfile = open(filename, "wb")
         if args.midi:
-            save_tracks_as_midi(outfile, patterns, args.pitch_bend_depth, not args.override_channel_10, args.midi_transpose)
+            midi = tracks_to_midi(patterns, args.pitch_bend_depth, not args.override_channel_10, args.midi_transpose)
+            midi.save(file=outfile)
     else:
         semantic = SEMANTIC
         result = {

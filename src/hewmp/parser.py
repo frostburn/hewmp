@@ -7,13 +7,13 @@ try:
 except ImportError:
     mido = None
 from fractions import Fraction
-from lexer import Lexer, CONFIGS, TRACK_START
-from chord_parser import expand_chord, separate_by_arrows
-from temperaments import TEMPERAMENTS
-from temperament import temper_subgroup, comma_reduce
-from notation import notate_fraction, notate_otonal_utonal, notate_pitch, reverse_inflections
-from percussion import PERCUSSION_SHORTHANDS
-from gm_programs import GM_PROGRAMS
+from .lexer import Lexer, CONFIGS, TRACK_START
+from .chord_parser import expand_chord, separate_by_arrows
+from .temperaments import TEMPERAMENTS
+from .temperament import temper_subgroup, comma_reduce
+from .notation import notate_fraction, notate_otonal_utonal, notate_pitch, reverse_inflections
+from .percussion import PERCUSSION_SHORTHANDS
+from .gm_programs import GM_PROGRAMS
 
 
 PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
@@ -207,8 +207,8 @@ class Tempo(Event):
             "tempoDuration": str(self.tempo_duration),
             "beatUnit": str(self.beat_unit),
             "beatDuration": str(self.beat_duration),
-            "groovePattern": list(map(str, self.groove_pattern)),
-            "grooveSpan": str(self.groove_span),
+            "groovePattern": None if self.groove_pattern is None else list(map(str, self.groove_pattern)),
+            "grooveSpan": None if self.groove_span is None else str(self.groove_span),
         })
         return result
 
@@ -221,6 +221,10 @@ class Tempo(Event):
     def to_realtime(self, time, duration):
         start_beat = float(time)
         end_beat = float(time + duration)
+        beat_duration = float(self.beat_duration)
+        if self.groove_span is None:
+            return start_beat*beat_duration, (end_beat - start_beat)*beat_duration
+
         unit = float(self.groove_span/self.beat_unit)
 
         groove_bars, groove_beat = divmod(start_beat, unit)
@@ -229,7 +233,6 @@ class Tempo(Event):
         groove_bars, groove_beat = divmod(end_beat, unit)
         end_time = (groove_bars + self.groove(groove_beat/unit)) * unit
 
-        beat_duration = float(self.beat_duration)
         return start_time*beat_duration, (end_time - start_time)*beat_duration
 
     def __repr__(self):

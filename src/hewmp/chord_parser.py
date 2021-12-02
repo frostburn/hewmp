@@ -1,4 +1,4 @@
-from extra_chords import EXTRA_CHORDS
+from .extra_chords import EXTRA_CHORDS
 
 ARROWS = "+-><^vudUDAVMWi!*%"
 OPPOSITE = {}

@@ -1,5 +1,5 @@
 from io import StringIO
-from lexer import Lexer
+from hewmp.lexer import Lexer
 
 
 def test_lexer():

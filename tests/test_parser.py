@@ -1,7 +1,7 @@
 from fractions import Fraction
 from numpy import array, dot
-from hewmp_parser import parse_text, parse_interval, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX
-from notation import notate_pitch, reverse_inflections, notate_interval
+from hewmp.parser import parse_text, parse_interval, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX
+from hewmp.notation import notate_pitch, reverse_inflections, notate_interval
 
 
 def test_parse_interval():
@@ -24,8 +24,8 @@ def test_parse_pitch():
 
 
 def test_transposition():
-    pattern_a = parse_text("M2&m2")
-    pattern_b = parse_text("m3")
+    pattern_a = parse_text("M2&m2")[0]
+    pattern_b = parse_text("m3")[0]
 
     for event in pattern_a:
         if isinstance(event, Note):
@@ -38,8 +38,8 @@ def test_transposition():
 
 
 def test_transposition_persistence():
-    pattern_a = parse_text("M2&M2 M2&M2")
-    pattern_b = parse_text("M3 M3")
+    pattern_a = parse_text("M2&M2 M2&M2")[0]
+    pattern_b = parse_text("M3 M3")[0]
 
     for event in pattern_a:
         if isinstance(event, Note):
@@ -52,8 +52,8 @@ def test_transposition_persistence():
 
 
 def test_floaty_transposition():
-    pattern_a = parse_text("M2&~100c M2")
-    pattern_b = parse_text("M2 M2")
+    pattern_a = parse_text("M2&~100c M2")[0]
+    pattern_b = parse_text("M2 M2")[0]
 
     for event in pattern_a:
         if isinstance(event, Note):
@@ -97,7 +97,7 @@ def test_playhead():
     text = """
     P1=M- ~M3- ~P5 | M2=m+ ~m3+ ~P5 |> M2-=m+ ~m3+ ~P5 ||
     """
-    pattern = parse_text(text)
+    pattern = parse_text(text)[0]
     data = pattern.to_json()
     assert Fraction(data["time"]) == 6
     assert Fraction(data["duration"]) == 3

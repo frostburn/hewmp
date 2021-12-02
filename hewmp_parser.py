@@ -16,29 +16,6 @@ from percussion import PERCUSSION_SHORTHANDS
 from gm_programs import GM_PROGRAMS
 
 
-# TODO:
-# * User-specified gate length
-# * User-specified velocity
-# * Chance operators
-# * Vibrato
-# * Tremolo
-# * Pitch-bends
-# * Arpeggios
-#   - Arpeggiate and hold [~]
-#   - Arpeggiate and hold in sixteenth notes [~1/16]
-#   - Arpeggiate and hold evenly (as a tuplet) [~?]
-#   - Arpeggiate up in sixteenth notes [^1/16]
-#   - Arpeggiate down evenly [v?] (In reverse listed order. Don't measure pitch. Remember to fix chord spellings for this.)
-#   - Arpeggiate up and down in a loop [^v1/16]
-# * Dynamic tempo
-# * Dynamic tuning
-# * Preserve whitespace when translating
-# * Translation to relative fractions
-# * Integrate comma root solver through a flag
-# * Include EDN steps in plain MIDI
-# * Playhead control across tracks
-
-
 PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
 E_INDEX = len(PRIMES)
 HZ_INDEX = E_INDEX + 1

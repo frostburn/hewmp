@@ -1374,9 +1374,6 @@ def save_tracks_as_midi(file, tracks, pitch_bend_depth=2, reserve_channel_10=Tru
         mapping = None
         velocity = 85
         events = []
-        channel = channel_offset
-        # TODO: Better time-awarenes in channel distribution
-        # Maybe by sorting (Attach velocities and frequencies first)
         time_offset = 0
         for event in data["events"]:
             if event["type"] == "tuning":
@@ -1386,12 +1383,26 @@ def save_tracks_as_midi(file, tracks, pitch_bend_depth=2, reserve_channel_10=Tru
                 velocity = int(round(float(127 * Fraction(event["velocity"]))))
             if event["type"] in ("note", "percussion", "programChange") or event.get("subtype") == "controlChange":
                 time = int(round(resolution * event["realtime"]))
+            if event["type"] == "note":
+                frequency = base_frequency*exp(dot(mapping, event["pitch"])) + event["pitch"][HZ_INDEX]
+                events.append((time, event, frequency, velocity))
+            if event["type"] == "percussion":
+                events.append((time, event, None, velocity))
+            if event["type"] == "programChange" or event.get("subtype") == "controlChange":
+                change_time = time - 1
+                if change_time < 0:
+                    time_offset = -change_time
+                events.append((change_time, event, None, None))
+        presorted = events
+        events = []
+        channel = channel_offset
+        key = lambda t: (t[0], t[2], t[3])
+        for time, event, frequency, velocity in sorted(presorted, key=key):
             if event["type"] in ("note", "percussion"):
                 duration = int(round(resolution * event["realGateLength"]))
                 if duration <= 0:
                     continue
             if event["type"] == "note":
-                frequency = base_frequency*exp(dot(mapping, event["pitch"])) + event["pitch"][HZ_INDEX]
                 index, bend = freq_to_midi(frequency, pitch_bend_depth)
                 index += transpose
                 channel_ = channel
@@ -1410,15 +1421,9 @@ def save_tracks_as_midi(file, tracks, pitch_bend_depth=2, reserve_channel_10=Tru
                 events.append((time, "note_on", index, None, velocity, channel_))
                 events.append((time + duration, "note_off", index, None, velocity, channel_))
             if event["type"] == "programChange":
-                change_time = time - 1
-                events.append((change_time, "program_change", event["program"], None, None, None))
-                if change_time < 0:
-                    time_offset = -change_time
+                events.append((time, "program_change", event["program"], None, None, None))
             if event.get("subtype") == "controlChange":
-                change_time = time - 1
-                events.append((change_time, "control_change", event["control"], None, event["value"], None))
-                if change_time < 0:
-                    time_offset = -change_time
+                events.append((time, "control_change", event["control"], None, event["value"], None))
 
         current_time = 0
         for event in sorted(events):

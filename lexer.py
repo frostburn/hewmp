@@ -139,32 +139,3 @@ class Lexer:
     def peek(self):
         self.peeked_token = next(self)
         return self.peeked_token
-
-
-if __name__ == "__main__":
-    from io import StringIO
-
-    reader = StringIO("""
-        $ Global config
-        T:whatever
-        Q:1/5=777
-        --- $ Start of first track
-        $ Test string
-        CL:51/50,77/75
-        P1 M3-=m7+ m3+[0] (P1 M3- P5)[2] m9+2v5&10c&-5Hz 1,5/4,3/2
-        |: P1 | P5 | -P4 :|
-        |:M3i|-M2:|  $ comment
-        $ Play from here instead
-        |> P1 P4 P4 >|
-        $ Stop before you reach here
-        P1[1/2] "User $$ $"message$"!" P4
-        $|: P1 M2 :|
-        |: P1 M3 :|
-        --- $ Next track
-        M2 M2 M2
-        ---
-        P5,P4
-    """)
-    lexer = Lexer(reader)
-    for token in lexer:
-        print(token)

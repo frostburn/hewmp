@@ -1039,7 +1039,10 @@ def parse_track(lexer, default_config):
                 track_volume = TrackVolume(Fraction(token), time)
                 pattern.append(track_volume)
                 config[config_key] = track_volume.volume
-            if config_key in ("EDO", "EDN"):
+            if config_key in ("ED", "EDN"):
+                if "unmapEDN" in config["flags"]:
+                    config["flags"].remove("unmapEDN")
+            if config_key == "ED":
                 token = token.strip()
                 warts = Counter()
                 while token[-1].isalpha():
@@ -1047,18 +1050,9 @@ def parse_track(lexer, default_config):
                     warts[ord(wart) - ord("a")] += 1
                     token = token[:-1]
                 config["tuning"].warts = [warts[i] for i in range(len(PRIMES))]
-                if config_key in ("EDN", "EDO"):
-                    if config_key == "EDN":
-                        divisions_token, divided_token = token.split(",", 1)
-                        edn_divisions = Fraction(divisions_token)
-                        edn_divided = Fraction(divided_token)
-                    if config_key == "EDO":
-                        edn_divisions = Fraction(token)
-                        edn_divided = Fraction(2)
-                    config["tuning"].edn_divisions = edn_divisions
-                    config["tuning"].edn_divided = edn_divided
-                if "unmapEDN" in config["flags"]:
-                    config["flags"].remove("unmapEDN")
+                config["tuning"].edn_divisions = Fraction(token)
+            if config_key == "EDN":
+                config["tuning"].edn_divided = Fraction(token)
             if config_key == "N":
                 current_notation = token.strip()
                 config[config_key] = current_notation
@@ -1347,7 +1341,7 @@ def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_t
 # TODO: Track support
 def save_pattern_as_midi_edn(file, pattern, val, reference_pitch=64, resolution=960):
     """
-    Save pattern as a midi file using steps based on the size of the EDO/EDN parameter.
+    Save pattern as a midi file using steps based on the size of the ED/EDN parameters.
 
     No tuning information is added to the midi data. You'll have to use the corresponding EDO mode in your DAW.
     """
@@ -1592,7 +1586,7 @@ if __name__ == "__main__":
             save_tracks_as_midi(outfile, patterns, args.pitch_bend_depth, not args.override_channel_10, args.midi_transpose)
         if args.midi_edn:
             if val is None:
-                raise ValueError("Must be in EDO or EDN mode to output MIDI")
+                raise ValueError("Must be in EDN mode to output MIDI")
             save_pattern_as_midi_edn(outfile, pattern, val, 64 + args.midi_transpose)
         elif args.midi128:
             save_pattern_as_midi128(outfile, pattern)

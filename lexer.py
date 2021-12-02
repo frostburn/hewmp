@@ -24,8 +24,8 @@ CONFIGS = [
     "Q:",  # Tempo
     "G:",  # Groove
     "V:",  # Volume
-    "EDN:",  # Equal divisions of harmonic N
-    "EDO:",  # ED2
+    "ED:",  # Equal divisions of a harmonic
+    "EDN:",  # Harmonic to divide
     "N:",  # Notation
     "I:",  # Instrument (Program Change)
     "MP:",  # Max polyphony

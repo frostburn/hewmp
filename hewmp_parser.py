@@ -1273,7 +1273,6 @@ def _notate_absolute_pitch(pitch, inflections):
     return notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
 
 
-# TODO: Notate tracks
 def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_time=False):
     if isinstance(pattern, Articulation):
         for symbol, value in ARTICULATIONS.items():
@@ -1333,6 +1332,10 @@ def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_t
         if pattern.emit:
             return "Z{}".format(suffix)
         return "z{}".format(suffix)
+    if isinstance(pattern, Percussion):
+        for short, (index, name) in PERCUSSION_SHORTHANDS.items():
+            if index == pattern.index:
+                return "{}{}".format(short, suffix)
 
     return ""
 
@@ -1478,12 +1481,22 @@ if __name__ == "__main__":
         args.infile.close()
 
     if args.fractional:
-        args.outfile.write(notate_pattern(pattern, _notate_fractions_chord, _notate_fractions_pitch, True))
+        for pattern in patterns:
+            if pattern.duration <= 0:
+                continue
+            args.outfile.write("---\n")
+            args.outfile.write(notate_pattern(pattern, _notate_fractions_chord, _notate_fractions_pitch, True))
+            args.outfile.write("\n")
     elif args.absolute:
         inflections = reverse_inflections(DEFAULT_INFLECTIONS)
         _chord = lambda pattern: _notate_absolute_chord(pattern, inflections)
         _pitch = lambda pattern: _notate_absolute_pitch(pattern, inflections)
-        args.outfile.write(notate_pattern(pattern, _chord, _pitch, True))
+        for pattern in patterns:
+            if pattern.duration <= 0:
+                continue
+            args.outfile.write("---\n")
+            args.outfile.write(notate_pattern(pattern, _chord, _pitch, True))
+            args.outfile.write("\n")
     elif args.midi:
         if mido is None:
             raise ValueError("Missing mido package")
@@ -1509,5 +1522,5 @@ if __name__ == "__main__":
 
     if args.outfile is not sys.stdout:
         args.outfile.close()
-    else:
+    elif not args.fractional and not args.absolute:
         args.outfile.write("\n")

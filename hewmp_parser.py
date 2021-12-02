@@ -1115,21 +1115,6 @@ def parse_track(lexer, default_config):
         elif token in DYNAMICS:
             dynamic = Dynamic(DYNAMICS[token], time)
             pattern.append(dynamic)
-        elif token.startswith("=") or ":" in token or ";" in token:
-            # TODO: Don't parse chords when using percussion notation.
-            if token_obj.whitespace or not token.startswith("="):
-                subpattern_time = time
-                subpattern_duration = Fraction(1)
-            else:
-                replaced = pattern.pop()
-                subpattern_time = replaced.time
-                subpattern_duration = replaced.duration
-            if token.startswith("="):
-                token = token[1:]
-            subpattern = parse_chord(token, current_pitch, DEFAULT_INFLECTIONS, edn_divisions, edn_divided)
-            subpattern.time = subpattern_time
-            subpattern.duration = subpattern_duration
-            pattern.append(subpattern)
         elif token in ("z", "Z"):
             rest = Rest((token=="Z"), time)
             pattern.append(rest)
@@ -1150,30 +1135,45 @@ def parse_track(lexer, default_config):
             percussion = Percussion(name, index, time)
             pattern.append(percussion)
             time += percussion.duration
-        else:
-            floaty = False
-            if token.startswith("~"):
-                floaty = True
-                token = token[1:]
-            interval, absolute = parse_interval(token, DEFAULT_INFLECTIONS, edn_divisions, edn_divided)
-
-            if transposed_pattern:
-                if absolute:
-                    raise ParsingError("Absolute transposition")
-                transposed_pattern.transpose(interval)
-                pattern.append(transposed_pattern)
-                transposed_pattern = None
-                if not floaty:
-                    current_pitch += interval
+        elif current_notation == "hewmp":
+            if token.startswith("=") or ":" in token or ";" in token:
+                if token_obj.whitespace or not token.startswith("="):
+                    subpattern_time = time
+                    subpattern_duration = Fraction(1)
+                else:
+                    replaced = pattern.pop()
+                    subpattern_time = replaced.time
+                    subpattern_duration = replaced.duration
+                if token.startswith("="):
+                    token = token[1:]
+                subpattern = parse_chord(token, current_pitch, DEFAULT_INFLECTIONS, edn_divisions, edn_divided)
+                subpattern.time = subpattern_time
+                subpattern.duration = subpattern_duration
+                pattern.append(subpattern)
             else:
-                if absolute:
-                    current_pitch = zero_pitch()
-                pitch = current_pitch + interval
-                if not floaty:
-                    current_pitch = pitch
-                note = Note(pitch, time)
-                pattern.append(note)
-                time += note.duration
+                floaty = False
+                if token.startswith("~"):
+                    floaty = True
+                    token = token[1:]
+                interval, absolute = parse_interval(token, DEFAULT_INFLECTIONS, edn_divisions, edn_divided)
+
+                if transposed_pattern:
+                    if absolute:
+                        raise ParsingError("Absolute transposition")
+                    transposed_pattern.transpose(interval)
+                    pattern.append(transposed_pattern)
+                    transposed_pattern = None
+                    if not floaty:
+                        current_pitch += interval
+                else:
+                    if absolute:
+                        current_pitch = zero_pitch()
+                    pitch = current_pitch + interval
+                    if not floaty:
+                        current_pitch = pitch
+                    note = Note(pitch, time)
+                    pattern.append(note)
+                    time += note.duration
 
     pattern.insert(0, Articulation(ARTICULATIONS[";"]))
     pattern.insert(0, Dynamic(DYNAMICS["mf"]))

@@ -21,7 +21,7 @@ YA_TEMPERAMENTS = {
     "mavila": ["135/128"],
     "porcupine": ["250/243"],
     "dimipent": ["648/625"],
-    "diaschismic": ["2028/2025"],
+    "diaschismic": ["2048/2025"],
     "magic": ["3125/3072"],
     "ripple": ["6561/6250"],
     "hanson": ["15625/15552"],
@@ -52,12 +52,12 @@ YA_TEMPERAMENTS = {
     "11tet": ["135/128", "262144/253125"],  # mavila | passion
     "12tet": ["81/80", "128/125"],  # meantone | augmented
     "13tet": ["25/24", "262144/253125"],  # dicot | passion
-    "14tet": ["27/25", "2028/2025"],  # bug | diaschismic
+    "14tet": ["27/25", "2048/2025"],  # bug | diaschismic
     "15tet": ["128/125", "256/243"],  # augmented | blackwood
     "16tet": ["135/128", "648/625"],  # mavila | dimipent
     "17tet": ["25/24", "20480/19683"],  # dicot | superpyth
     "19tet": ["81/80", "3125/3072"],  # meantone | magic
-    "22tet": ["250/243", "2028/2025"],  # porcupine | diaschismic
+    "22tet": ["250/243", "2048/2025"],  # porcupine | diaschismic
     "23tet": ["135/128", "6561/6250"],  # mavila | ripple
     "25tet": ["256/243", "3125/3072"],  # blackwood | magic
     "27tet": ["128/125", "20480/19683"],  # augmented | superpyth

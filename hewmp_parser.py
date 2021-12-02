@@ -1219,17 +1219,17 @@ def parse_text(text):
     return parse_file(StringIO(text))
 
 
-# TODO: Simplify across tracks
-def simplify_events(events):
+def simplify_tracks(data):
     used = array([False] * len(SEMANTIC))
 
-    for event in events:
-        if event["type"] == "note":
-            for i, coord in enumerate(event["pitch"]):
-                if coord != 0:
-                    used[i] = True
+    for track in data["tracks"]:
+        for event in track["events"]:
+            if event["type"] == "note":
+                for i, coord in enumerate(event["pitch"]):
+                    if coord != 0:
+                        used[i] = True
 
-    semantic = list(array(SEMANTIC)[used])
+    data["semantic"] = list(array(SEMANTIC)[used])
 
     def simplify(pitch):
         result = []
@@ -1239,14 +1239,13 @@ def simplify_events(events):
             result.append(coord)
         return result
 
-    for event in events:
-        if event["type"] == "note":
-            event["pitch"] = simplify(event["pitch"])
+    for track in data["tracks"]:
+        for event in track["events"]:
+            if event["type"] == "note":
+                event["pitch"] = simplify(event["pitch"])
 
-        if event["type"] == "tuning":
-            event["suggestedMapping"] = simplify(event["suggestedMapping"])
-
-    return semantic, events
+            if event["type"] == "tuning":
+                event["suggestedMapping"] = simplify(event["suggestedMapping"])
 
 
 def _notate_fractions_chord(pattern):
@@ -1485,7 +1484,7 @@ if __name__ == "__main__":
         _chord = lambda pattern: _notate_absolute_chord(pattern, inflections)
         _pitch = lambda pattern: _notate_absolute_pitch(pattern, inflections)
         args.outfile.write(notate_pattern(pattern, _chord, _pitch, True))
-    elif args.midi or args.midi_edn or args.midi128:
+    elif args.midi:
         if mido is None:
             raise ValueError("Missing mido package")
         if args.outfile is sys.stdout:
@@ -1505,8 +1504,7 @@ if __name__ == "__main__":
         for pattern in patterns:
             result["tracks"].append(pattern.to_json())
         if args.simplify:
-            semantic, events = simplify_events(data["events"])
-            data["events"] = events
+            simplify_tracks(result)
         json.dump(result, args.outfile)
 
     if args.outfile is not sys.stdout:

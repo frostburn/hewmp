@@ -86,6 +86,21 @@ class Event(MusicBase):
         return [self]
 
 
+class RealEvent:
+    def __init__(self, event, realtime, realduration):
+        self.event = event
+        self.realtime = realtime
+        self.realduration = realduration
+
+    def to_json(self):
+        result = {
+            "realtime": self.realtime,
+            "realduration": self.realduration,
+        }
+        result.update(self.event.to_json())
+        return result
+
+
 class Tuning(Event):
     def __init__(self, base_frequency, comma_list, constraints, subgroup, edn_divisions=None, edn_divided=None, warts=None, suggested_mapping=None, time=0, duration=0):
         super().__init__(time, duration)
@@ -174,6 +189,28 @@ class Tuning(Event):
             self.time,
             self.duration,
         )
+
+
+class RealTuning(RealEvent):
+    def __init__(self, tuning, realtime, realduration, semantic):
+        super().__init__(tuning, realtime, realduration)
+        self.semantic = semantic
+
+    @property
+    def tuning(self):
+        return self.event
+
+    def pitch_to_freq_rads(self, pitch):
+        nats = dot(self.tuning.suggested_mapping, pitch)
+        freq_offset = pitch[self.semantic.index("Hz")] if "Hz" in self.semantic else 0.0
+        freq = self.tuning.base_frequency * exp(nats) + freq_offset
+        rads = pitch[self.semantic.index("rad")] if "rad" in self.semantic else 0.0
+        return freq, rads
+
+    def to_json(self):
+        result = super().to_json()
+        result.update(self.tuning.to_json())
+        return result
 
 
 class Tempo(Event):
@@ -435,6 +472,33 @@ class Percussion(Event):
         return self.__class__(self.name, self.index, time, duration)
 
 
+class GatedEvent(RealEvent):
+    def __init__(self, event, realtime, realduration, real_gate_length):
+        super().__init__(event, realtime, realduration)
+        self.real_gate_length = real_gate_length
+
+    def to_json(self):
+        result = {"realGateLength": self.real_gate_length}
+        result.update(super().to_json())
+        return result
+
+
+class GatedNote(GatedEvent):
+    @property
+    def pitch(self):
+        return self.event.pitch
+
+
+class GatedPercussion(GatedEvent):
+    @property
+    def index(self):
+        return self.event.index
+
+    @property
+    def name(self):
+        return self.event.name
+
+
 class Pattern(MusicBase, Transposable):
     def __init__(self, subpatterns=None, time=0, duration=1):
         super().__init__(time, duration)
@@ -492,6 +556,9 @@ class Pattern(MusicBase, Transposable):
                 subpattern.transpose(pitch)
 
     def to_json(self):
+        raise ValueError("Cannot convert unrealized Pattern to json")
+
+    def realize(self, semantic):
         start_time = None
         end_time = None
         flat = []
@@ -538,38 +605,33 @@ class Pattern(MusicBase, Transposable):
                 continue
             if start_time is not None:
                 event = event.retime(event.time - start_time, event.duration)
-            data = event.to_json()
-            data["realtime"] = realtime - start_realtime
-            data["realduration"] = realduration
-            if real_gate_length is not None:
-                data["realGateLength"] = float(real_gate_length)
+            realtime -= start_realtime
             for type_, missing_event in list(missing.items()):
                 if missing_event is not None:
                     extra = missing_event.retime(event.time, 0)
-                    extra_data = extra.to_json()
-                    extra_data["realtime"] = data["realtime"]
-                    events.append(extra_data)
+                    events.append(RealEvent(extra, realtime, 0.0))
                     missing[type_] = None
-            events.append(data)
+            if isinstance(event, Tuning):
+                event = RealTuning(event, realtime, realduration, semantic)
+            elif isinstance(event, Note):
+                event = GatedNote(event, realtime, realduration, real_gate_length)
+            elif isinstance(event, Percussion):
+                event = GatedPercussion(event, realtime, realduration, real_gate_length)
+            else:
+                event = RealEvent(event, realtime, realduration)
+            events.append(event)
 
         if start_time is None:
             start_time = self.time
         if end_time is None:
             end_time = self.end_time
         if start_time > tempo.time:
-            events.insert(0, tempo.to_json())
+            events.insert(0, RealEvent(tempo, 0.0, 0.0))
         if start_time > tuning.time:
-            events.insert(0, tuning.to_json())
+            events.insert(0, RealTuning(tuning, 0.0, 0.0, semantic))
         duration = end_time - start_time
         realtime, realduration = tempo.to_realtime(start_time, duration)
-        result = {
-            "time": str(start_time),
-            "duration": str(duration),
-            "realtime": realtime,
-            "realduration": realduration,
-            "events": events,
-        }
-        return result
+        return RealPattern(Pattern(events, start_time, duration), realtime, realduration)
 
     def retime(self, time, duration):
         raise NotImplementedError("Pattern retiming not implemented")
@@ -584,6 +646,24 @@ class Pattern(MusicBase, Transposable):
             if note.time != 0 or note.duration != 1:
                 return False
         return True
+
+
+class RealPattern(RealEvent):
+    def __init__(self, pattern, realtime, realduration):
+        super().__init__(pattern, realtime, realduration)
+
+    @property
+    def events(self):
+        return self.event.subpatterns
+
+    def to_json(self):
+        return {
+            "time": str(self.event.time),
+            "duration": str(self.event.duration),
+            "realtime": self.realtime,
+            "realduration": self.realduration,
+            "events": [event.to_json() for event in self.events]
+        }
 
 
 DEFAULT_CONFIG = {
@@ -1351,7 +1431,7 @@ def tracks_to_midi(tracks, pitch_bend_depth=2, reserve_channel_10=True, transpos
         track = mido.MidiTrack()
         midi.tracks.append(track)
 
-        data = pattern.to_json()
+        data = pattern.realize(SEMANTIC).to_json()
         base_frequency = None
         mapping = None
         velocity = 85
@@ -1501,7 +1581,7 @@ if __name__ == "__main__":
             "tracks": [],
         }
         for pattern in patterns:
-            result["tracks"].append(pattern.to_json())
+            result["tracks"].append(pattern.realize(semantic).to_json())
         if args.simplify:
             simplify_tracks(result)
         json.dump(result, args.outfile)

@@ -1,6 +1,6 @@
 from fractions import Fraction
 from numpy import array, dot
-from hewmp.parser import parse_text, parse_interval, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX
+from hewmp.parser import parse_text, parse_interval, DEFAULT_INFLECTIONS, Note, SEMANTIC, E_INDEX, HZ_INDEX, RAD_INDEX
 from hewmp.notation import notate_pitch, reverse_inflections, notate_interval
 
 
@@ -98,7 +98,7 @@ def test_playhead():
     P1=M- ~M3- ~P5 | M2=m+ ~m3+ ~P5 |> M2-=m+ ~m3+ ~P5 ||
     """
     pattern = parse_text(text)[0]
-    data = pattern.to_json()
+    data = pattern.realize(SEMANTIC).to_json()
     assert Fraction(data["time"]) == 6
     assert Fraction(data["duration"]) == 3
     has_tempo = False

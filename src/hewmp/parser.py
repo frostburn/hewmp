@@ -10,7 +10,7 @@ from fractions import Fraction
 from .lexer import Lexer, CONFIGS, TRACK_START
 from .chord_parser import expand_chord, separate_by_arrows
 from .temperaments import TEMPERAMENTS
-from .temperament import temper_subgroup, comma_reduce
+from .temperament import temper_subgroup, comma_reduce, comma_equals
 from .notation import notate_fraction, notate_otonal_utonal, notate_pitch, reverse_inflections
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
@@ -195,6 +195,7 @@ class RealTuning(RealEvent):
     def __init__(self, tuning, realtime, realduration, semantic):
         super().__init__(tuning, realtime, realduration)
         self.semantic = semantic
+        self.cache = {}
 
     @property
     def tuning(self):
@@ -211,6 +212,12 @@ class RealTuning(RealEvent):
         result = super().to_json()
         result.update(self.tuning.to_json())
         return result
+
+    def equals(self, pitch_a, pitch_b, persistence=5):
+        """
+        Check if two pitches are comma-equal
+        """
+        return comma_equals(pitch_a, pitch_b, self.tuning.comma_list, persistence=persistence, cache=self.cache)
 
 
 class Tempo(Event):

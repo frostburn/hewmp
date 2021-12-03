@@ -1,6 +1,6 @@
 from fractions import Fraction
 from numpy import array, dot
-from hewmp.parser import parse_text, parse_interval, DEFAULT_INFLECTIONS, Note, SEMANTIC, E_INDEX, HZ_INDEX, RAD_INDEX
+from hewmp.parser import parse_text, parse_interval, DEFAULT_INFLECTIONS, Note, SEMANTIC, E_INDEX, HZ_INDEX, RAD_INDEX, RealTuning, GatedNote
 from hewmp.notation import notate_pitch, reverse_inflections, notate_interval
 
 
@@ -132,6 +132,21 @@ def test_compound():
     assert (pitch[:2] == array([3, -3])).all()
 
 
+def test_pitch_equality():
+    text = """
+    T:meantone
+    @M2 @M2-"""
+    pattern = parse_text(text)[0].realize(SEMANTIC)
+    tuning = None
+    notes = []
+    for event in pattern.events:
+        if isinstance(event, RealTuning):
+            tuning = event
+        if isinstance(event, GatedNote):
+            notes.append(event)
+    assert tuning.equals(notes[0].pitch, notes[1].pitch)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_pitch()
@@ -143,3 +158,4 @@ if __name__ == '__main__':
     test_playhead()
     test_split_fifth()
     test_compound()
+    test_pitch_equality()

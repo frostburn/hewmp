@@ -161,6 +161,10 @@ def comma_root(pitch, degree, comma_list, persistence=5):
     return best
 
 
+def comma_equals(pitch_a, pitch_b, comma_list, persistence=5, cache=None):
+    return (comma_reduce(pitch_a - pitch_b, comma_list, persistence=persistence, cache=cache) == 0).all()
+
+
 if __name__ == "__main__":
     from numpy import log
     JI = log(array([2, 3, 5]))

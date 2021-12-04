@@ -2,12 +2,13 @@
 Tools for reversing parsed notation back into a standard form.
 In other words in combination with parsing translate relative intervals like M3- to ratio notation such as 5/4 or (absolute) pitch notation like C5#-
 """
+from collections import Counter
 from numpy import array, log, pi, maximum
 
 
-def notate_extras(pitch, e_index=None, hz_index=None, rad_index=None):
+def tokenize_extras(pitch, e_index=None, hz_index=None, rad_index=None):
     """
-    Notate extra bits like cents, Hz and phase offsets as transpositions
+    Tokenize extra bits like cents, Hz and phase offsets as transpositions
     """
     result = []
     if e_index is not None:
@@ -27,9 +28,9 @@ def notate_extras(pitch, e_index=None, hz_index=None, rad_index=None):
     return ""
 
 
-def notate_fraction(pitch, primes, *extra_indices):
+def tokenize_fraction(pitch, primes, *extra_indices):
     """
-    Notate pitch monzo defined by the primes as a fraction p/q
+    Tokenize pitch monzo defined by the primes as a fraction p/q
     """
     numerator = 1
     denominator = 1
@@ -42,13 +43,13 @@ def notate_fraction(pitch, primes, *extra_indices):
         if coord < 0:
             denominator *= prime**(-coord)
     if denominator == 1:
-        return "{}{}".format(numerator, notate_extras(pitch, *extra_indices))
-    return "{}/{}{}".format(numerator, denominator, notate_extras(pitch, *extra_indices))
+        return "{}{}".format(numerator, tokenize_extras(pitch, *extra_indices))
+    return "{}/{}{}".format(numerator, denominator, tokenize_extras(pitch, *extra_indices))
 
 
-def notate_otonal_utonal(pitches, primes):
+def tokenize_otonal_utonal(pitches, primes):
     """
-    Notate a chord like =M- in otonal (4:5:6) or utonal (15;12;10) notation depending on which one is simpler
+    Tokenize a chord like =M- in otonal (4:5:6) or utonal (15;12;10) notation depending on which one is simpler
 
     Assumes that there are no extra bits
     """
@@ -98,7 +99,7 @@ def reverse_inflections(inflections):
 def pythagoras_and_arrows(pitch, inflections):
     twos = pitch[0]
     threes = pitch[1]
-    arrow_counts = {}
+    arrow_counts = Counter()
     for index, arrow, comma in inflections:
         direction = comma[index]
         if pitch[index]*direction > 0:
@@ -113,6 +114,10 @@ def pythagoras_and_arrows(pitch, inflections):
     twos = int(twos)
     threes = int(threes)
 
+    return twos, threes, arrow_counts
+
+
+def tokenize_arrows(arrow_counts):
     arrow_str = ""
     for arrow, count in arrow_counts.items():
         arrow_str += arrow
@@ -121,19 +126,21 @@ def pythagoras_and_arrows(pitch, inflections):
         if count > 1:
             arrow_str += str(int(count))
 
-    return twos, threes, arrow_str
+    return arrow_str
+
 
 PYTHAGOREAN_QUALITIES = ("m", "m", "m", "m", "P", "P", "P", "M", "M", "M", "M")
 PYTHAGOREAN_INDEX_P1 = 5
 
 
-def notate_interval(pitch, inflections, *extra_indices):
+def tokenize_interval(pitch, inflections, *extra_indices):
     """
-    Notate (relative) pitch monzo using the inflections provided
+    Tokenize (relative) pitch monzo using the inflections provided
 
     Assumes that the first two coordinates form the pythagorean basis
     """
-    twos, threes, arrow_str = pythagoras_and_arrows(pitch, inflections)
+    twos, threes, arrow_counts = pythagoras_and_arrows(pitch, inflections)
+    arrow_str = tokenize_arrows(arrow_counts)
 
     index = threes + PYTHAGOREAN_INDEX_P1
     if index >= 0 and index < len(PYTHAGOREAN_QUALITIES):
@@ -154,7 +161,7 @@ def notate_interval(pitch, inflections, *extra_indices):
     sign = "-" if value < 0 else ""
     value = abs(value) + 1
 
-    return "{}{}{}{}{}".format(sign, quality, value, arrow_str, notate_extras(pitch, *extra_indices))
+    return "{}{}{}{}{}".format(sign, quality, value, arrow_str, tokenize_extras(pitch, *extra_indices))
 
 
 LYDIAN = ("F", "C", "G", "D", "a", "E", "B")
@@ -172,37 +179,46 @@ LETTER_OCTAVES = {
 SHARP_INFLECTION = (-11, 7)
 
 
-def notate_pitch(pitch, inflections, *extra_indices):
+def notate_pitch(pitch, inflections):
     """
-    Notate (absolute) pitch monzo using the inflections provided
-
-    Assumes that the first two coordinates form the pythagorean basis
+    Calculate the letter, octave, sharps, flats and other arrows corresponding to a pitch monzo
     """
-    twos, threes, arrow_str = pythagoras_and_arrows(pitch, inflections)
-
+    twos, threes, arrow_counts = pythagoras_and_arrows(pitch, inflections)
     index = threes + LYDIAN_INDEX_A
     letter = LYDIAN[index%len(LYDIAN)]
-    accidental = ""
     while index < 0:
-        accidental += "b"
+        arrow_counts["b"] += 1
         index += 7
         twos += SHARP_INFLECTION[0]
         threes += SHARP_INFLECTION[1]
     while index >= len(LYDIAN):
         if index >= 2*len(LYDIAN):
-            accidental += "x"
+            arrow_counts["x"] += 1
             index -= 2*len(LYDIAN)
             twos -= 2*SHARP_INFLECTION[0]
             threes -= 2*SHARP_INFLECTION[1]
         else:
-            accidental = "#" + accidental
+            arrow_counts["#"] += 1
             index -= len(LYDIAN)
             twos -= SHARP_INFLECTION[0]
             threes -= SHARP_INFLECTION[1]
 
     octave = REFERENCE_OCTAVE + twos + LETTER_OCTAVES[letter]
 
-    return "{}{}{}{}{}".format(letter, octave, accidental, arrow_str, notate_extras(pitch, *extra_indices))
+    return letter, octave, arrow_counts
+
+
+def tokenize_pitch(pitch, inflections, *extra_indices):
+    """
+    Tokenize (absolute) pitch monzo using the inflections provided
+
+    Assumes that the first two coordinates form the pythagorean basis
+    """
+    letter, octave, arrow_counts = notate_pitch(pitch, inflections)
+    accidental = "b" * arrow_counts.pop("b", 0) + "#" * arrow_counts.pop("#", 0) + "x" * arrow_counts.pop("x", 0)
+    arrow_str = tokenize_arrows(arrow_counts)
+
+    return "{}{}{}{}{}".format(letter, octave, accidental, arrow_str, tokenize_extras(pitch, *extra_indices))
 
 
 if __name__ == "__main__":
@@ -217,6 +233,6 @@ if __name__ == "__main__":
     inflections = reverse_inflections(DEFAULT_INFLECTIONS)
     pitch = parse_fraction(args.input)
     if args.absolute:
-        print(notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+        print(tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
     else:
-        print(notate_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+        print(tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))

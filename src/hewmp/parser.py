@@ -11,7 +11,7 @@ from .lexer import Lexer, CONFIGS, TRACK_START
 from .chord_parser import expand_chord, separate_by_arrows
 from .temperaments import TEMPERAMENTS
 from .temperament import temper_subgroup, comma_reduce, comma_equals
-from .notation import notate_fraction, notate_otonal_utonal, notate_pitch, reverse_inflections
+from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch, reverse_inflections
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
 
@@ -139,9 +139,9 @@ class Tuning(Event):
 
     def to_json(self):
         result = super().to_json()
-        comma_list = ",".join(notate_fraction(comma, PRIMES) for comma in self.comma_list)
-        constraints = ",".join(notate_fraction(constraint, PRIMES) for constraint in self.constraints)
-        subgroup = ".".join(notate_fraction(basis_vector, PRIMES) for basis_vector in self.subgroup)
+        comma_list = ",".join(tokenize_fraction(comma, PRIMES) for comma in self.comma_list)
+        constraints = ",".join(tokenize_fraction(constraint, PRIMES) for constraint in self.constraints)
+        subgroup = ".".join(tokenize_fraction(basis_vector, PRIMES) for basis_vector in self.subgroup)
         result.update({
             "type": "tuning",
             "baseFrequency": self.base_frequency,
@@ -338,6 +338,12 @@ class Dynamic(Event):
         result["type"] = "dynamic"
         result["velocity"] = str(self.velocity)
         return result
+
+
+class RealDynamic(RealEvent):
+    @property
+    def velocity(self):
+        return self.event.velocity
 
 
 class Articulation(Event):
@@ -565,7 +571,7 @@ class Pattern(MusicBase, Transposable):
     def to_json(self):
         raise ValueError("Cannot convert unrealized Pattern to json")
 
-    def realize(self, semantic):
+    def realize(self, semantic=SEMANTIC):
         start_time = None
         end_time = None
         flat = []
@@ -601,6 +607,8 @@ class Pattern(MusicBase, Transposable):
             realtime, realduration = tempo.to_realtime(event.time, event.duration)
             if isinstance(event, Note) or isinstance(event, Percussion):
                 _, real_gate_length = tempo.to_realtime(event.time, event.duration * articulation.gate_ratio)
+                if real_gate_length <= 0:
+                    continue
             else:
                 real_gate_length = None
             if start_time is not None and event.time < start_time:
@@ -616,10 +624,15 @@ class Pattern(MusicBase, Transposable):
             for type_, missing_event in list(missing.items()):
                 if missing_event is not None:
                     extra = missing_event.retime(event.time, 0)
-                    events.append(RealEvent(extra, realtime, 0.0))
+                    if isinstance(missing_event, Dynamic):
+                        events.append(RealDynamic(extra, realtime, 0.0))
+                    else:
+                        events.append(RealEvent(extra, realtime, 0.0))
                     missing[type_] = None
             if isinstance(event, Tuning):
                 event = RealTuning(event, realtime, realduration, semantic)
+            elif isinstance(event, Dynamic):
+                event = RealDynamic(event, realtime, realduration)
             elif isinstance(event, Note):
                 event = GatedNote(event, realtime, realduration, real_gate_length)
             elif isinstance(event, Percussion):
@@ -1315,32 +1328,32 @@ def simplify_tracks(data):
                 event["suggestedMapping"] = simplify(event["suggestedMapping"])
 
 
-def _notate_fractions_chord(pattern):
+def _tokenize_fractions_chord(pattern):
     pitches = []
     for note in pattern:
         pitches.append(note.pitch)
-    root_fraction = notate_fraction(pattern[0].pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX)
-    chord = notate_otonal_utonal(pitches, PRIMES)
+    root_fraction = tokenize_fraction(pattern[0].pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX)
+    chord = tokenize_otonal_utonal(pitches, PRIMES)
     return "@{}={}".format(root_fraction, chord)
 
 
-def _notate_fractions_pitch(pitch):
-    return "@{}".format(notate_fraction(pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX))
+def _tokenize_fractions_pitch(pitch):
+    return "@{}".format(tokenize_fraction(pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX))
 
 
-def _notate_absolute_chord(pattern, inflections):
+def _tokenize_absolute_chord(pattern, inflections):
     pitches = []
     for note in pattern:
         pitches.append(note.pitch)
-    pitches = [notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX) for pitch in pitches]
+    pitches = [tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX) for pitch in pitches]
     return "({})".format(",".join(pitches))
 
 
-def _notate_absolute_pitch(pitch, inflections):
-    return notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
+def _tokenize_absolute_pitch(pitch, inflections):
+    return tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
 
 
-def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_time=False):
+def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, absolute_time=False):
     if isinstance(pattern, Articulation):
         for symbol, value in ARTICULATIONS.items():
             if value == pattern.gate_ratio:
@@ -1364,21 +1377,21 @@ def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_t
             suffix = "[@{}]".format(pattern.time)
     if isinstance(pattern, Pattern):
         if pattern.is_chord():
-            return _notate_chord(pattern) + suffix
+            return _tokenize_chord(pattern) + suffix
         subnotations = []
         previous_time = None
         local_time = Fraction(0)
         for subpattern in pattern:
-            force_notate = False
+            force_tokenize = False
             if isinstance(subpattern, Articulation):
-                force_notate = True
+                force_tokenize = True
                 if main and subpattern.time == 0 and subpattern.gate_ratio == ARTICULATIONS[";"]:
-                    force_notate = False
+                    force_tokenize = False
             if isinstance(subpattern, Dynamic):
-                force_notate = True
+                force_tokenize = True
                 if main and subpattern.time == 0 and subpattern.velocity == DYNAMICS["mf"]:
-                    force_notate = False
-            if subpattern.duration == 0 and not force_notate:
+                    force_tokenize = False
+            if subpattern.duration == 0 and not force_tokenize:
                 continue
             local_absolute_time = False
             if subpattern.time != local_time:
@@ -1387,14 +1400,14 @@ def notate_pattern(pattern, _notate_chord, _notate_pitch, main=False, absolute_t
                 else:
                     local_absolute_time = True
                 local_time = subpattern.time
-            subnotations.append(notate_pattern(subpattern, _notate_chord, _notate_pitch, absolute_time=local_absolute_time))
+            subnotations.append(tokenize_pattern(subpattern, _tokenize_chord, _tokenize_pitch, absolute_time=local_absolute_time))
             previous_time = local_time
             local_time += subpattern.duration
         if main:
             return " ".join(filter(None, subnotations))
         return "(" + " ".join(filter(None, subnotations)) + ")" + suffix
     if isinstance(pattern, Note):
-        return _notate_pitch(pattern.pitch) + suffix
+        return _tokenize_pitch(pattern.pitch) + suffix
     if isinstance(pattern, Rest):
         if pattern.emit:
             return "Z{}".format(suffix)
@@ -1438,7 +1451,7 @@ def tracks_to_midi(tracks, pitch_bend_depth=2, reserve_channel_10=True, transpos
         track = mido.MidiTrack()
         midi.tracks.append(track)
 
-        data = pattern.realize(SEMANTIC).to_json()
+        data = pattern.realize().to_json()
         base_frequency = None
         mapping = None
         velocity = 85
@@ -1557,17 +1570,17 @@ if __name__ == "__main__":
             if pattern.duration <= 0:
                 continue
             args.outfile.write("---\n")
-            args.outfile.write(notate_pattern(pattern, _notate_fractions_chord, _notate_fractions_pitch, True))
+            args.outfile.write(tokenize_pattern(pattern, _tokenize_fractions_chord, _tokenize_fractions_pitch, True))
             args.outfile.write("\n")
     elif args.absolute:
         inflections = reverse_inflections(DEFAULT_INFLECTIONS)
-        _chord = lambda pattern: _notate_absolute_chord(pattern, inflections)
-        _pitch = lambda pattern: _notate_absolute_pitch(pattern, inflections)
+        _chord = lambda pattern: _tokenize_absolute_chord(pattern, inflections)
+        _pitch = lambda pattern: _tokenize_absolute_pitch(pattern, inflections)
         for pattern in patterns:
             if pattern.duration <= 0:
                 continue
             args.outfile.write("---\n")
-            args.outfile.write(notate_pattern(pattern, _chord, _pitch, True))
+            args.outfile.write(tokenize_pattern(pattern, _chord, _pitch, True))
             args.outfile.write("\n")
     elif args.midi:
         if mido is None:

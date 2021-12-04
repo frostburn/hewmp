@@ -1,7 +1,7 @@
 from fractions import Fraction
 from numpy import array, dot
 from hewmp.parser import parse_text, parse_interval, DEFAULT_INFLECTIONS, Note, SEMANTIC, E_INDEX, HZ_INDEX, RAD_INDEX, RealTuning, GatedNote
-from hewmp.notation import notate_pitch, reverse_inflections, notate_interval
+from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interval
 
 
 def test_parse_interval():
@@ -73,7 +73,7 @@ def test_pitch_translation():
                 for arrow in ("", "-", "<2", "+2^3"):
                     token = letter + octave + accidental + arrow
                     pitch = parse_interval(token, DEFAULT_INFLECTIONS, 12, 2)[0]
-                    retoken = notate_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
+                    retoken = tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
                     assert token == retoken
 
 
@@ -89,7 +89,7 @@ def test_interval_translation():
             for arrow in ("", "-", "<2", "+2^3"):
                 token = "{}{}{}".format(quality, value, arrow)
                 pitch = parse_interval(token, DEFAULT_INFLECTIONS, 12, 2)[0]
-                retoken = notate_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
+                retoken = tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
                 assert token == retoken
 
 

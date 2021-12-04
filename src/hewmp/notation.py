@@ -104,7 +104,9 @@ def pythagoras_and_arrows(pitch, inflections):
         direction = comma[index]
         if pitch[index]*direction > 0:
             count = pitch[index]*direction
-            arrow_counts[arrow] = count
+            if count != int(count):
+                raise ValueError("Non-integral monzo")
+            arrow_counts[arrow] = int(count)
             twos -= comma[0]*count
             threes -= comma[1]*count
 
@@ -221,16 +223,21 @@ def tokenize_pitch(pitch, inflections, *extra_indices):
     return "{}{}{}{}{}".format(letter, octave, accidental, arrow_str, tokenize_extras(pitch, *extra_indices))
 
 
+def get_inflections():
+    from .parser import DEFAULT_INFLECTIONS
+    return reverse_inflections(DEFAULT_INFLECTIONS)
+
+
 if __name__ == "__main__":
     import argparse
-    from hewmp_parser import DEFAULT_INFLECTIONS, PRIMES, zero_pitch, parse_fraction, E_INDEX, HZ_INDEX, RAD_INDEX
+    from hewmp_parser import parse_fraction, E_INDEX, HZ_INDEX, RAD_INDEX
 
     parser = argparse.ArgumentParser(description='Display the HEWMP notation for the given fraction')
     parser.add_argument('input', type=str)
     parser.add_argument('--absolute', action="store_true")
     args = parser.parse_args()
 
-    inflections = reverse_inflections(DEFAULT_INFLECTIONS)
+    inflections = get_inflections()
     pitch = parse_fraction(args.input)
     if args.absolute:
         print(tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))

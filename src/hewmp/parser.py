@@ -14,6 +14,7 @@ from .temperament import temper_subgroup, comma_reduce, comma_equals
 from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch, reverse_inflections
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
+from .smitonic import SMITONIC_INTERVAL_QUALITIES, SMITONIC_BASIC_PITCHES, smitonic_parse_arrows, smitonic_parse_pitch, SMITONIC_INFLECTIONS
 
 
 PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
@@ -855,7 +856,7 @@ def parse_pitch(token, inflections):
     return result
 
 
-def parse_interval(token, inflections, edn_divisions, edn_divided, return_root_degree=False):
+def parse_interval(token, inflections, edn_divisions, edn_divided, return_root_degree=False, smitonic_inflections=SMITONIC_INFLECTIONS):
     absolute = False
     if token.startswith("@"):
         absolute = True
@@ -897,7 +898,7 @@ def parse_interval(token, inflections, edn_divisions, edn_divided, return_root_d
             divided = edn_divided
             step_spec = token.split("\\")
             steps = Fraction(step_spec[0])
-            if len(step_spec) >= 2:
+            if len(step_spec) >= 2 and step_spec[1]:
                 divisions = Fraction(step_spec[1])
             if len(step_spec) == 3:
                 divided = Fraction(step_spec[2])
@@ -910,6 +911,13 @@ def parse_interval(token, inflections, edn_divisions, edn_divided, return_root_d
         if direction is not None:
             raise ParsingError("Signed absolute pitch")
         pitch += parse_pitch(token, inflections)
+        absolute = True
+    elif token[0] in SMITONIC_INTERVAL_QUALITIES:
+        pitch += smitonic_parse_arrows(token, smitonic_inflections)
+    elif token[0] in SMITONIC_BASIC_PITCHES:
+        if direction is not None:
+            raise ParsingError("Signed absolute pitch")
+        pitch += smitonic_parse_pitch(token, smitonic_inflections)
         absolute = True
 
     if direction is not None:
@@ -1130,9 +1138,11 @@ def parse_track(lexer, default_config):
                     warts[ord(wart) - ord("a")] += 1
                     token = token[:-1]
                 config["tuning"].warts = [warts[i] for i in range(len(PRIMES))]
-                config["tuning"].edn_divisions = Fraction(token)
+                edn_divisions = Fraction(token)
+                config["tuning"].edn_divisions = edn_divisions
             if config_key == "EDN":
-                config["tuning"].edn_divided = Fraction(token)
+                edn_divided = Fraction(token)
+                config["tuning"].edn_divided = edn_divided
             if config_key == "N":
                 current_notation = token.strip()
                 config[config_key] = current_notation
@@ -1279,7 +1289,8 @@ def parse_track(lexer, default_config):
     if "CR" in config["flags"]:
         comma_reduce_pattern(pattern, comma_list, config["CRD"])
 
-    pattern.max_polyphony = max_polyphony
+    if max_polyphony is not None:
+        pattern.max_polyphony = max_polyphony
     return pattern, config
 
 
@@ -1446,6 +1457,7 @@ def tracks_to_midi(tracks, pitch_bend_depth=2, reserve_channel_10=True, transpos
     midi = mido.MidiFile()
     channel_offset = 0
     for pattern in tracks:
+        max_polyphony = getattr(pattern, "max_polyphony", 15)
         if pattern.duration <= 0:
             continue
         track = mido.MidiTrack()
@@ -1492,14 +1504,14 @@ def tracks_to_midi(tracks, pitch_bend_depth=2, reserve_channel_10=True, transpos
                     channel_ += 1
                 events.append((time, "note_on", index, bend, velocity, channel_))
                 events.append((time + duration, "note_off", index, bend, velocity, channel_))
-                channel = ((channel - channel_offset + 1) % pattern.max_polyphony) + channel_offset
+                channel = ((channel - channel_offset + 1) % max_polyphony) + channel_offset
             if event["type"] == "percussion":
                 index = event["index"]
                 if reserve_channel_10:
                     channel_ = 9
                 else:
                     channel_ = channel
-                    channel = ((channel - channel_offset + 1) % pattern.max_polyphony) + channel_offset
+                    channel = ((channel - channel_offset + 1) % max_polyphony) + channel_offset
                 events.append((time, "note_on", index, None, velocity, channel_))
                 events.append((time + duration, "note_off", index, None, velocity, channel_))
             if event["type"] == "programChange":
@@ -1512,7 +1524,7 @@ def tracks_to_midi(tracks, pitch_bend_depth=2, reserve_channel_10=True, transpos
             time, msg_type, index, bend, velocity, channel = event
             time += time_offset
             if msg_type == "program_change":
-                for ch in range(pattern.max_polyphony):
+                for ch in range(max_polyphony):
                     ch += channel_offset
                     if reserve_channel_10 and ch >= 9:
                         ch += 1
@@ -1520,7 +1532,7 @@ def tracks_to_midi(tracks, pitch_bend_depth=2, reserve_channel_10=True, transpos
                     track.append(message)
                     current_time = time
             elif msg_type == "control_change":
-                for ch in range(pattern.max_polyphony):
+                for ch in range(max_polyphony):
                     ch += channel_offset
                     if reserve_channel_10 and ch >= 9:
                         ch += 1
@@ -1539,7 +1551,7 @@ def tracks_to_midi(tracks, pitch_bend_depth=2, reserve_channel_10=True, transpos
         message = mido.MetaMessage("end_of_track", time=(target_time - current_time))
         track.append(message)
 
-        channel_offset += pattern.max_polyphony
+        channel_offset += max_polyphony
 
     return midi
 

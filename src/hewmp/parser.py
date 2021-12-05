@@ -9,7 +9,7 @@ except ImportError:
 from fractions import Fraction
 from .lexer import Lexer, CONFIGS, TRACK_START
 from .chord_parser import expand_chord, separate_by_arrows
-from .temperaments import TEMPERAMENTS
+from .temperaments import TEMPERAMENTS, EQUAL_TEMPERAMENTS
 from .temperament import temper_subgroup, comma_reduce, comma_equals
 from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch, reverse_inflections
 from .percussion import PERCUSSION_SHORTHANDS
@@ -1101,8 +1101,19 @@ def parse_track(lexer, default_config):
             if config_key == "a":
                 base_frequency = float(token)
             if config_key == "T":
-                comma_list, subgroup = TEMPERAMENTS[token.strip()]
-                subgroup = subgroup.split(".")
+                tuning_name = token.strip()
+                if tuning_name in TEMPERAMENTS:
+                    comma_list, subgroup = TEMPERAMENTS[tuning_name]
+                    subgroup = subgroup.split(".")
+                elif tuning_name in EQUAL_TEMPERAMENTS:
+                    edn_divisions, edn_divided = EQUAL_TEMPERAMENTS[tuning_name]
+                    config["tuning"].edn_divisions = edn_divisions
+                    config["tuning"].edn_divided = edn_divided
+                    config["tuning"].warts = [0]*len(PRIMES)
+                    if "unmapEDN" in config["flags"]:
+                        config["flags"].remove("unmapEDN")
+                else:
+                    raise ParsingError("Unrecognized tuning '{}'".format(tuning_name))
             if config_key == "CL":
                 comma_list = [comma.strip() for comma in token.split(",")]
             if config_key == "SG":

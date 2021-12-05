@@ -172,3 +172,11 @@ for temperaments, subgroup in _:
         TEMPERAMENTS[key] = (value, subgroup)
 
 TEMPERAMENTS.update(ISLAND_TEMPERAMENTS)
+
+EQUAL_TEMPERAMENTS = {
+    "alpha": (9*9 + 5*5 + 4*4, (3/2)**9*(5/4)**5*(6/5)**4),
+    "beta": (11*11 + 6*6 + 5*5, (3/2)**11*(5/4)**6*(6/5)**5),
+    "gamma": (20*20 + 11*11 + 9*9, (3/2)**20*(5/4)**11*(6/5)**9),
+    "delta": (50*50 + 28*28 + 23*23, (3/2)**50*(5/4)**28*(6/5)**23),
+    "bohlen-pierce": (13, 3),
+}

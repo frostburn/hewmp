@@ -125,15 +125,18 @@ class Tuning(Event):
             )
         else:
             generator = log(float(self.edn_divided)) / float(self.edn_divisions)
-            steps = around(JI/generator)
-            mapping = steps*generator
-            for index, count in enumerate(self.warts):
-                modification = ((count + 1)//2) * (2*(count%2) - 1)
-                if mapping[index] > JI[index]:
-                    steps[index] -= modification
-                else:
-                    steps[index] += modification
-            mapping = steps*generator
+            if generator == 0:
+                mapping = JI*0
+            else:
+                steps = around(JI/generator)
+                mapping = steps*generator
+                for index, count in enumerate(self.warts):
+                    modification = ((count + 1)//2) * (2*(count%2) - 1)
+                    if mapping[index] > JI[index]:
+                        steps[index] -= modification
+                    else:
+                        steps[index] += modification
+                mapping = steps*generator
         self.suggested_mapping = zero_pitch()
         self.suggested_mapping[:len(JI)] = mapping
         self.suggested_mapping[E_INDEX] = 1

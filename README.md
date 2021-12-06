@@ -116,26 +116,26 @@ To specify a timestamp use `T`. To jump to the timestamp us `@T` inside square b
 ### Inflections
 | arrow | pronunciation | prime*  | notes |
 |:-----:|:-------------:|:------: | ----- |
-| -     | minus         | 5       | |
-| -3    | minus three   | 125     | triple the effect of a single `-` |
 | +     | plus          | 1/5     | |
 | +2    | plus two      | 1/25    | double the effect of a single `+` |
-| <     | less          | 7       | |
+| -     | minus         | 5       | |
+| -3    | minus three   | 125     | triple the effect of a single `-` |
 | >     | more          | 1/7     | |
-| v     | down          | 1/11    | |
+| <     | less          | 7       | |
 | ^     | up            | 11      | |
-| !     | lei           | 1/13    | `!-` is pronounced "lake", opposite of an island |
+| v     | down          | 1/11    | |
 | i     | aye           | 13      | `i+` is pronounced "island", motivated by the various island temperaments |
-| %     | holes         | 1/17    | think of stars and black holes |
+| !     | lei           | 1/13    | `!-` is pronounced "lake", opposite of an island |
 | *     | star          | 17      | |
-| V     | low           | 1/19    | |
+| %     | holes         | 1/17    | think of stars and black holes |
 | A     | high          | 19      | `A` looks like a big carret `^` with a line across |
-| d     | sinker        | 1/23    | think "down" |
+| V     | low           | 1/19    | |
 | u     | hook          | 23      | think "up" |
-| D     | bow           | 1/29    | think "Down" |
+| d     | sinker        | 1/23    | think "down" |
 | U     | arc           | 29      | think "Up" |
-| W     | little        | 31      | `W` looks like two arrows pointing down |
-| M     | much          | 1/31    | `M` looks like two arrows pointing up |
+| D     | bow           | 1/29    | think "Down" |
+| M     | mighty        | 1/31    | `M` looks like two arrows pointing up |
+| W     | weak          | 31      | `W` looks like two arrows pointing down |
 
 ### Chords
 | symbol  | pronunciation         | notes                                                                                 |

@@ -858,84 +858,94 @@ def parse_pitch(token, inflections):
 
     return result
 
+class IntervalParser:
+    def __init__(self, inflections=DEFAULT_INFLECTIONS, smitonic_inflections=SMITONIC_INFLECTIONS, edn_divisions=Fraction(12), edn_divided=Fraction(2)):
+        self.inflections = inflections
+        self.smitonic_inflections = smitonic_inflections
+        self.edn_divisions = edn_divisions
+        self.edn_divided = edn_divided
 
-def parse_interval(token, inflections, edn_divisions, edn_divided, return_root_degree=False, smitonic_inflections=SMITONIC_INFLECTIONS):
-    absolute = False
-    if token.startswith("@"):
-        absolute = True
-        token = token[1:]
+    def parse(self, token, return_root_degree=False):
+        absolute = False
+        if token.startswith("@"):
+            absolute = True
+            token = token[1:]
 
-    direction = None
-    if token[0] in "+-":
-        if token[0] == "-":
-            direction = -1
-        else:
-            direction = 1
-        token = token[1:]
+        direction = None
+        if token[0] in "+-":
+            if token[0] == "-":
+                direction = -1
+            else:
+                direction = 1
+            token = token[1:]
 
-    pitch = zero_pitch()
+        pitch = zero_pitch()
 
-    while token[0] == "c":
-        pitch[0] += 1
-        token = token[1:]
+        while token[0] == "c":
+            pitch[0] += 1
+            token = token[1:]
 
-    root_degree = 1
-    if "/" in token:
-        maybe_token, degree_token = token.rsplit("/", 1)
-        if not maybe_token.isdigit():  # Not a simple fraction
-            token = maybe_token
-            root_degree = int(degree_token)
+        exponent_degree = 1
+        root_degree = 1
+        if "/" in token:
+            maybe_token, degree_token = token.rsplit("/", 1)
+            if not maybe_token.isdigit():  # Not a simple fraction
+                token = maybe_token
+                if "*" in degree_token:
+                    degree_token, exponent_token = degree_token.split("*", 1)
+                    exponent_degree = int(exponent_degree)
+                root_degree = int(degree_token)
 
-    if token[0].isdigit():
-        if token.endswith("c"):
-            cents_in_nats = float(token[:-1])/1200*log(2)
-            pitch[E_INDEX] = cents_in_nats
-        elif token.endswith("Hz"):
-            hz = float(token[:-2])
-            pitch[HZ_INDEX] = hz
-        elif token.endswith("deg"):
-            rad = float(token[:-3]) / 180 * pi
-            pitch[RAD_INDEX] = rad
-        elif "\\" in token:
-            divisions = edn_divisions
-            divided = edn_divided
-            step_spec = token.split("\\")
-            steps = Fraction(step_spec[0])
-            if len(step_spec) >= 2 and step_spec[1]:
-                divisions = Fraction(step_spec[1])
-            if len(step_spec) == 3:
-                divided = Fraction(step_spec[2])
-            pitch[E_INDEX] = float(steps) / float(divisions) * log(float(divided))
-        else:
-            pitch += parse_fraction(token)
-    elif token[0] in INTERVAL_QUALITIES:
-        pitch += parse_arrows(token, inflections)
-    elif token[0] in BASIC_PITCHES:
+        if token[0].isdigit():
+            if token.endswith("c"):
+                cents_in_nats = float(token[:-1])/1200*log(2)
+                pitch[E_INDEX] = cents_in_nats
+            elif token.endswith("Hz"):
+                hz = float(token[:-2])
+                pitch[HZ_INDEX] = hz
+            elif token.endswith("deg"):
+                rad = float(token[:-3]) / 180 * pi
+                pitch[RAD_INDEX] = rad
+            elif "\\" in token:
+                divisions = self.edn_divisions
+                divided = self.edn_divided
+                step_spec = token.split("\\")
+                steps = Fraction(step_spec[0])
+                if len(step_spec) >= 2 and step_spec[1]:
+                    divisions = Fraction(step_spec[1])
+                if len(step_spec) == 3:
+                    divided = Fraction(step_spec[2])
+                pitch[E_INDEX] = float(steps) / float(divisions) * log(float(divided))
+            else:
+                pitch += parse_fraction(token)
+        elif token[0] in INTERVAL_QUALITIES:
+            pitch += parse_arrows(token, self.inflections)
+        elif token[0] in BASIC_PITCHES:
+            if direction is not None:
+                raise ParsingError("Signed absolute pitch")
+            pitch += parse_pitch(token, self.inflections)
+            absolute = True
+        elif token[0] in SMITONIC_INTERVAL_QUALITIES:
+            pitch += smitonic_parse_arrows(token, self.smitonic_inflections)
+        elif token[0] in SMITONIC_BASIC_PITCHES:
+            if direction is not None:
+                raise ParsingError("Signed absolute pitch")
+            pitch += smitonic_parse_pitch(token, self.smitonic_inflections)
+            absolute = True
+
         if direction is not None:
-            raise ParsingError("Signed absolute pitch")
-        pitch += parse_pitch(token, inflections)
-        absolute = True
-    elif token[0] in SMITONIC_INTERVAL_QUALITIES:
-        pitch += smitonic_parse_arrows(token, smitonic_inflections)
-    elif token[0] in SMITONIC_BASIC_PITCHES:
-        if direction is not None:
-            raise ParsingError("Signed absolute pitch")
-        pitch += smitonic_parse_pitch(token, smitonic_inflections)
-        absolute = True
+            pitch *= direction
 
-    if direction is not None:
-        pitch *= direction
-
-    if return_root_degree:
-        return pitch, absolute, root_degree
-    return pitch / root_degree, absolute
+        if return_root_degree:
+            return pitch, absolute, exponent_degree, root_degree
+        return pitch / root_degree * exponent_degree, absolute
 
 
-def parse_otonal(token, trasposition, *conf):
+def parse_otonal(token, trasposition, interval_parser):
     subtokens = token.split(":")
     pitches = []
     for subtoken in subtokens:
-        pitch, absolute = parse_interval(subtoken, *conf)
+        pitch, absolute = interval_parser.parse(subtoken)
         if absolute:
             raise ParsingError("Otonal chord using absolute pitches")
         pitches.append(pitch)
@@ -944,11 +954,11 @@ def parse_otonal(token, trasposition, *conf):
     return Pattern([Note(pitch + trasposition) for pitches in pitches])
 
 
-def parse_utonal(token, trasposition, *conf):
+def parse_utonal(token, trasposition, interval_parser):
     subtokens = token.split(";")
     pitches = []
     for subtoken in subtokens:
-        pitch, absolute = parse_interval(subtoken, *conf)
+        pitch, absolute = interval_parser.parse(subtoken)
         if absolute:
             raise ParsingError("Utonal chord using absolute pitches")
         pitches.append(pitch)
@@ -958,20 +968,20 @@ def parse_utonal(token, trasposition, *conf):
     return Pattern([Note(pitch + trasposition) for pitches in pitches])
 
 
-def parse_chord(token, trasposition, *conf):
+def parse_chord(token, trasposition, interval_parser):
     inversion = 0
     if "_" in token:
         token, inversion_token = token.split("_")
         inversion = int(inversion_token)
     if ":" in token:
-        result = parse_otonal(token, trasposition, *conf)
+        result = parse_otonal(token, trasposition, interval_parser)
     elif ";" in token:
-        result = parse_utonal(token, trasposition, *conf)
+        result = parse_utonal(token, trasposition, interval_parser)
     else:
         subtokens = expand_chord(token)
         result = Pattern()
         for subtoken in subtokens:
-            pitch, absolute = parse_interval(subtoken, *conf)
+            pitch, absolute = interval_parser.parse(subtoken)
             if absolute:
                 result.append(Note(pitch))
             else:
@@ -1073,14 +1083,15 @@ def parse_track(lexer, default_config):
     timestamp = None
     playhead = None
     playstop = None
+    interval_parser = IntervalParser()
 
     config = {}
     config.update(default_config)
     config["tuning"] = config["tuning"].copy()
     config["tempo"] = config["tempo"].copy()
     config["flags"] = list(config["flags"])
-    edn_divisions = config["tuning"].edn_divisions
-    edn_divided = config["tuning"].edn_divided
+    interval_parser.edn_divisions = config["tuning"].edn_divisions
+    interval_parser.edn_divided = config["tuning"].edn_divided
     current_notation = config["N"]
     base_frequency = None
     comma_list = None
@@ -1111,7 +1122,9 @@ def parse_track(lexer, default_config):
                 elif tuning_name in EQUAL_TEMPERAMENTS:
                     edn_divisions, edn_divided = EQUAL_TEMPERAMENTS[tuning_name]
                     config["tuning"].edn_divisions = edn_divisions
+                    interval_parser.edn_divisions = edn_divisions
                     config["tuning"].edn_divided = edn_divided
+                    interval_parser.edn_divided = edn_divided
                     config["tuning"].warts = [0]*len(PRIMES)
                     if "unmapEDN" in config["flags"]:
                         config["flags"].remove("unmapEDN")
@@ -1154,9 +1167,11 @@ def parse_track(lexer, default_config):
                 config["tuning"].warts = [warts[i] for i in range(len(PRIMES))]
                 edn_divisions = Fraction(token)
                 config["tuning"].edn_divisions = edn_divisions
+                interval_parser.edn_divisions = edn_divisions
             if config_key == "EDN":
                 edn_divided = Fraction(token)
                 config["tuning"].edn_divided = edn_divided
+                interval_parser.edn_divided = edn_divided
             if config_key == "N":
                 current_notation = token.strip()
                 config[config_key] = current_notation
@@ -1250,7 +1265,7 @@ def parse_track(lexer, default_config):
                     subpattern_duration = replaced.duration
                 if token.startswith("="):
                     token = token[1:]
-                subpattern = parse_chord(token, current_pitch, DEFAULT_INFLECTIONS, edn_divisions, edn_divided)
+                subpattern = parse_chord(token, current_pitch, interval_parser)
                 subpattern.time = subpattern_time
                 subpattern.duration = subpattern_duration
                 pattern.append(subpattern)
@@ -1259,7 +1274,7 @@ def parse_track(lexer, default_config):
                 if token.startswith("~"):
                     floaty = True
                     token = token[1:]
-                interval, absolute = parse_interval(token, DEFAULT_INFLECTIONS, edn_divisions, edn_divided)
+                interval, absolute = interval_parser.parse(token)
 
                 if transposed_pattern:
                     if absolute:
@@ -1287,11 +1302,11 @@ def parse_track(lexer, default_config):
     if base_frequency is not None:
         config["tuning"].base_frequency = base_frequency
     if subgroup is not None:
-        config["tuning"].subgroup = [parse_interval(basis_vector, DEFAULT_INFLECTIONS, 12, 2)[0] for basis_vector in subgroup]
+        config["tuning"].subgroup = [interval_parser.parse(basis_vector)[0] for basis_vector in subgroup]
     if comma_list is not None:
-        config["tuning"].comma_list = [parse_interval(comma, DEFAULT_INFLECTIONS, 12, 2)[0] for comma in comma_list]
+        config["tuning"].comma_list = [interval_parser.parse(comma)[0] for comma in comma_list]
     if constraints is not None:
-        config["tuning"].constraints = [parse_interval(constraint, DEFAULT_INFLECTIONS, 12, 2)[0] for constraint in constraints]
+        config["tuning"].constraints = [interval_parser.parse(constraint)[0] for constraint in constraints]
 
     if "unmapEDN" in config["flags"]:
         config["tuning"].warts = None

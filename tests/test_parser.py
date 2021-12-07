@@ -1,26 +1,28 @@
 from fractions import Fraction
 from numpy import array, dot
-from hewmp.parser import parse_text, parse_interval, DEFAULT_INFLECTIONS, Note, SEMANTIC, E_INDEX, HZ_INDEX, RAD_INDEX, RealTuning, GatedNote
+from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX, RealTuning, GatedNote
 from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interval
 
 
 def test_parse_interval():
     mapping = array([12, 19, 28])
+    interval_parser = IntervalParser()
     scale = ["P1", "m2", "M2", "m3+", "M3-", "P4", "A4", "P5", "m6+", "M6-", "m7+", "M7-", "P8", "m9", "M9"]
-    edo12 = [dot(mapping, parse_interval(s, DEFAULT_INFLECTIONS, 12, 2)[0][:len(mapping)]) for s in scale]
+    edo12 = [dot(mapping, interval_parser.parse(s)[0][:len(mapping)]) for s in scale]
     assert edo12 == list(range(15))
 
-    assert (parse_interval("M3-", DEFAULT_INFLECTIONS, 12, 2)[0][:3] == array([-2, 0, 1])).all()
-    assert (parse_interval("d7+2", DEFAULT_INFLECTIONS, 12, 2)[0][:3] == array([7, -1, -2])).all()
+    assert (interval_parser.parse("M3-")[0][:3] == array([-2, 0, 1])).all()
+    assert (interval_parser.parse("d7+2")[0][:3] == array([7, -1, -2])).all()
 
 
 def test_parse_pitch():
     mapping = array([12, 19, 28])
+    interval_parser = IntervalParser()
     scale = ["C4", "C4#", "D4", "E4b", "F4b", "F4", "G4b", "F4x", "F4#x", "a4", "C5bb", "B4"]
-    edo12 = [dot(mapping, parse_interval(s, DEFAULT_INFLECTIONS, 12, 2)[0][:len(mapping)]) for s in scale]
+    edo12 = [dot(mapping, interval_parser.parse(s)[0][:len(mapping)]) for s in scale]
     assert edo12 == list(range(-9, 3))
 
-    assert (parse_interval("a-2x<", DEFAULT_INFLECTIONS, 12, 2)[0][:4] == array([-34, 16, 0, 1])).all()
+    assert (interval_parser.parse("a-2x<")[0][:4] == array([-34, 16, 0, 1])).all()
 
 
 def test_transposition():
@@ -72,7 +74,7 @@ def test_pitch_translation():
             for accidental in ("" ,"b", "#", "x"):
                 for arrow in ("", "-", "<2", "+2^3"):
                     token = letter + octave + accidental + arrow
-                    pitch = parse_interval(token, DEFAULT_INFLECTIONS, 12, 2)[0]
+                    pitch = IntervalParser().parse(token)[0]
                     retoken = tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
                     assert token == retoken
 
@@ -88,7 +90,7 @@ def test_interval_translation():
         for quality in qualities:
             for arrow in ("", "-", "<2", "+2^3"):
                 token = "{}{}{}".format(quality, value, arrow)
-                pitch = parse_interval(token, DEFAULT_INFLECTIONS, 12, 2)[0]
+                pitch = IntervalParser().parse(token)[0]
                 retoken = tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
                 assert token == retoken
 
@@ -98,7 +100,7 @@ def test_playhead():
     P1=M- ~M3- ~P5 | M2=m+ ~m3+ ~P5 |> M2-=m+ ~m3+ ~P5 ||
     """
     pattern = parse_text(text)[0]
-    data = pattern.realize(SEMANTIC).to_json()
+    data = pattern.realize().to_json()
     assert Fraction(data["time"]) == 6
     assert Fraction(data["duration"]) == 3
     has_tempo = False
@@ -117,18 +119,26 @@ def test_playhead():
 
 
 def test_split_fifth():
-    pitch = parse_interval("P5/2", DEFAULT_INFLECTIONS, 12, 0)[0]
+    interval_parser = IntervalParser()
+    pitch = interval_parser.parse("P5/2")[0]
     assert (pitch[:2] == array([-0.5, 0.5])).all()
-    pitch = parse_interval("3/2", DEFAULT_INFLECTIONS, 12, 0)[0]
+    pitch = interval_parser.parse("3/2")[0]
     assert (pitch[:2] == array([-1, 1])).all()
-    pitch = parse_interval("3/2/2", DEFAULT_INFLECTIONS, 12, 0)[0]
+    pitch = interval_parser.parse("3/2/2")[0]
     assert (pitch[:2] == array([-0.5, 0.5])).all()
+
+
+def test_double_tone():
+    interval_parser = IntervalParser()
+    pitch = interval_parser.parse("M2/1*2")[0]
+    assert (pitch[:2] == array([-6, 4])).all()
 
 
 def test_compound():
-    pitch = parse_interval("M6", DEFAULT_INFLECTIONS, 12, 0)[0]
+    interval_parser = IntervalParser()
+    pitch = interval_parser.parse("M6")[0]
     assert (pitch[:2] == array([-4, 3])).all()
-    pitch = parse_interval("-cM6", DEFAULT_INFLECTIONS, 12, 0)[0]
+    pitch = interval_parser.parse("-cM6")[0]
     assert (pitch[:2] == array([3, -3])).all()
 
 
@@ -136,7 +146,7 @@ def test_pitch_equality():
     text = """
     T:meantone
     @M2 @M2-"""
-    pattern = parse_text(text)[0].realize(SEMANTIC)
+    pattern = parse_text(text)[0].realize()
     tuning = None
     notes = []
     for event in pattern.events:

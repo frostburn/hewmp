@@ -2,6 +2,7 @@
 WA = "2.3"
 WA_TEMPERAMENTS = {
     "blackwood": ["256/243"],  # No fives 5tet
+    "whitewood": ["2187/2048"],  # No fives 7tet
     "compton": ["531441/524288"],  # No fives 12tet
 }
 

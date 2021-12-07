@@ -864,6 +864,16 @@ class IntervalParser:
         self.smitonic_inflections = smitonic_inflections
         self.edn_divisions = edn_divisions
         self.edn_divided = edn_divided
+        self.base_pitch = zero_pitch()
+        self.smitonic_base_pitch = zero_pitch()
+
+    def set_base_pitch(self, token):
+        if token[0] in BASIC_PITCHES:
+            self.base_pitch = parse_pitch(token, self.inflections)
+        elif token[0] in SMITONIC_BASIC_PITCHES:
+            self.smitonic_base_pitch = smitonic_parse_pitch(token, self.smitonic_inflections)
+        else:
+            raise ParsingError("Unrecognized absolute pitch {}".format(token))
 
     def parse(self, token, return_root_degree=False):
         absolute = False
@@ -923,14 +933,14 @@ class IntervalParser:
         elif token[0] in BASIC_PITCHES:
             if direction is not None:
                 raise ParsingError("Signed absolute pitch")
-            pitch += parse_pitch(token, self.inflections)
+            pitch += parse_pitch(token, self.inflections) - self.base_pitch
             absolute = True
         elif token[0] in SMITONIC_INTERVAL_QUALITIES:
             pitch += smitonic_parse_arrows(token, self.smitonic_inflections)
         elif token[0] in SMITONIC_BASIC_PITCHES:
             if direction is not None:
                 raise ParsingError("Signed absolute pitch")
-            pitch += smitonic_parse_pitch(token, self.smitonic_inflections)
+            pitch += smitonic_parse_pitch(token, self.smitonic_inflections) - self.smitonic_base_pitch
             absolute = True
 
         if direction is not None:
@@ -1093,7 +1103,6 @@ def parse_track(lexer, default_config):
     interval_parser.edn_divisions = config["tuning"].edn_divisions
     interval_parser.edn_divided = config["tuning"].edn_divided
     current_notation = config["N"]
-    base_frequency = None
     comma_list = None
     subgroup = None
     constraints = None
@@ -1112,8 +1121,11 @@ def parse_track(lexer, default_config):
             continue
 
         if config_mode:
-            if config_key == "a":
-                base_frequency = float(token)
+            if config_key == "BF":
+                config["tuning"].base_frequency = float(token)
+            if config_key == "BN":
+                for subtoken in token.split(","):
+                    interval_parser.set_base_pitch(subtoken.strip())
             if config_key == "T":
                 tuning_name = token.strip()
                 if tuning_name in TEMPERAMENTS:
@@ -1299,8 +1311,6 @@ def parse_track(lexer, default_config):
 
     pattern.insert(0, config["tempo"])
 
-    if base_frequency is not None:
-        config["tuning"].base_frequency = base_frequency
     if subgroup is not None:
         config["tuning"].subgroup = [interval_parser.parse(basis_vector)[0] for basis_vector in subgroup]
     if comma_list is not None:

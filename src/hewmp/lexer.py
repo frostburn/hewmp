@@ -13,7 +13,8 @@ PLAY_CONTROL = ("|:", ":|", "|>", ">|")
 TRACK_START = "---"
 
 CONFIGS = [
-    "a:",  # Frequency of a4 and @P1
+    "BF:",  # Frequency of base note and @P1
+    "BN:",  # Base note, default a4 and J4
     "T:",  # Temperament
     "CL:",  # Comma-list
     "SG:",  # Subgroup

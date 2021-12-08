@@ -9,9 +9,9 @@ You can use HEWMP with minimal knowledge of music theory by writing melodies usi
 ```
 1/1 5/4 6/5 4/3
 ```
-Frequency of the notes is initialized to 440Hz and each ratio is used to multiply it. Here's the same melody spelled using frequencies.
+Note frequency is initialized to 440Hz and each ratio multiplies it. Here's the same melody spelled using frequencies.
 ```
-a:0
+BF:0
 @440Hz @550Hz @660Hz @880Hz
 ```
 Or as *absolute* ratios that don't multiply together and are always calculated from the base frequency.
@@ -23,6 +23,16 @@ Denominators of one can be dropped.
 @1 @5/4 @3/2 @2
 ```
 
+## Descending Intervals
+To cause the pitch to fall use fractions smaller than one
+```
+1 3/4 4/5 5/6
+```
+or place a minus sign before the interval
+```
+1 -4/3 -5/4 -6/5
+```
+
 ## Note Duration
 Note duration is specified using square brackets `[`, `]` after a note
 ```
@@ -31,18 +41,40 @@ Note duration is specified using square brackets `[`, `]` after a note
 
 ## Rests
 To advance time without playing a note use the rest symbol `z`. If you want to include the rest in the output use a capital letter `Z`.
+```
+1 z 5/4 6/5
+```
 
 ## Comments
-Anything after a `$` sign is ignored.
+Anything after a `$` sign is ignored until a newline is reached.
+```
+$ This is a comment
+1 3/2 $ This another comment after two notes that play
+```
 
 ## Barlines
 Barlines `|` can be used to visually organize your music. They have no effect on the sound.
+```
+1[4] | 5/4[2] 6/5[2] | 5/4 16/15[3] ||
+```
 
 ### Repeats
-Sections can be repeated by placing them between `|:` and `:|` and optional `x` can be attached onto `:|` to specify the number of repeats other than the default two. `x1` has no effect and `x0` effectively removes the section.
+A section can be repeated by placing it between `|:` and `:|`. An optional `x` can be attached onto `:|` to specify the number of repeats other than the default two. This means that `x1` has no effect and `x0` effectively removes the section.
+```
+$ Repeats are literal so the following is an ascending sequence of seven notes
+|: M2 :|x7
+```
 
 ### Previewing a Section
-You can place a playhead symbol `|>` to ignore all music written before it. Use a playstop symbol `>|` to ignore everything after it.
+You can place a playhead symbol `|>` to skip all music written before it. Use a playstop symbol `>|` to ignore everything after it.
+```
+$ This is skipped but the effect of going up an octave is preserved
+1 2
+$ This section is played
+|> 2/3 3/4 >|
+$ This section is ignored
+2 1
+```
 
 ### Ties
 To play a note across a barline use additive duration

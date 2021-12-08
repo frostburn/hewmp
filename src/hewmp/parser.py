@@ -582,10 +582,10 @@ class Pattern(MusicBase, Transposable):
         tempo = None
         tuning = None
         for event in self.flatten():
-            if isinstance(event, Playhead):
-                start_time = event.time
-            elif isinstance(event, Playstop):
+            if isinstance(event, Playstop):
                 end_time = event.end_time
+            elif isinstance(event, Playhead):
+                start_time = event.time
             else:
                 flat.append(event)
             if isinstance(event, Tempo):
@@ -1091,8 +1091,6 @@ def parse_track(lexer, default_config):
     transposed_pattern = None
     current_pitch = zero_pitch()
     timestamp = None
-    playhead = None
-    playstop = None
     interval_parser = IntervalParser()
 
     config = {}
@@ -1253,11 +1251,9 @@ def parse_track(lexer, default_config):
         elif token == "T":
             timestamp = time
         elif token == "|>":
-            playhead = Playhead(time)
-            pattern.append(playhead)
+            pattern.append(Playhead(time))
         elif token == ">|":
-            playstop = Playstop(time)
-            pattern.append(playstop)
+            pattern.append(Playstop(time))
         elif token.startswith('"'):
             message = UserMessage(token[1:], time)
             pattern.append(message)

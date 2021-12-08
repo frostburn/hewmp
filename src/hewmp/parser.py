@@ -951,7 +951,7 @@ class IntervalParser:
         return pitch / root_degree * exponent_degree, absolute
 
 
-def parse_otonal(token, trasposition, interval_parser):
+def parse_otonal(token, interval_parser):
     subtokens = token.split(":")
     pitches = []
     for subtoken in subtokens:
@@ -959,12 +959,13 @@ def parse_otonal(token, trasposition, interval_parser):
         if absolute:
             raise ParsingError("Otonal chord using absolute pitches")
         pitches.append(pitch)
+    root = pitches[0]
     for i in range(len(pitches)):
-        pitches[i] -= pitches[0]
-    return Pattern([Note(pitch + trasposition) for pitches in pitches])
+        pitches[i] = pitches[i] - root
+    return Pattern([Note(pitch) for pitch in pitches])
 
 
-def parse_utonal(token, trasposition, interval_parser):
+def parse_utonal(token, interval_parser):
     subtokens = token.split(";")
     pitches = []
     for subtoken in subtokens:
@@ -975,18 +976,20 @@ def parse_utonal(token, trasposition, interval_parser):
     root = pitches[0]
     for i in range(len(pitches)):
         pitches[i] = root - pitches[i]
-    return Pattern([Note(pitch + trasposition) for pitches in pitches])
+    return Pattern([Note(pitch) for pitch in pitches])
 
 
-def parse_chord(token, trasposition, interval_parser):
+def parse_chord(token, transposition, interval_parser):
     inversion = 0
     if "_" in token:
         token, inversion_token = token.split("_")
         inversion = int(inversion_token)
     if ":" in token:
-        result = parse_otonal(token, trasposition, interval_parser)
+        result = parse_otonal(token, interval_parser)
+        result.transpose(transposition)
     elif ";" in token:
-        result = parse_utonal(token, trasposition, interval_parser)
+        result = parse_utonal(token, interval_parser)
+        result.transpose(transposition)
     else:
         subtokens = expand_chord(token)
         result = Pattern()
@@ -995,7 +998,7 @@ def parse_chord(token, trasposition, interval_parser):
             if absolute:
                 result.append(Note(pitch))
             else:
-                result.append(Note(pitch + trasposition))
+                result.append(Note(pitch + transposition))
     for i in range(inversion):
         result[i].pitch[0] += 1
     if inversion:

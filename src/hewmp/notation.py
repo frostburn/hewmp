@@ -230,7 +230,7 @@ def get_inflections():
 
 if __name__ == "__main__":
     import argparse
-    from hewmp_parser import parse_fraction, E_INDEX, HZ_INDEX, RAD_INDEX
+    from hewmp.parser import parse_fraction, E_INDEX, HZ_INDEX, RAD_INDEX
 
     parser = argparse.ArgumentParser(description='Display the HEWMP notation for the given fraction')
     parser.add_argument('input', type=str)

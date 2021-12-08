@@ -105,20 +105,105 @@ $ I arpeggio
 | ~2[3]         ||
 ```
 
-## Hz Offset
-Beating of similarly tuned notes is a musical phenomenon that is often percieved as a rhythm instead of a pitch difference. Use `Hz` to specify a frequency offset. See also [Phase Offset](#phase).
+## Composite intervals
+You can add an octave to an interval by prefixing it with `c`
 ```
-1,1 z 1,~1Hz z 1,~2Hz
+1 ~3/2 ~c5/4
 ```
 
-## Transposing
-To combine two notes use the `&` symbol. This is mainly useful for specifying `Hz` offset alongside a pitch.
+## Pythagorean basis
+The base notation system of HEWMP is Pythagorean i.e. 3-limit just intonation i.e. fractions built from powers of 2 and 3.
+While the main system is based on relative intervals there is an underlying set of absolute pitches forming a chain of fifths.
+(Please note that the absolute pitch `a` is spelled in lowercase to differentiate it from the augmented interval `A`.)
 ```
-1/1 3/2&1Hz
+$ A chain of fifths (3/2) around the base note a4
+F2 C3 G3 D4 a4 E5 B5
+z z z
+$ The same spelled using fractions
+@16/81 @8/27 @4/9 @2/3 @1 @3/2 @9/4
+```
+Adding one to the number after an absolute pitch raises it by an octave.
+From these we can derive the basic set of intervals `P1`, `m2`, `M2`, `m3`, `M3`, `P4`, `A4`, `d5`, `P5`, `m6`, `M6`, `m7` and `M7`.
+```
+$ Perfect unison
+C4 C4
+C4 P1
+$ Major second
+C4 D4
+C4 M2
+$ Major third
+C4 E4
+C4 M3
+$ Perfect fourth
+C4 F4
+C4 P4
+$ Perfect fifth
+C4 G4
+C4 P5
+$ Major sixth
+C4 a4
+C4 M6
+$ Major seventh
+C4 B4
+C4 M7
+$ Perfect octave (same as cP1)
+C4 C5
+C4 P8
+$ Minor seventh
+D4 C5
+D4 m7
+$ Minor sixth
+E4 C5
+E4 m6
+$ Minor third
+a4 C5
+a4 m3
+$ Minor second
+B4 C5
+B4 m2
+$ Augmented fourth
+F4 B4
+F4 A4
+$ Diminished fifth
+B3 F4
+B3 d5
+```
+Remember that in just intonation the augmented fourth `729/512` is different from the diminished fifth `1024/729`.
+
+## Sharps and Flats
+An absolute pitch can be raised by a fraction of `2187/2048` by appending a sharp sign `#` to it (spelled as a hash to remain within ASCII).
+```
+a4 a4#
+```
+To raise the pitch by double the amount use a double sharp sign `x` (spelled as a lowercase 'ex' to remain within ASCII).
+```
+a4 a4x
+```
+To lower the pitch by `2187/2048` append a flat sign `b` (spelled as a lowercase 'bee').
+```
+a4 a4b
+```
+You can stack any number of `#`, `x` or `b` (in that order) to modify the pitch further.
+```
+a4 a4bb
+```
+
+## Augmented and Diminished Intervals
+If the base interval is perfect `P` or major `M` an augmented version is wider by a fraction of `2187/2048`.
+```
+P1 A1
+```
+If the base interval is perfect `P` or minor `m` a diminished version is narrower by a fraction of `2187/2048`. This can create negative intervals.
+```
+P1 d1
+```
+Augmented `A` and diminished `d` stack.
+```
+P1 dd1
 ```
 
 ## Inflections
-The system is based on small adjustements to Pythagorean intervals defined by their prime-factors and their exponents.
+To spell intervals beyond the 3-limit the system uses small adjustements defined by their prime-factors and their exponents. For example `5/4` is spelled `M3-`, `7/4` is spelled `m7<` and `11/8` is spelled `P4^`. There's a pair of *arrows* corresponding to every prime up to 31 (ordered by size in cents bellow).
 
 | lower | raise | prime | 2,3,5,7,11,13,17,19,23,29,31-monzo | ratio     | cents    |
 |:-----:|:-----:|:-----:| ---------------------------------- |:---------:|:--------:|
@@ -132,16 +217,22 @@ The system is based on small adjustements to Pythagorean intervals defined by th
 | v     | ^     | 11    | [-5 1 0 0 1 0 0 0 0 0 0>           | 33/32     | 53.27294 |
 | W     | M     | 31    | [5 0 0 0 0 0 0 0 0 0 -1>           | 32/31     | 54.96443 |
 
-Currently these inflections are fixed but an option to define your own will be added.
+Currently these inflections are fixed but an option to configure them will be added.
 
 The vectors associated with the primes 5, 7 and 11 follow Joe Monzo's original proposition.
-The monzo for `i` and `!` was particularly chosen so that the barbados third `13/10` can be spelled as `M3i+`. This in turn makes it possible to write the barbados terrad `10:13:15` as `=Mi+` using the chord system (pronounced "major island" see [pronunciation](#pronunciation) for details).
-The inflections are supposed to resemble arrows pointing in opposite directions while the u and d pairs bring to mind the words up and down.
+The monzo for `i` and `!` was particularly chosen so that the barbados third `13/10` is be spelled `M3i+`. This in turn makes it possible to write the barbados terrad `10:13:15` as `=Mi+` using the chord system (pronounced "major island" see [pronunciation](#pronunciation) for details).
+The inflections are supposed to resemble arrows pointing in opposite directions while the u and d pairs bring to mind the words *up* and *down*.
 
 ## Chords
 HEWMP has multiple ways of specifying groups of notes that sound together.
 ### Otonal Chords
-`4:5:6`
+Use `:` to spell out chords as extended ratios. The first number is always at the current pitch.
+```
+M2=10:12:15  $ ii
+P4=4:3:5     $ V
+-P5=4:5:6:8  $ I
+4:5:6        $ The = sign is optional if you don't want the pitch to change
+```
 ### Utonal Chords
 `6;5;4`
 ### Chord Symbol
@@ -163,6 +254,18 @@ Parenthesis `(`, `)` are actually used to define tuplets. Anything placed inside
 To rewind time a specific beat use the `@` symbol followed by a number inside square brackets `[`, `]`.
 ### Timestamp
 To specify a timestamp use `T`. To jump to the timestamp us `@T` inside square brackets.
+
+## Hz Offset
+Beating of similarly tuned notes is a musical phenomenon that is often percieved as a rhythm instead of a pitch difference. Use `Hz` to specify a frequency offset. See also [Phase Offset](#phase).
+```
+1,1 z 1,~1Hz z 1,~2Hz
+```
+
+## Transposing
+To combine two intervals use the `&` symbol. This is mainly useful for specifying `Hz` offset alongside a pitch.
+```
+1/1 3/2&1Hz
+```
 
 ## <a name="pronunciation"></a> Pronunciation
 ### Inflections
@@ -223,3 +326,6 @@ To control when the beats of two similarly tuned notes occur use a phase offset 
 ```
 (1,1Hz&90deg)[5]
 ```
+
+## Smitonic extension
+To get better coverage we have this!

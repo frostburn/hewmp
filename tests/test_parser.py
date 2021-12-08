@@ -1,5 +1,5 @@
 from fractions import Fraction
-from numpy import array, dot
+from numpy import array, dot, isclose
 from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX, RealTuning, GatedNote
 from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interval
 
@@ -157,6 +157,24 @@ def test_pitch_equality():
     assert tuning.equals(notes[0].pitch, notes[1].pitch)
 
 
+def test_otonal():
+    text = "4:5:6"
+    pattern = parse_text(text)[0]
+    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    assert isclose((notes[1].pitch - notes[0].pitch)[:3], [-2, 0, 1]).all()
+    assert isclose((notes[2].pitch - notes[0].pitch)[:3], [-1, 1, 0]).all()
+    assert isclose((notes[2].pitch - notes[1].pitch)[:3], [1, 1, -1]).all()
+
+
+def test_utonal():
+    text = "6;5;4"
+    pattern = parse_text(text)[0]
+    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    assert isclose((notes[2].pitch - notes[1].pitch)[:3], [-2, 0, 1]).all()
+    assert isclose((notes[2].pitch - notes[0].pitch)[:3], [-1, 1, 0]).all()
+    assert isclose((notes[1].pitch - notes[0].pitch)[:3], [1, 1, -1]).all()
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_pitch()
@@ -169,3 +187,5 @@ if __name__ == '__main__':
     test_split_fifth()
     test_compound()
     test_pitch_equality()
+    test_otonal()
+    test_utonal()

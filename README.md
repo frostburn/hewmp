@@ -1,4 +1,4 @@
-# hewmp
+# HEWMP
 HEWMP is a machine-readable notation system for writing music in (tempered) just intonation.
 
 The acronym stands for Helmholtz / Ellis / Wolf / Monzo / Pakkanen notation.
@@ -34,13 +34,13 @@ or place a minus sign before the interval
 ```
 
 ## Note Duration
-Note duration is specified using square brackets `[`, `]` after a note
+Note duration is specified using square brackets `[`, `]` after a note. The default duration is `[1]` (one beat).
 ```
 1/1[2] 6/5 5/4 6/5 10/9[2]
 ```
 
 ## Rests
-To advance time without playing a note use the rest symbol `z`. If you want to include the rest in the output use a capital letter `Z`.
+To advance time without playing a note use the rest symbol `z`. If you want to include the rest in the output use a capital letter `Z` (only applies if the output format supports explicit rests).
 ```
 1 z 5/4 6/5
 ```
@@ -83,7 +83,7 @@ To play a note across a barline use additive duration
 ```
 
 ## Absolute Pitches
-Using `@` before an interval measures pitch from the base frequency.
+Using `@` before an interval measures the pitch from the base frequency.
 ```
 $ Go up
 9/8 9/8 9/8
@@ -97,12 +97,12 @@ $ Go up from there
 To play a note relative to the previous one, but ignore it going forward use `~`. This can be used to play local scales, only using non-floaty pitches to move the root note.
 ```
 $ ii arpeggio
-| 9/8 ~6/5 ~3/2 |
+9/8 ~6/5 ~3/2 |
 $ V arpeggio
-| 4/3 ~5/4 ~3/2 |
+4/3 ~5/4 ~3/2 |
 $ I arpeggio
-| 2/3 ~5/4 ~3/2 |
-| ~2[3]         ||
+2/3 ~5/4 ~3/2 |
+~2[3]         ||
 ```
 
 ## Composite intervals
@@ -123,7 +123,13 @@ $ The same spelled using fractions
 @16/81 @8/27 @4/9 @2/3 @1 @3/2 @9/4
 ```
 Adding one to the number after an absolute pitch raises it by an octave.
-From these we can derive the basic set of intervals `P1`, `m2`, `M2`, `m3`, `M3`, `P4`, `A4`, `d5`, `P5`, `m6`, `M6`, `m7` and `M7`.
+```
+$ Two A notes an octave apart
+a4 a5
+$ The same
+@1 @2
+```
+From the basic pitches we can derive the basic set of intervals `P1`, `m2`, `M2`, `m3`, `M3`, `P4`, `d5`, `A4`, `P5`, `m6`, `M6`, `m7` and `M7`.
 ```
 $ Perfect unison
 C4 C4
@@ -171,7 +177,7 @@ B3 d5
 Remember that in just intonation the augmented fourth `729/512` is different from the diminished fifth `1024/729`.
 
 ## Sharps and Flats
-An absolute pitch can be raised by a fraction of `2187/2048` by appending a sharp sign `#` to it (spelled as a hash to remain within ASCII).
+An absolute pitch can be raised by a fraction of `2187/2048` (approximately `113.685c`) by appending a sharp sign `#` to it (spelled as a hash to remain within ASCII).
 ```
 a4 a4#
 ```
@@ -203,7 +209,7 @@ P1 dd1
 ```
 
 ## Inflections
-To spell intervals beyond the 3-limit the system uses small adjustements defined by their prime-factors and their exponents. For example `5/4` is spelled `M3-`, `7/4` is spelled `m7<` and `11/8` is spelled `P4^`. There's a pair of *arrows* corresponding to every prime up to 31 (ordered by size in cents bellow).
+To spell intervals beyond the 3-limit HEWMP uses small adjustements defined by prime factors and their exponents. For example `5/4` is spelled `M3-` (a flat major third), `7/4` is spelled `m7<` (a flat minor seventh) and `11/8` is spelled `P4^` (a sharp perfect fourth). There's a pair of *arrows* corresponding to every prime up to 31 (ordered by size in cents bellow).
 
 | lower | raise | prime | 2,3,5,7,11,13,17,19,23,29,31-monzo | ratio     | cents    |
 |:-----:|:-----:|:-----:| ---------------------------------- |:---------:|:--------:|
@@ -220,7 +226,7 @@ To spell intervals beyond the 3-limit the system uses small adjustements defined
 Currently these inflections are fixed but an option to configure them will be added.
 
 The vectors associated with the primes 5, 7 and 11 follow Joe Monzo's original proposition.
-The monzo for `i` and `!` was particularly chosen so that the barbados third `13/10` is be spelled `M3i+`. This in turn makes it possible to write the barbados terrad `10:13:15` as `=Mi+` using the chord system (pronounced "major island" see [pronunciation](#pronunciation) for details).
+The monzo for `i` and `!` was particularly chosen so that the barbados third `13/10` is spelled `M3i+`. This in turn makes it possible to write the barbados terrad `10:13:15` as `=Mi+` using the chord system (pronounced "major island" see [pronunciation](#pronunciation) for details).
 The inflections are supposed to resemble arrows pointing in opposite directions while the u and d pairs bring to mind the words *up* and *down*.
 
 ## Chords
@@ -234,7 +240,13 @@ P4=4:3:5     $ V
 4:5:6        $ The = sign is optional if you don't want the pitch to change
 ```
 ### Utonal Chords
-`6;5;4`
+As otonal chords are composed of members of the harmonic series, utonal chords by contrast are composed of subharmonics and spelled using `;`.
+```
+$ A minor chord written using utonal syntax
+6;5;4
+$ The same but using fractions and otonal syntax
+1/6:1/5:1/4
+```
 ### Chord Symbol
 `=M7-`
 ### Comma-separated Pitches
@@ -254,6 +266,19 @@ Parenthesis `(`, `)` are actually used to define tuplets. Anything placed inside
 To rewind time a specific beat use the `@` symbol followed by a number inside square brackets `[`, `]`.
 ### Timestamp
 To specify a timestamp use `T`. To jump to the timestamp us `@T` inside square brackets.
+
+## Cents
+If you want to specify intervals not affected by tuning use cents.
+```
+$ 12ed2 A major scale
+0c 200c 200c 100c 200c 200c 200c 100c
+```
+
+## Primes beyond 31
+If a fraction contains primes larger than the supported `31` those will be converted to cents in the output.
+```
+1 37/31
+```
 
 ## Hz Offset
 Beating of similarly tuned notes is a musical phenomenon that is often percieved as a rhythm instead of a pitch difference. Use `Hz` to specify a frequency offset. See also [Phase Offset](#phase).

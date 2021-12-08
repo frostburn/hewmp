@@ -1270,6 +1270,7 @@ def parse_track(lexer, default_config):
                 if token_obj.whitespace or not token.startswith("="):
                     subpattern_time = time
                     subpattern_duration = Fraction(1)
+                    time += subpattern_duration
                 else:
                     replaced = pattern.pop()
                     subpattern_time = replaced.time

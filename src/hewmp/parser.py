@@ -903,7 +903,7 @@ class IntervalParser:
                 token = maybe_token
                 if "*" in degree_token:
                     degree_token, exponent_token = degree_token.split("*", 1)
-                    exponent_degree = int(exponent_degree)
+                    exponent_degree = int(exponent_token)
                 root_degree = int(degree_token)
 
         if token[0].isdigit():

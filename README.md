@@ -295,14 +295,81 @@ sus4[1/2]
 ## Time Rewind
 The comma operator `,` is actually a time rewind operator that turns back time based on the duration of the last note played.
 
-## Tuplets
-Parenthesis `(`, `)` are actually used to define tuplets. Anything placed inside parenthesis will have total duration of one.
-
 ## Absolute Time
 To rewind time a specific beat use the `@` symbol followed by a number inside square brackets `[`, `]`.
-### Timestamp
-To specify a timestamp use `T`. To jump to the timestamp us `@T` inside square brackets.
 
+## Tuplets
+Parenthesis `(`, `)` are actually used to define tuplets. Anything placed inside parenthesis will have total duration of one.
+```
+$ Steady pedal tone
+1        1    1  1    |  1  1      1 1 ||
+$ Funky second voice
+3/2[@0] (z 1) 1 (z 1) | (1 1 1)[2] 1 1 ||
+```
+## Timestamp
+To specify a timestamp use `T`. To jump to the timestamp use `@T` inside square brackets.
+```
+$ First section alto voice
+C4         D4 E4     E4 |
+$ First section soprano voice
+(z C5)[@0] B4 (z a4) G4 |
+
+T  $ Mark the begining of second section
+$$$$ Second section alto voice
+F4         C4     a4[2]     |
+$$$$ Second section soprano voice
+(z E5)[@T] (z C5) (z F4) C5 |
+
+$ Final section alto
+T E4[2]           C4[2] ||
+$ Final section soprano
+(z G4)[@T] (z B4) C5[2] ||
+```
+## Tracks
+`---` (TODO)
+## Configuration
+### Base Frequency
+`BF:432`
+### Base Note
+`BN:C4`
+### Tempo
+`Q:1/4=220  $ Quarter notes at 220bpm`
+### Unit Length
+`L:1/8  $ Duration of [1] corresponds to an eight note`
+### Groove
+`G:1/4=2 1  $ Every span of a quarter note is played in triplet swing`
+### Track Volume
+`V:0.5  $ Half as loud`
+### Notation
+`N:percussion` (TODO)
+### Instrument
+`I:Marimba` (TODO)
+### Maximum Track Polyphony
+`MP:2` (TODO)
+### Oscillator Waveform
+`WF:sine` (TODO)
+### Flags
+`F:CR` (TODO)
+### Comma Reduction Search Depth
+`CRD:6` (TODO)
+### Subgroup
+`SG:2.3.5` (TODO)
+### Comma List
+`CL:81/80,128/125` (TODO)
+### Constraints
+`C:P8` (TODO)
+### Temperament/Tuning
+`T:porcupine` (TODO)
+### Equal Divisions of an Interval (default 12)
+`ED:19c`
+### Interval to Equally Divide (default 2)
+`EDN:3`
+## Dynamics
+`p` and `f`. (TODO)
+## Articulation
+`.` and `_` (TODO)
+## User Messages
+`1 "gently" 1`
 ## Cents
 If you want to specify intervals not affected by tuning use cents.
 ```
@@ -326,6 +393,24 @@ Beating of similarly tuned notes is a musical phenomenon that is often percieved
 To combine two intervals use the `&` symbol. This is mainly useful for specifying `Hz` offset alongside a pitch.
 ```
 1/1 3/2&1Hz
+```
+
+## EDN Steps
+```
+0\ 2\ 5\ 5\
+
+@0\19 5\19 5\19 9\19
+
+@0\10\3 5\10\3
+```
+
+## Interval Roots
+```
+P1 ~P5/2 ~P5
+```
+## Interval Exponents
+```
+P1 ~P4/3 ~P4/3*2 ~P4
 ```
 
 ## <a name="pronunciation"></a> Pronunciation
@@ -389,4 +474,4 @@ To control when the beats of two similarly tuned notes occur use a phase offset 
 ```
 
 ## Smitonic extension
-To get better coverage we have this!
+TODO

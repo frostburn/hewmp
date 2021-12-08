@@ -62,7 +62,7 @@ Barlines `|` can be used to visually organize your music. They have no effect on
 A section can be repeated by placing it between `|:` and `:|`. An optional `x` can be attached onto `:|` to specify the number of repeats other than the default two. This means that `x1` has no effect and `x0` effectively removes the section.
 ```
 $ Repeats are literal so the following is an ascending sequence of seven notes
-|: M2 :|x7
+|: 9/8 :|x7
 ```
 
 ### Previewing a Section
@@ -79,20 +79,40 @@ $ This section is ignored
 ### Ties
 To play a note across a barline use additive duration
 ```
-1/1[2] 5/4[2]|[+4] | 5/6 4/3 1/2[2] ||
+1/1[2] 5/4[2]|[+4] | 6/5 4/3 1/2[2] ||
 ```
 
 ## Absolute Pitches
-Use `@`.
+Using `@` before an interval measures pitch from the base frequency.
+```
+$ Go up
+9/8 9/8 9/8
+$ Reset back to 440Hz and go to 660Hz
+@1 @3/2
+$ Go up from there
+9/8 9/8 9/8
+```
 
 ## Floaty Pitches
 To play a note relative to the previous one, but ignore it going forward use `~`. This can be used to play local scales, only using non-floaty pitches to move the root note.
+```
+$ ii arpeggio
+| 9/8 ~6/5 ~3/2 |
+$ V arpeggio
+| 4/3 ~5/4 ~3/2 |
+$ I arpeggio
+| 2/3 ~5/4 ~3/2 |
+| ~2[3]         ||
+```
 
 ## Hz Offset
-Beating of similarly tuned notes is a musical phenomenon that is percieved as a rhythm instead of a pitch. Use `Hz` to specify a frequency offset. See also [phase offset](#phase).
+Beating of similarly tuned notes is a musical phenomenon that is often percieved as a rhythm instead of a pitch difference. Use `Hz` to specify a frequency offset. See also [Phase Offset](#phase).
+```
+1,1 z 1,~1Hz z 1,~2Hz
+```
 
 ## Transposing
-To combine two notes use the `&` symbol. This is mainly useful for specifying `Hz` offset along with a pitch.
+To combine two notes use the `&` symbol. This is mainly useful for specifying `Hz` offset alongside a pitch.
 ```
 1/1 3/2&1Hz
 ```

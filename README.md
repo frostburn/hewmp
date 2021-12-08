@@ -247,14 +247,50 @@ $ A minor chord written using utonal syntax
 $ The same but using fractions and otonal syntax
 1/6:1/5:1/4
 ```
-### Chord Symbol
-`=M7-`
+### Chord Symbols
+HEWMP comes with a chord system that applies inflections to chord tones
+```
+$ Major seventh chord with syntonic inflections on the major third and the major seventh
+=M7-
+$ Same as
+8:10:12:15
+```
+Some chords like `=aug` only have one version and do not support inflections. (TODO: Document all chords)
+#### Added tones
+Tones can be added to the chord symbols that support inflections.
+```
+$ Major seventh chord with an added perfect fourth
+=M7-add4
+```
+#### Suspendend replacements
+The third of a chord can be substituted for chords that support inflections.
+```
+$ Major seventh chord with the major third replaced by a major second
+=M7-sus2
+```
 ### Comma-separated Pitches
-`P1,M3-,P5,M7-`
+```
+$ Minor seventh chord with syntonic inflections
+P1,~m3+,~P5,~m7+
+$ Same as
+=m7+
+$ or
+10:12:15:18
+```
 ### Chord Inversions
-Chords spelled in otonal, utonal or symbolic style can be inverted using `_`. A three note chord has three inversions `_0` root position, `_1` first inversion and `_2` second inversion.
+Chords spelled in otonal, utonal or symbolic style can be inverted using `_`. A three note chord has three inversions `_0` root position, `_1` first inversion and `_2` second inversion. Chords with four notes have four inversions and so on.
+```
+D4=m7+     $ ii
+G4=7-_2    $ V7 in second inversion
+C4=M-add8  $ I with an octave on top
+```
 ### Chord duration
-Duration can be attached to otonal, utonal and symbolic chords. Comma-separated pitches need to be wrapped in parenthesis `(P1,P5)[2]`
+Duration can be attached to otonal, utonal and symbolic chords. Comma-separated pitches need to be wrapped in parenthesis.
+```
+6;5;4[1/2]
+sus4[1/2]
+(P1,~P5)[2]
+```
 
 ## Time Rewind
 The comma operator `,` is actually a time rewind operator that turns back time based on the duration of the last note played.

@@ -1267,7 +1267,7 @@ def parse_track(lexer, default_config):
             time += percussion.duration
         elif current_notation == "hewmp":
             if token.startswith("=") or ":" in token or ";" in token:
-                if token_obj.whitespace or not token.startswith("="):
+                if token_obj.whitespace or not token.startswith("=") or not pattern:
                     subpattern_time = time
                     subpattern_duration = Fraction(1)
                     time += subpattern_duration

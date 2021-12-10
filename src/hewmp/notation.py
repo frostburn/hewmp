@@ -84,39 +84,40 @@ def rindex(lst, value):
     return len(lst) - lst[::-1].index(value) - 1
 
 
-def reverse_inflections(inflections):
+def reverse_inflections(inflections, basis_indices=(0, 1)):
     result = []
     for arrow, comma in inflections.items():
-        index = 0
-        if 1 in comma:
-            index = rindex(comma, 1)
-        if -1 in comma:
-            index = max(index, rindex(comma, -1))
-        result.append((index, arrow, comma))
+        for index in range(len(comma)):
+            if index in basis_indices:
+                continue
+            if abs(comma[index]) == 1:
+                result.append((index, arrow, comma))
+                break
+        else:
+            raise ValueError("Comma {!r} doesn't define a single prime step for arrow '{}'".format(comma, arrow))
     return result
 
 
-def pythagoras_and_arrows(pitch, inflections):
-    twos = pitch[0]
-    threes = pitch[1]
+def basis_and_arrows(pitch, inflections, basis_indices=(0, 1)):
+    base0 = pitch[basis_indices[0]]
+    base1 = pitch[basis_indices[1]]
     arrow_counts = Counter()
     for index, arrow, comma in inflections:
         direction = comma[index]
         if pitch[index]*direction > 0:
             count = pitch[index]*direction
             if count != int(count):
-                raise ValueError("Non-integral monzo")
+                raise ValueError("Non-integral prime component")
             arrow_counts[arrow] = int(count)
-            twos -= comma[0]*count
-            threes -= comma[1]*count
+            base0 -= comma[basis_indices[0]]*count
+            base1 -= comma[basis_indices[1]]*count
 
-    if twos != int(twos) or threes != int(threes):
-        raise ValueError("Non-integral monzo")
+    if base0 == int(base0):
+        base0 = int(base0)
+    if base1 == int(base1):
+        base1 = int(base1)
 
-    twos = int(twos)
-    threes = int(threes)
-
-    return twos, threes, arrow_counts
+    return base0, base1, arrow_counts
 
 
 def tokenize_arrows(arrow_counts):
@@ -124,7 +125,7 @@ def tokenize_arrows(arrow_counts):
     for arrow, count in arrow_counts.items():
         arrow_str += arrow
         if count != int(count):
-            raise ValueError("Non-integral monzo")
+            raise ValueError("Non-integral arrow count")
         if count > 1:
             arrow_str += str(int(count))
 
@@ -141,7 +142,7 @@ def tokenize_interval(pitch, inflections, *extra_indices):
 
     Assumes that the first two coordinates form the pythagorean basis
     """
-    twos, threes, arrow_counts = pythagoras_and_arrows(pitch, inflections)
+    twos, threes, arrow_counts = basis_and_arrows(pitch, inflections)
     arrow_str = tokenize_arrows(arrow_counts)
 
     index = threes + PYTHAGOREAN_INDEX_P1
@@ -185,7 +186,7 @@ def notate_pitch(pitch, inflections):
     """
     Calculate the letter, octave, sharps, flats and other arrows corresponding to a pitch monzo
     """
-    twos, threes, arrow_counts = pythagoras_and_arrows(pitch, inflections)
+    twos, threes, arrow_counts = basis_and_arrows(pitch, inflections)
     index = threes + LYDIAN_INDEX_A
     letter = LYDIAN[index%len(LYDIAN)]
     while index < 0:
@@ -230,16 +231,25 @@ def get_inflections():
 
 if __name__ == "__main__":
     import argparse
-    from hewmp.parser import parse_fraction, E_INDEX, HZ_INDEX, RAD_INDEX
+    from hewmp.parser import IntervalParser, E_INDEX, HZ_INDEX, RAD_INDEX
+    from hewmp.smitonic import smitonic_tokenize_interval, SMITONIC_INFLECTIONS, smitonic_tokenize_pitch
 
     parser = argparse.ArgumentParser(description='Display the HEWMP notation for the given fraction')
     parser.add_argument('input', type=str)
     parser.add_argument('--absolute', action="store_true")
+    parser.add_argument('--smitonic', action="store_true")
     args = parser.parse_args()
 
     inflections = get_inflections()
-    pitch = parse_fraction(args.input)
+    smitonic_inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
+    pitch = IntervalParser().parse(args.input)[0]
     if args.absolute:
-        print(tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+        if args.smitonic:
+            print(smitonic_tokenize_pitch(pitch, smitonic_inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+        else:
+            print(tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
     else:
-        print(tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+        if args.smitonic:
+            print(smitonic_tokenize_interval(pitch, smitonic_inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+        else:
+            print(tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))

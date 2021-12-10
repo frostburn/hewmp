@@ -1,5 +1,6 @@
 from numpy import array
 from .chord_parser import separate_by_arrows
+from .notation import tokenize_extras, basis_and_arrows, tokenize_arrows
 
 SMITONIC_INFLECTIONS = {
     "+": [-4, 0, 1, 0, 0.5],
@@ -40,7 +41,7 @@ SMITONIC_BASIC_INTERVALS = {
     "s7": (6, -1.5),
     "s5": (4, -1),
     "s3": (2, -0.5),
-    # "P1": (0, 0),
+    "p1": (0, 0),
     "L6": (-1, 0.5),
     "L4": (-3, 1),
     "L2": (-5, 1.5),
@@ -57,7 +58,7 @@ SMITONIC_BASIC_INTERVALS = {
 }
 
 SMITONIC_WIDE_INFLECTION = (-12, 3.5)
-SMITONIC_INTERVAL_QUALITIES = "nsLW"
+SMITONIC_INTERVAL_QUALITIES = "nspLW"
 
 
 def smitonic_parse_arrows(token, inflections):
@@ -104,18 +105,19 @@ def smitonic_parse_arrows(token, inflections):
 # P - perfect
 # So we use JKNOQRS
 SMITONIC_BASIC_PITCHES = {
-    "S": (5, -1.5),
-    "Q": (3, -1),
-    "N": (1, -0.5),
+    "S": (6, -1.5),
+    "Q": (4, -1),
+    "N": (2, -0.5),
     "J": (0, 0),
-    "R": (-2, 0.5),
-    "O": (-4, 1),
+    "R": (-1, 0.5),
+    "O": (-3, 1),
     "K": (-5, 1.5),
 }
+SMITONIC_REFERENCE_OCTAVE = 5
 
 
 def smitonic_parse_pitch(token, inflections):
-    from .parser import REFERENCE_OCTAVE, zero_pitch
+    from .parser import zero_pitch
 
     letter = token[0]
     token = token[1:]
@@ -154,7 +156,93 @@ def smitonic_parse_pitch(token, inflections):
 
     basic_pitch = SMITONIC_BASIC_PITCHES[letter]
 
-    result[0] += octave - REFERENCE_OCTAVE + basic_pitch[0]
+    result[0] += octave - SMITONIC_REFERENCE_OCTAVE + basic_pitch[0]
     result[4] += basic_pitch[1]
 
     return result
+
+
+SMITONIC_QUALITIES = ("s", "s", "s", "s", "s", "s", "p", "L", "L", "L", "L", "L", "L")
+SMITONIC_INDEX_P1 = 6
+
+
+def smitonic_tokenize_interval(pitch, inflections, *extra_indices):
+    """
+    Tokenize (relative) pitch monzo using the inflections provided
+    """
+    twos, elevens, arrow_counts = basis_and_arrows(pitch, inflections, basis_indices=(0, 4))
+    arrow_str = tokenize_arrows(arrow_counts)
+
+    index = int(2*elevens + SMITONIC_INDEX_P1)
+    if index >= 0 and index < len(SMITONIC_QUALITIES):
+        quality = SMITONIC_QUALITIES[index]
+    elif index < 0:
+        quality = ""
+        while index < 0:
+            quality += "n"
+            index += 7
+    else:
+        index -= len(SMITONIC_QUALITIES)
+        quality = ""
+        while index >= 0:
+            quality += "W"
+            index -= 7
+
+    value = int(7*twos + 24*elevens)
+    sign = "-" if value < 0 else ""
+    value = abs(value) + 1
+
+    return "{}{}{}{}{}".format(sign, quality, value, arrow_str, tokenize_extras(pitch, *extra_indices))
+
+
+NEREVARINE = ("S", "Q", "N", "J", "R", "O", "K")
+NEREVARINE_INDEX_J = 3
+SMITONIC_LETTER_OCTAVES = {
+    "S": -6,
+    "Q": -4,
+    "N": -2,
+    "J": 0,
+    "R": 1,
+    "O": 3,
+    "K": 5,
+}
+
+
+def smitonic_notate_pitch(pitch, inflections):
+    """
+    Calculate the letter, octave, sharps, flats and other arrows corresponding to a pitch monzo
+    """
+    twos, elevens, arrow_counts = basis_and_arrows(pitch, inflections, basis_indices=(0, 4))
+    index = int(2*elevens + NEREVARINE_INDEX_J)
+    letter = NEREVARINE[index%len(NEREVARINE)]
+    while index < 0:
+        arrow_counts["b"] += 1
+        index += 7
+        twos += SMITONIC_WIDE_INFLECTION[0]
+        elevens += SMITONIC_WIDE_INFLECTION[1]
+    while index >= len(NEREVARINE):
+        if index >= 2*len(NEREVARINE):
+            arrow_counts["x"] += 1
+            index -= 2*len(NEREVARINE)
+            twos -= 2*SMITONIC_WIDE_INFLECTION[0]
+            elevens -= 2*SMITONIC_WIDE_INFLECTION[1]
+        else:
+            arrow_counts["#"] += 1
+            index -= len(NEREVARINE)
+            twos -= SMITONIC_WIDE_INFLECTION[0]
+            elevens -= SMITONIC_WIDE_INFLECTION[1]
+
+    octave = SMITONIC_REFERENCE_OCTAVE + twos + SMITONIC_LETTER_OCTAVES[letter]
+
+    return letter, octave, arrow_counts
+
+
+def smitonic_tokenize_pitch(pitch, inflections, *extra_indices):
+    """
+    Tokenize (absolute) pitch monzo using the inflections provided
+    """
+    letter, octave, arrow_counts = smitonic_notate_pitch(pitch, inflections)
+    accidental = "b" * arrow_counts.pop("b", 0) + "#" * arrow_counts.pop("#", 0) + "x" * arrow_counts.pop("x", 0)
+    arrow_str = tokenize_arrows(arrow_counts)
+
+    return "{}{}{}{}{}".format(letter, octave, accidental, arrow_str, tokenize_extras(pitch, *extra_indices))

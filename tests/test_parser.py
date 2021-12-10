@@ -2,6 +2,7 @@ from fractions import Fraction
 from numpy import array, dot, isclose
 from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX, RealTuning, GatedNote
 from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interval
+from hewmp.smitonic import smitonic_tokenize_interval, SMITONIC_INFLECTIONS, smitonic_tokenize_pitch
 
 
 def test_parse_interval():
@@ -95,6 +96,34 @@ def test_interval_translation():
                 assert token == retoken
 
 
+def test_smitonic_pitch_translation():
+    inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
+    for letter in "JKNOQRS":
+        for octave in ("3", "4"):
+            for accidental in ("" ,"b", "#", "x"):
+                for arrow in ("", "-", "<2", "+2^3"):
+                    token = letter + octave + accidental + arrow
+                    pitch = IntervalParser().parse(token)[0]
+                    retoken = smitonic_tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
+                    assert token == retoken
+
+
+def test_smitonic_interval_translation():
+    inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
+    for value in range(1, 12):
+        qualities = ["nn", "n", "W", "WW"]
+        if value in (1, 8):
+            qualities.append("p")
+        else:
+            qualities.extend(["s", "L"])
+        for quality in qualities:
+            for arrow in ("", "-", "<2", "+2^3"):
+                token = "{}{}{}".format(quality, value, arrow)
+                pitch = IntervalParser().parse(token)[0]
+                retoken = smitonic_tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
+                assert token == retoken
+
+
 def test_playhead():
     text = """
     P1=M- ~M3- ~P5 | M2=m+ ~m3+ ~P5 |> M2-=m+ ~m3+ ~P5 ||
@@ -183,6 +212,8 @@ if __name__ == '__main__':
     test_floaty_transposition()
     test_pitch_translation()
     test_interval_translation()
+    test_smitonic_pitch_translation()
+    test_smitonic_interval_translation()
     test_playhead()
     test_split_fifth()
     test_compound()

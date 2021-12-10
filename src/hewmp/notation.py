@@ -3,7 +3,7 @@ Tools for reversing parsed notation back into a standard form.
 In other words in combination with parsing translate relative intervals like M3- to ratio notation such as 5/4 or (absolute) pitch notation like C5#-
 """
 from collections import Counter
-from numpy import array, log, pi, maximum
+from numpy import array, log, pi, maximum, isclose, around
 
 
 def tokenize_extras(pitch, e_index=None, hz_index=None, rad_index=None):
@@ -28,13 +28,24 @@ def tokenize_extras(pitch, e_index=None, hz_index=None, rad_index=None):
     return ""
 
 
+def extract_root(pitch):
+    """
+    Try to extract an integer root from a non-integral pitch
+    """
+    for root in range(1, 101):
+        if isclose(pitch*root, around(pitch*root)).all():
+            return pitch*root, root
+    raise ValueError("Failed to extract root from Non-integral pitch")
+
+
 def tokenize_fraction(pitch, primes, *extra_indices):
     """
     Tokenize pitch monzo defined by the primes as a fraction p/q
     """
     numerator = 1
     denominator = 1
-    for coord, prime in zip(pitch, primes):
+    derooted, root = extract_root(pitch[:len(primes)])
+    for coord, prime in zip(derooted, primes):
         if coord != int(coord):
             raise ValueError("Non-integral monzo")
         coord = int(coord)
@@ -42,9 +53,14 @@ def tokenize_fraction(pitch, primes, *extra_indices):
             numerator *= prime**coord
         if coord < 0:
             denominator *= prime**(-coord)
-    if denominator == 1:
-        return "{}{}".format(numerator, tokenize_extras(pitch, *extra_indices))
-    return "{}/{}{}".format(numerator, denominator, tokenize_extras(pitch, *extra_indices))
+    if root == 1:
+        if denominator == 1:
+            result = str(numerator)
+        else:
+            result = "{}/{}".format(numerator, denominator)
+    else:
+        result = "{}/{}/{}".format(numerator, denominator, root)
+    return "{}{}".format(result, tokenize_extras(pitch, *extra_indices))
 
 
 def tokenize_otonal_utonal(pitches, primes):

@@ -23,6 +23,15 @@ Denominators of one can be dropped.
 @1 @5/4 @3/2 @2
 ```
 
+## Installation
+TODO
+## MIDI Output
+TODO
+## Inspection Modes
+TODO
+## JSON Output
+TODO
+
 ## Descending Intervals
 To cause the pitch to fall use fractions smaller than one
 ```
@@ -228,6 +237,9 @@ Currently these inflections are fixed but an option to configure them will be ad
 The vectors associated with the primes 5, 7 and 11 follow Joe Monzo's original proposition.
 The monzo for `i` and `!` was particularly chosen so that the barbados third `13/10` is spelled `M3i+`. This in turn makes it possible to write the barbados terrad `10:13:15` as `=Mi+` using the chord system (pronounced "major island" see [pronunciation](#pronunciation) for details).
 The inflections are supposed to resemble arrows pointing in opposite directions while the u and d pairs bring to mind the words *up* and *down*.
+
+## Figuring Out Spellings
+TODO
 
 ## Chords
 HEWMP has multiple ways of specifying groups of notes that sound together.
@@ -474,4 +486,14 @@ To control when the beats of two similarly tuned notes occur use a phase offset 
 ```
 
 ## Smitonic extension
-TODO
+| lower | raise | prime | 2,3,5,7,11,13,17,19,23,29,31-monzo | ratio     | cents    |
+|:-----:|:-----:|:-----:| ---------------------------------- |:---------:|:--------:|
+| <     | >     | 7     | [-8 0 0 -1 -1.5 0 0 1 0 0 0>       | 256/77/&radic;11 | 4.19718 |
+| %     | *     | 17    | [-11 0 0 0 2 0 1 0 0 0 0>          | 2057/2048 | 7.59129 |
+| d     | u     | 23    | [8 0 0 0 -1 0 0 0 -1 0 0>          | 256/253 | 20.40771 |
+| V     | A     | 19    | [6 0 0 0 -0.5 0 0 -1 0 0 0>        | 64/19/&radic;11 | 26.82801 |
+| !     | i     | 13    | [2 0 0 0 0.5 -1 0 0 0 0 0>         | &radic;11&middot;4/13 | 35.13131 |
+| v     | ^     | 3     | [-5 1 0 0 1 0 0 0 0 0 0>           | 33/32             | 53.27294 |
+| W     | M     | 31    | [5 0 0 0 0 0 0 0 0 0 -1>           | 32/31             | 54.96443 |
+| D     | U     | 29    | [-10 0 0 0 1.5 0 0 0 0 1 0>        | &radic;11&middot;319/1024 | 56.55411 |
+| -     | +     | 5     | [-4 0 1 0 0.5 0 0 0 0 0 0>         | &radic;11&middot;5/16     | 61.97269 |

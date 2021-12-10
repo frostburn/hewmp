@@ -112,7 +112,7 @@ def test_smitonic_interval_translation():
     inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
     for value in range(1, 12):
         qualities = ["nn", "n", "W", "WW"]
-        if value in (1, 8):
+        if value in (1, 3, 6, 8, 10):
             qualities.append("p")
         else:
             qualities.extend(["s", "L"])

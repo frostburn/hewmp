@@ -28,33 +28,31 @@ for key, value in list(SMITONIC_INFLECTIONS.items()):
     SMITONIC_INFLECTIONS[key] = array(value + [0] * (_PITCH_LENGTH - len(value)))
 
 SMITONIC_BASIC_INTERVALS = {
-    "n6": (23, -6.5),
     "n4": (21, -6),
     "n2": (19, -5.5),
     "n7": (18, -5),
     "n5": (16, -4.5),
     "n3": (14, -4),
     "n1": (12, -3.5),
-    "s6": (11, -3),
+    "n6": (11, -3),
     "s4": (9, -2.5),
     "s2": (7, -2),
     "s7": (6, -1.5),
     "s5": (4, -1),
-    "s3": (2, -0.5),
+    "p3": (2, -0.5),
     "p1": (0, 0),
-    "L6": (-1, 0.5),
+    "p6": (-1, 0.5),
     "L4": (-3, 1),
     "L2": (-5, 1.5),
     "L7": (-6, 2),
     "L5": (-8, 2.5),
-    "L3": (-10, 3),
+    "W3": (-10, 3),
     "W1": (-12, 3.5),
     "W6": (-13, 4),
     "W4": (-15, 4.5),
     "W2": (-17, 5),
     "W7": (-18, 5.5),
     "W5": (-20, 6),
-    "W3": (-22, 6.5),
 }
 
 SMITONIC_WIDE_INFLECTION = (-12, 3.5)
@@ -162,8 +160,8 @@ def smitonic_parse_pitch(token, inflections):
     return result
 
 
-SMITONIC_QUALITIES = ("s", "s", "s", "s", "s", "s", "p", "L", "L", "L", "L", "L", "L")
-SMITONIC_INDEX_P1 = 6
+SMITONIC_QUALITIES = ("s", "s", "s", "s", "p", "p", "p", "L", "L", "L", "L")
+SMITONIC_INDEX_P1 = 5
 
 
 def smitonic_tokenize_interval(pitch, inflections, *extra_indices):

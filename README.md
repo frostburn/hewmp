@@ -432,45 +432,100 @@ Percussion notation uses shorthands for drums. Here are some basics.
 | t1        | High Floor Tom     |        |
 | t0        | Low Floor Tom      |        |
 
+TODO: Document all shorthands
 ### Instrument
-`I:Marimba` (TODO)
+Use `I:` to select an instrument. If the name corresponds to General MIDI the matching program is selected as well.
+```
+I:Marimba
+```
+TODO: Document all available instruments
 ### Maximum Track Polyphony
-`MP:2` (TODO)
-### Flags
-`F:CR` (TODO)
-### Comma Reduction Search Depth
-`CRD:6` (TODO)
+HEWMP uses per-channel pitch-bends to achieve microtones. Use `MP:` to reserve some of the available 15 channels for the current track.
+```
+MP:2
+```
 ### Subgroup
-`SG:2.3.5` (TODO)
+To use HEWMP's tuning capabilities you need to tell it which mappings of primes should be affected. You can also use fractions like `2.3.13/5` or multiples of primes like `2.15.7`.
+```
+SG:2.3.5
+```
 ### Comma List
-`CL:81/80,128/125` (TODO)
-### Constraints
-`C:P8` (TODO)
+The main reason HEWMP is based on relative intervals is to be able to write comma pumps of arbitrary length in just intonation with a finite number of symbols.
+```
+$ I-vi-ii-V chord progression that pumps the syntonic comma.
+$ (The product of the fractions is 80/81)
+|: 2/3=M- 5/6=m+ 4/3=m+ 4/3=M-_2 :|x12
+```
+Using a comma-list `CL:` you can *temper out* a set of commas so that the pitch doesn't change when pumping the commas. HEWMP accomplishes this by slightly altering the pitch mapping of the primes in the subgroup given by `SG:`.
+```
+SG:2.3.5
+CL:81/80,128/125
+$ I-vi-ii-V chord progression that pumps the syntonic comma,
+$ but the overall pitch doesn't change.
+|: 2/3=M- 5/6=m+ 4/3=m+ 4/3=M-_2 :|x4
+$ Chord progression that pumps the diesis without changing the overall pitch.
+|: 1/2=M- 5/4=M- 5/4=M-_2 5/4=7-_3 :|x4
+```
 ### Temperament/Tuning
-`T:porcupine` (TODO)
-### Equal Divisions of an Interval (default 12)
-`ED:19c`
-### Interval to Equally Divide (default 2)
-`EDN:3`
+HEWMP comes with a few named presets so that you don't have to type out specific subgroups and comma lists.
+```
+$ Same as SG:2.3.5 and CL:250/243
+T:porcupine
+$ Chord progression that pumps the porcupine comma
+|: 5/3=6:4:5 2/3=3:4:5 5/3=6:4:5 2/3=6:5:4 5/6=3:4:5 :|
+```
+TODO: Document all available temperaments
+### Constraints
+The tuning algorithm tries to do the least amount of damage to just intonation when tempering out commas, but sometimes you may wish to preserve certain intervals while allowing others to take more of the damage.
+```
+T:meantone
+$ Specify quarter-comma meantone by constraining
+$ octaves to be pure and major thirds to be just
+C:P8,M3-
+```
+### Equal Divisions of an Interval
+While it is possible to produce an equal temperament without affecting every prime (e.g. `T:compton` is 12edo that only affects `2` and `3`) there's the option to round every prime to the closest number of steps of an equal temperement with `ED:`. You can use [Wart Notation](https://en.xen.wiki/w/Val#Shorthand_notation) to specify non-standard rounding. The default number of divisions is 12.
+```
+ED:20c
+```
+### Interval to Equally Divide
+Use `EDN:` to change which interval is divided equally. The default interval to divide is `2`.
+```
+EDN:3
+```
+### Flags
+Various configs that don't take parameters go under flags `F:`.
+```
+T:porcupine
+F:CR  $ Use comma-reduction to simplify output
+```
+### Comma Reduction Search Depth
+Sometimes the algorithm fails to find the simplest representation. You can increase `CRD:` from the default `5` to give the search more resources.
+```
+CRD:6
+```
 ## Dynamics
-`p` and `f`. (TODO)
+To change the velocity of notes played use dynamics `ppp`, `pp`, `p`, `mp`, `mf`, `f`, `ff` or `fff`.
 ## Articulation
-`.` and `_` (TODO)
+To change the gate length of notes played use articulations `.` (staccato), `;` (normale) or `_` (tenuto).
 ## User Messages
-`1 "gently" 1`
+You can add custom messages to the JSON output by using double quotes `"`.
+```
+P1 "gently" M2
+```
+The `$` character acts as as escape inside double quotes. To enter a double quote use `$"`. To enter a dollar sign use `$$`.
 ## Cents
 If you want to specify intervals not affected by tuning use cents.
 ```
 $ 12ed2 A major scale
 0c 200c 200c 100c 200c 200c 200c 100c
 ```
-
+Warning: Not even `ED:` will round these up.
 ## Primes beyond 31
 If a fraction contains primes larger than the supported `31` those will be converted to cents in the output.
 ```
 1 37/31
 ```
-
 ## Hz Offset
 Beating of similarly tuned notes is a musical phenomenon that is often percieved as a rhythm instead of a pitch difference. Use `Hz` to specify a frequency offset. See also [Phase Offset](#phase).
 ```
@@ -484,6 +539,7 @@ To combine two intervals use the `&` symbol. This is mainly useful for specifyin
 ```
 
 ## EDN Steps
+The shorthand to enter cents equal to the current `ED:` step size is `1\`. To specify the number of divisions of `2` add a second number after `\`. To specify another interval to divide besides `2` append it after a second backslash.
 ```
 0\ 2\ 5\ 5\
 
@@ -493,11 +549,16 @@ To combine two intervals use the `&` symbol. This is mainly useful for specifyin
 ```
 
 ## Interval Roots
+To specify fractional pitch monzos append a slash `/` and the desired root degree.
 ```
+$ Neutral arpeggio
 P1 ~P5/2 ~P5
 ```
-## Interval Exponents
+Warning: Interval roots may produce fractional steps if the relevant components of the `ED:` mapping are not divisible by the root degree.
+### Interval Exponents
+To further multiply the fractional pitch monzo append an asterisk `*` and the desired exponent.
 ```
+$ Step through equal divisions of the pure fourth
 P1 ~P4/3 ~P4/3*2 ~P4
 ```
 
@@ -505,20 +566,20 @@ P1 ~P4/3 ~P4/3*2 ~P4
 ### Inflections
 | arrow | pronunciation | prime*  | notes |
 |:-----:|:-------------:|:------: | ----- |
-| +     | plus          | 1/5     | |
+| +     | plus          | 1/5     |       |
 | +2    | plus two      | 1/25    | double the effect of a single `+` |
-| -     | minus         | 5       | |
+| -     | minus         | 5       |       |
 | -3    | minus three   | 125     | triple the effect of a single `-` |
-| >     | more          | 1/7     | |
-| <     | less          | 7       | |
-| ^     | up            | 11      | |
-| v     | down          | 1/11    | |
+| >     | more          | 1/7     |       |
+| <     | less          | 7       |       |
+| ^     | up            | 11      |       |
+| v     | down          | 1/11    |       |
 | i     | aye           | 13      | `i+` is pronounced "island", motivated by the various island temperaments |
 | !     | lei           | 1/13    | `!-` is pronounced "lake", opposite of an island |
-| *     | star          | 17      | |
+| *     | star          | 17      |       |
 | %     | holes         | 1/17    | think of stars and black holes |
 | A     | high          | 19      | `A` looks like a big carret `^` with a line across |
-| V     | low           | 1/19    | |
+| V     | low           | 1/19    |       |
 | u     | hook          | 23      | think "up" |
 | d     | sinker        | 1/23    | think "down" |
 | U     | arc           | 29      | think "Up" |
@@ -556,7 +617,7 @@ P1 ~P4/3 ~P4/3*2 ~P4
 | =M#15   | major-sharp-fifteenth | the major thirteenth is inflected, the augmented fifteenth is not |
 
 ## <a name="phase"></a> Phase Offset
-To control when the beats of two similarly tuned notes occur use a phase offset defined in degrees.
+To control when the beats of two similarly tuned notes occur use a phase offset defined in degrees. You will most likely have to write your own synths to take advantage of this.
 ```
 (1,1Hz&90deg)[5]
 ```

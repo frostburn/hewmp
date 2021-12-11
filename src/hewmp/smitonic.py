@@ -244,3 +244,13 @@ def smitonic_tokenize_pitch(pitch, inflections, *extra_indices):
     arrow_str = tokenize_arrows(arrow_counts)
 
     return "{}{}{}{}{}".format(letter, octave, accidental, arrow_str, tokenize_extras(pitch, *extra_indices))
+
+
+SMITONIC_BASIC_CHORDS = {
+    "O": (("p1", "L4", "s7"), (2,)),
+    "u": (("p1", "s4", "s7"), (1, 2)),
+}
+
+SMITONIC_EXTRA_CHORDS = {
+    "smaug": ("p1", "L4", "L7"),
+}

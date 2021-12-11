@@ -1,5 +1,6 @@
 from .extra_chords import EXTRA_CHORDS
 
+
 ARROWS = "+-><^vudUDAVMWi!*%"
 OPPOSITE = {}
 for i in range(0, len(ARROWS), 2):
@@ -122,9 +123,9 @@ BASIC_CHORDS_.update(BASIC_CHORDS)
 BASIC_CHORDS_.update(SUS_CHORDS)
 
 
-def make_basic_chord(base, arrow_tokens):
+def make_basic_chord(base, arrow_tokens, chords=BASIC_CHORDS_):
     inflection = "".join(arrow_tokens)
-    intervals, inflection_indices = BASIC_CHORDS_[base]
+    intervals, inflection_indices = chords[base]
     chord = []
     for i, interval in enumerate(intervals):
         if i in inflection_indices:
@@ -135,8 +136,12 @@ def make_basic_chord(base, arrow_tokens):
 
 
 def expand_chord(token):
+    from .smitonic import SMITONIC_BASIC_CHORDS, SMITONIC_EXTRA_CHORDS
+
     if token in EXTRA_CHORDS:
         return EXTRA_CHORDS[token]
+    if token in SMITONIC_EXTRA_CHORDS:
+        return SMITONIC_EXTRA_CHORDS[token]
 
     added_tones = token.split("add")
     token = added_tones.pop(0)
@@ -149,7 +154,7 @@ def expand_chord(token):
         sus_replacement = accidental_to_quality(sus_token)
 
     prefix = ""
-    if token.startswith("M") or token.startswith("d"):
+    if token.startswith("M") or token.startswith("d") or token.startswith("u"):
         prefix = token[0]
         token = token[1:]
     if token.startswith("su"):
@@ -167,6 +172,8 @@ def expand_chord(token):
         chord = make_flavor_chord(base, separated)
     if base in BASIC_CHORDS:
         chord = make_basic_chord(base, separated)
+    if base in SMITONIC_BASIC_CHORDS:
+        chord = make_basic_chord(base, separated, chords=SMITONIC_BASIC_CHORDS)
     if sus_replacement is not None:
         if chord is None:
             raise ValueError("Sus replacement on an incompatible chord")

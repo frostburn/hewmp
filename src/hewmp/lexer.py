@@ -85,9 +85,9 @@ class Lexer:
             next_but_one_character = self.reader.read(1)
             self.reader.seek(pos)
 
-            if self.reading_config_value:
+            if self.reading_config_value and not commenting:
                 token += character
-                if next_character == "\n":
+                if next_character == "\n" or next_character in COMMENT:
                     self.reading_config_value = False
                     return Token(token, whitespace)
                 continue

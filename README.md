@@ -379,20 +379,59 @@ L:1/4         $ Play quarter notes
 k h s k,h | k h s k,o | k,h h s k,h | k,c h s z ||
 ```
 ## Configuration
+Configuration is usually placed near the top of the score and consists of various shorthands in capital letters followed by a colon.
 ### Base Frequency
-`BF:432`
+Use the config `BF:` to define what frequency is used for `@P1` and `a4`. Everything else is calculated in reference to this base pitch. Default is 440Hz.
+```
+BF:432  $ Now we're vibing
+```
 ### Base Note
-`BN:C4`
+Us the config `BN:` to change what absolute pitch has the same frequency as `@P1`. Default is `a4,J5`. (`J5` comes from the [Smitonic Extension](#smitonic))
+```
+BN:C4  $ Start from C=440Hz
+```
 ### Tempo
-`Q:1/4=220  $ Quarter notes at 220bpm`
+Use `Q:` to define how many beats there are in a minute and what constitutes a beat of tempo. Default is `1/4=120`.
+```
+Q:1/4=220  $ Quarter notes at 220bpm
+```
 ### Unit Length
-`L:1/8  $ Duration of [1] corresponds to an eight note`
-### Groove
-`G:1/4=2 1  $ Every span of a quarter note is played in triplet swing`
+Use `L:` to define the duration of one beat on the grid. This is compared to the duration of a beat of tempo to calculate the real duration of a beat. Default is `1/4`.
+```
+L:1/8  $ Duration of [1] corresponds to an eight note
+```
+### Groove Pattern
+Use `G:` to define a non-uniform relative duration for beats on the grid. Default is `1/4=1 1` (straight).
+```
+G:1/4=2 1  $ Every span of a quarter note is played in triplet swing
+```
 ### Track Volume
-`V:0.5  $ Half as loud`
+Use `V:` to define the volume of a track. Default is `1.0`.
+```
+V:0.5  $ Half as loud
+```
 ### Notation
-`N:percussion` (TODO)
+Use `N:` to change what notes mean. Used for writing percussion, but in the future will support alternatives to HEWMP such as color notation. Default is `hewmp`.
+```
+N:percussion
+```
+Percussion notation uses shorthands for drums. Here are some basics.
+
+| shorthand | name               | notes  |
+|:---------:|:------------------:|:------:|
+| k         | Acoustic Bass Drum | "kick" |
+| s         | Acoustic Snare     |        |
+| h         | Closed Hi-hat      |        |
+| o         | Open Hi-hat        |        |
+| c         | Crash Cymbal 1     |        |
+| r         | Ride Cymbal 1      |        |
+| t5        | High Tom           |        |
+| t4        | Hi-Mid Tom         |        |
+| t3        | Low-Mid Tom        |        |
+| t2        | Low Tom            |        |
+| t1        | High Floor Tom     |        |
+| t0        | Low Floor Tom      |        |
+
 ### Instrument
 `I:Marimba` (TODO)
 ### Maximum Track Polyphony

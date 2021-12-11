@@ -1599,6 +1599,7 @@ if __name__ == "__main__":
     import argparse
     import sys
     import json
+    import os.path
 
     parser = argparse.ArgumentParser(description='Parse input file (or stdin) in HEWMP notation and output JSON to file (or stdout)')
     parser.add_argument('infile', nargs='?', type=argparse.FileType('r'), default=sys.stdin)
@@ -1607,6 +1608,7 @@ if __name__ == "__main__":
     parser.add_argument('--fractional', action='store_true')
     parser.add_argument('--absolute', action='store_true')
     parser.add_argument('--midi', action='store_true')
+    parser.add_argument('--json', action='store_true')
     parser.add_argument('--pitch-bend-depth', type=int, default=2)
     parser.add_argument('--override-channel-10', action='store_true')
     parser.add_argument('--midi-transpose', type=int, default=0)
@@ -1615,6 +1617,11 @@ if __name__ == "__main__":
     patterns = parse_file(args.infile)
     if args.infile is not sys.stdin:
         args.infile.close()
+
+    file_extension = os.path.splitext(args.outfile.name)[-1].lower()
+    export_midi = (args.midi or file_extension == ".mid")
+    if args.json:
+        export_midi = False
 
     if args.fractional:
         for pattern in patterns:
@@ -1633,7 +1640,7 @@ if __name__ == "__main__":
             args.outfile.write("---\n")
             args.outfile.write(tokenize_pattern(pattern, _chord, _pitch, True))
             args.outfile.write("\n")
-    elif args.midi:
+    elif export_midi:
         if mido is None:
             raise ValueError("Missing mido package")
         if args.outfile is sys.stdout:
@@ -1642,9 +1649,8 @@ if __name__ == "__main__":
             filename = args.outfile.name
             args.outfile.close()
             outfile = open(filename, "wb")
-        if args.midi:
-            midi = tracks_to_midi(patterns, args.pitch_bend_depth, not args.override_channel_10, args.midi_transpose)
-            midi.save(file=outfile)
+        midi = tracks_to_midi(patterns, args.pitch_bend_depth, not args.override_channel_10, args.midi_transpose)
+        midi.save(file=outfile)
     else:
         semantic = SEMANTIC
         result = {

@@ -20,7 +20,6 @@ CONFIGS = [
     "SG:",  # Subgroup
     "C:",  # Constraints
     "CRD:",  # Comma reduction search depth
-    "WF:",  # Oscillator waveform
     "L:",  # Unit-length
     "Q:",  # Tempo
     "G:",  # Groove

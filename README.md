@@ -436,8 +436,6 @@ Percussion notation uses shorthands for drums. Here are some basics.
 `I:Marimba` (TODO)
 ### Maximum Track Polyphony
 `MP:2` (TODO)
-### Oscillator Waveform
-`WF:sine` (TODO)
 ### Flags
 `F:CR` (TODO)
 ### Comma Reduction Search Depth

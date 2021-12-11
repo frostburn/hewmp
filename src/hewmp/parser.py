@@ -696,7 +696,6 @@ DEFAULT_CONFIG = {
     "track_volume": TrackVolume(Fraction(1)),
     "program_change": None,
     "CRD": 5,
-    "WF": None,
     "N": "hewmp",
     "flags": ("unmapEDN",),  # default to just intonation
 }
@@ -1151,8 +1150,6 @@ def parse_track(lexer, default_config):
                 constraints = [constraint.strip() for constraint in token.split(",")]
             if config_key == "CRD":
                 config[config_key] = int(token)
-            if config_key == "WF":
-                config[config_key] = token.strip()
             if config_key == "L":
                 config["tempo"].beat_unit = Fraction(token)
             if config_key == "Q":

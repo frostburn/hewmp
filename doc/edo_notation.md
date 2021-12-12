@@ -189,3 +189,29 @@ Bellow are listed slightly opinionated tables for the simplest ways to notate ea
 | 14     | L7                | S4#            | m7                   | B4b               |
 | 15     | WW7,nn8           | J5bb           | d7,A8                | C5#               |
 | 16     | p8                | J5             | P8                   | C5                |
+## 22ed2
+| Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
+|:------:|:-----------------:|:--------------:|:--------------------:|:-----------------:|
+| 0      | p1                | J4             | P1                   | C4                |
+| 1      | p1^,s2v           | J4^            | m2                   | D4b               |
+| 2      | s2                | J4#,K4b        | m2+                  | D4b+              |
+| 3      | s2^,L2v           | K4v            | M2-                  | D4-               |
+| 4      | L2                | K4             | M2                   | D4                |
+| 5      | L2^,p3v           | K4^,N4v        | m3                   | E4b               |
+| 6      | p3                | N4             | m3+                  | E4b+              |
+| 7      | p3^,s4v           | N4^            | M3-                  | E4-               |
+| 8      | s4                | N4#,O4b        | M3                   | E4                |
+| 9      | s4^,L4v           | O4v            | P4                   | F4                |
+| 10     | L4                | O4             | P4+                  | F4+               |
+| 11     | L4^,s5v           | O4^,Q4v        | A4-,d5+              | F4#-,Gb+          |
+| 12     | s5                | Q4             | P5-                  | G4-               |
+| 13     | s5^,L5v           | Q4^            | P5                   | G4                |
+| 14     | L5                | Q4#,R4b        | m6                   | a4b               |
+| 15     | L5^,p6v           | R4v            | m6+                  | a4b+              |
+| 16     | p6                | R4             | M6-                  | a4-               |
+| 17     | p6^,s7v           | R4^,S4v        | M6                   | a4                |
+| 18     | s7                | S4             | m7                   | B4b               |
+| 19     | s7^,L7v           | S4^            | m7+                  | B4b+              |
+| 20     | L7                | S4#,J5b        | M7-                  | B4-               |
+| 21     | L7^,p8v           | J5v            | M7                   | B4                |
+| 22     | p8                | J5             | P8                   | C5                |

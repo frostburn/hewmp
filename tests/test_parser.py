@@ -27,8 +27,8 @@ def test_parse_pitch():
 
 
 def test_transposition():
-    pattern_a = parse_text("M2&m2")[0]
-    pattern_b = parse_text("m3")[0]
+    pattern_a = parse_text("M2&m2")[0][0]
+    pattern_b = parse_text("m3")[0][0]
 
     for event in pattern_a:
         if isinstance(event, Note):
@@ -41,8 +41,8 @@ def test_transposition():
 
 
 def test_transposition_persistence():
-    pattern_a = parse_text("M2&M2 M2&M2")[0]
-    pattern_b = parse_text("M3 M3")[0]
+    pattern_a = parse_text("M2&M2 M2&M2")[0][0]
+    pattern_b = parse_text("M3 M3")[0][0]
 
     for event in pattern_a:
         if isinstance(event, Note):
@@ -55,8 +55,8 @@ def test_transposition_persistence():
 
 
 def test_floaty_transposition():
-    pattern_a = parse_text("M2&~100c M2")[0]
-    pattern_b = parse_text("M2 M2")[0]
+    pattern_a = parse_text("M2&~100c M2")[0][0]
+    pattern_b = parse_text("M2 M2")[0][0]
 
     for event in pattern_a:
         if isinstance(event, Note):
@@ -128,7 +128,7 @@ def test_playhead():
     text = """
     P1=M- ~M3- ~P5 | M2=m+ ~m3+ ~P5 |> M2-=m+ ~m3+ ~P5 ||
     """
-    pattern = parse_text(text)[0]
+    pattern = parse_text(text)[0][0]
     data = pattern.realize().to_json()
     assert Fraction(data["time"]) == 6
     assert Fraction(data["duration"]) == 3
@@ -175,7 +175,7 @@ def test_pitch_equality():
     text = """
     T:meantone
     @M2 @M2-"""
-    pattern = parse_text(text)[0].realize()
+    pattern = parse_text(text)[0][0].realize()
     tuning = None
     notes = []
     for event in pattern.events:
@@ -188,7 +188,7 @@ def test_pitch_equality():
 
 def test_otonal():
     text = "4:5:6"
-    pattern = parse_text(text)[0]
+    pattern = parse_text(text)[0][0]
     notes = [note for note in pattern.flatten() if isinstance(note, Note)]
     assert isclose((notes[1].pitch - notes[0].pitch)[:3], [-2, 0, 1]).all()
     assert isclose((notes[2].pitch - notes[0].pitch)[:3], [-1, 1, 0]).all()
@@ -197,7 +197,7 @@ def test_otonal():
 
 def test_utonal():
     text = "6;5;4"
-    pattern = parse_text(text)[0]
+    pattern = parse_text(text)[0][0]
     notes = [note for note in pattern.flatten() if isinstance(note, Note)]
     assert isclose((notes[2].pitch - notes[1].pitch)[:3], [-2, 0, 1]).all()
     assert isclose((notes[2].pitch - notes[0].pitch)[:3], [-1, 1, 0]).all()

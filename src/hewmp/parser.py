@@ -1339,7 +1339,7 @@ def parse_file(file):
     while not lexer.done:
         pattern, _ = parse_track(lexer, global_config)
         results.append(pattern)
-    return results
+    return results, global_config
 
 
 def parse_text(text):
@@ -1471,7 +1471,7 @@ FREQ_A4 = 440
 INDEX_A4 = 69
 MIDI_STEP = 2**(1/12)
 
-def freq_to_midi(frequency, pitch_bend_depth):
+def freq_to_midi_12(frequency, pitch_bend_depth):
     ratio = frequency / FREQ_A4
     steps = log(ratio) / log(MIDI_STEP)
     steps += INDEX_A4
@@ -1484,7 +1484,23 @@ def freq_to_midi(frequency, pitch_bend_depth):
     return index, bend
 
 
-def tracks_to_midi(tracks, pitch_bend_depth=2, reserve_channel_10=True, transpose=0, resolution=960):
+FREQ_C3 = FREQ_A4 / MIDI_STEP**21
+INDEX_C3 = INDEX_A4 - 21
+
+def freq_to_midi_edn(frequency, edn_divisions, edn_divided=2):
+    ratio = frequency / FREQ_C3
+    steps = log(ratio) / log(float(edn_divided)) * float(edn_divisions)
+    steps += INDEX_C3
+    index = int(round(steps))
+    bend = steps - index
+    if bend < 0:
+        bend = int(round(8192*bend*2))
+    else:
+        bend = int(round(8191*bend*2))
+    return index, bend
+
+
+def tracks_to_midi(tracks, freq_to_midi, reserve_channel_10=True, transpose=0, resolution=960):
     """
     Save tracks as a midi file with per-channel pitch-bend for microtones.
 
@@ -1533,7 +1549,7 @@ def tracks_to_midi(tracks, pitch_bend_depth=2, reserve_channel_10=True, transpos
                 if duration <= 0:
                     continue
             if event["type"] == "note":
-                index, bend = freq_to_midi(frequency, pitch_bend_depth)
+                index, bend = freq_to_midi(frequency)
                 index += transpose
                 channel_ = channel
                 if reserve_channel_10 and channel >= 9:
@@ -1605,18 +1621,19 @@ if __name__ == "__main__":
     parser.add_argument('--fractional', action='store_true')
     parser.add_argument('--absolute', action='store_true')
     parser.add_argument('--midi', action='store_true')
+    parser.add_argument('--midi-edn', action='store_true')
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--pitch-bend-depth', type=int, default=2)
     parser.add_argument('--override-channel-10', action='store_true')
     parser.add_argument('--midi-transpose', type=int, default=0)
     args = parser.parse_args()
 
-    patterns = parse_file(args.infile)
+    patterns, config = parse_file(args.infile)
     if args.infile is not sys.stdin:
         args.infile.close()
 
     file_extension = os.path.splitext(args.outfile.name)[-1].lower()
-    export_midi = (args.midi or file_extension == ".mid")
+    export_midi = (args.midi or args.midi_edn or file_extension == ".mid")
     if args.json:
         export_midi = False
 
@@ -1646,7 +1663,13 @@ if __name__ == "__main__":
             filename = args.outfile.name
             args.outfile.close()
             outfile = open(filename, "wb")
-        midi = tracks_to_midi(patterns, args.pitch_bend_depth, not args.override_channel_10, args.midi_transpose)
+        if args.midi_edn:
+            edn_divisions = config["tuning"].edn_divisions
+            edn_divided = config["tuning"].edn_divided
+            freq_to_midi = lambda freq: freq_to_midi_edn(freq, edn_divisions, edn_divided)
+        else:
+            freq_to_midi = lambda freq: freq_to_midi_12(freq, args.pitch_bend_depth)
+        midi = tracks_to_midi(patterns, freq_to_midi, not args.override_channel_10, args.midi_transpose)
         midi.save(file=outfile)
     else:
         semantic = SEMANTIC

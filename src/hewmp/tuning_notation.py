@@ -96,10 +96,11 @@ def hewmp_spellings(interval_parser, steps, edn_divided, preferred_arrows):
                         new_spellings[index].append(token)
             for value in range(1, 9):
                 for quality in "dA":
-                    token = "{}{}{}".format(quality, value, arrow)
-                    pitch = interval_parser.parse(token)[0]
-                    index = int(dot(steps, pitch[:len(steps)]))
-                    new_spellings[index].append(token)
+                    for arrow in pair:
+                        token = "{}{}{}".format(quality, value, arrow)
+                        pitch = interval_parser.parse(token)[0]
+                        index = int(dot(steps, pitch[:len(steps)]))
+                        new_spellings[index].append(token)
             still_missing = required - spelled - set(new_spellings.keys())
             if len(still_missing) < len(missing):
                 update_list_dict(spellings, new_spellings)

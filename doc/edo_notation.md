@@ -330,3 +330,30 @@ Bellow are listed slightly opinionated tables for the simplest ways to notate ea
 | 20     | L7                | S4#,J5b        | M7-                  | B4-               |
 | 21     | L7^,p8v           | J5v            | M7                   | B4                |
 | 22     | p8                | J5             | P8                   | C5                |
+## 23ed2
+| Degree | Pythagorean Interval | Pythagorean Pitch |
+|:------:|:--------------------:|:-----------------:|
+| 0      | P1                   | C4                |
+| 1      | d1                   | C4b               |
+| 2      | A2                   | D4#               |
+| 3      | M2                   | D4                |
+| 4      | m2                   | D4b               |
+| 5      | d2,A3                | E4#               |
+| 6      | M3                   | E4                |
+| 7      | m3                   | E4b               |
+| 8      | d3                   | E4bb,F4x          |
+| 9      | A4                   | F4#               |
+| 10     | P4                   | F4                |
+| 11     | d4                   | F4b               |
+| 12     | A5                   | G4#               |
+| 13     | P5                   | G4                |
+| 14     | d5                   | G4b               |
+| 15     | A6                   | a4#               |
+| 16     | M6                   | a4                |
+| 17     | m6                   | a4b               |
+| 18     | d6,A7                | B4#               |
+| 19     | M7                   | B4                |
+| 20     | m7                   | B4b               |
+| 21     | d7                   | B4bb,C5x          |
+| 22     | A8                   | C5#               |
+| 23     | P8                   | C5                |

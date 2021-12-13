@@ -736,6 +736,9 @@ While not the most accurate edo for the Orgone temperament, 18ed2 does greatly b
 | 12     | A4                   | W5,n6             |
 | 13     | A3,d8                | p6                |
 | 14     | m7                   | W6,n7             |
-| 16     | M6                   | s7                |
-| 17     | AA4                  | L7                |
+| 15     | M6                   | s7                |
+| 16     | A5                   | L7                |
+| 17     | AA4                  | W7,n8             |
 | 18     | P8                   | p8                |
+
+See more [edo notation](doc/edo_notation.md) in the docs.

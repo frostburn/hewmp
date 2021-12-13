@@ -38,7 +38,7 @@ def minimax(just_mapping, mapping):
     return best_mapping
 
 
-def temper_subgroup(just_mapping, comma_list, constraints, subgroup, num_iterations=1000, step_size=0.1):
+def temper_subgroup(just_mapping, comma_list, constraints, subgroup, num_iterations=1000, step_size=0.1, metric=None):
     """
     Return a tempered version of just intonation where only the subgroup is affected
 
@@ -55,6 +55,8 @@ def temper_subgroup(just_mapping, comma_list, constraints, subgroup, num_iterati
         constraint = constraints.pop()
     else:
         constraint = None
+    if metric is not None:
+        metric = array([dot(basis_vector, metric) for basis_vector in subgroup])
 
     if not isclose(array([dot(subgroup_just_mapping, comma) for comma in comma_list]), comma_sizes).all():
         raise ValueError("Non-orthogonal subgroup or comma outside subgroup")
@@ -64,7 +66,10 @@ def temper_subgroup(just_mapping, comma_list, constraints, subgroup, num_iterati
     subgroup_mapping = temper(subgroup_just_mapping, comma_list, constraints, num_iterations, step_size)
     if not constraints:
         if constraint is None:
-            subgroup_mapping = minimax(subgroup_just_mapping, subgroup_mapping)
+            if metric is not None:
+                subgroup_mapping = minimax(subgroup_just_mapping*metric, subgroup_mapping*metric) / metric
+            else:
+                subgroup_mapping = minimax(subgroup_just_mapping, subgroup_mapping)
         else:
             subgroup_mapping / dot(subgroup_mapping, constraint) * dot(subgroup_just_mapping, constraint)
 

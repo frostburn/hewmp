@@ -1,6 +1,6 @@
 from io import StringIO
 from collections import Counter
-from numpy import array, zeros, log, floor, pi, around, dot, exp, cumsum, linspace, concatenate
+from numpy import array, zeros, log, floor, pi, around, dot, exp, cumsum, linspace, concatenate, ones
 from scipy.interpolate import interp1d
 try:
     import mido
@@ -57,6 +57,11 @@ ARROWS = ""
 for key, value in list(DEFAULT_INFLECTIONS.items()):
     ARROWS += key
     DEFAULT_INFLECTIONS[key] = array(value + [0] * (PITCH_LENGTH - len(value)))
+
+
+DEFAULT_METRIC = ones(len(PRIMES))
+DEFAULT_METRIC[0] = 4  # Optimize error for 16 not 2
+DEFAULT_METRIC[1] = 2  # Optimize error for 9 not 3
 
 
 def zero_pitch():
@@ -122,6 +127,7 @@ class Tuning(Event):
                 [comma[:len(JI)] for comma in self.comma_list],
                 [constraint[:len(JI)] for constraint in self.constraints],
                 [basis_vector[:len(JI)] for basis_vector in self.subgroup],
+                metric=DEFAULT_METRIC,
             )
         else:
             generator = log(float(self.edn_divided)) / float(self.edn_divisions)

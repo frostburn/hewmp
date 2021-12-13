@@ -51,16 +51,22 @@ def temper_subgroup(just_mapping, comma_list, constraints, subgroup, num_iterati
     normalized_subgroup = [basis_vector / abs(basis_vector).sum() for basis_vector in subgroup]
     comma_list = [array([dot(basis_vector, comma) for basis_vector in normalized_subgroup]) for comma in comma_list]
     constraints = [array([dot(basis_vector, constraint) for basis_vector in normalized_subgroup]) for constraint in constraints]
+    if len(constraints) == 1:
+        constraint = constraints.pop()
+    else:
+        constraint = None
 
     if not isclose(array([dot(subgroup_just_mapping, comma) for comma in comma_list]), comma_sizes).all():
         raise ValueError("Non-orthogonal subgroup or comma outside subgroup")
     if not isclose(array([dot(subgroup_just_mapping, constraint) for constraint in constraints]), constraint_sizes).all():
         raise ValueError("Non-orthogonal subgroup or constraint outside subgroup")
 
-    # TODO: Rescale when only one constraint
     subgroup_mapping = temper(subgroup_just_mapping, comma_list, constraints, num_iterations, step_size)
     if not constraints:
-        subgroup_mapping = minimax(subgroup_just_mapping, subgroup_mapping)
+        if constraint is None:
+            subgroup_mapping = minimax(subgroup_just_mapping, subgroup_mapping)
+        else:
+            subgroup_mapping / dot(subgroup_mapping, constraint) * dot(subgroup_just_mapping, constraint)
 
     mapping = array(just_mapping)
     for i, basis_vector in enumerate(subgroup):

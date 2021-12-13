@@ -1548,6 +1548,9 @@ def tracks_to_midi(tracks, freq_to_midi, reserve_channel_10=True, transpose=0, r
                 duration = int(round(resolution * event["realGateLength"]))
                 if duration <= 0:
                     continue
+                max_duration = int(resolution * event["realduration"])
+                if duration >= max_duration:
+                    duration = max_duration - 1
             if event["type"] == "note":
                 index, bend = freq_to_midi(frequency)
                 index += transpose

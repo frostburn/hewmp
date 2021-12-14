@@ -1,5 +1,5 @@
 # HEWMP Notation for EDOs
-Bellow are listed slightly opinionated tables for the simplest ways to notate each equal division of the octave up to 22ed2.
+Bellow are listed slightly opinionated tables for the simplest ways to notate each equal division of the octave up to 26ed2.
 ## 3ed2
 | Degree | Smitonic Interval | Smitonic Pitch |
 |:------:|:-----------------:|:--------------:|
@@ -357,3 +357,90 @@ Bellow are listed slightly opinionated tables for the simplest ways to notate ea
 | 21     | d7                   | B4bb,C5x          |
 | 22     | A8                   | C5#               |
 | 23     | P8                   | C5                |
+## 24ed2
+| Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
+|:------:|:-----------------:|:--------------:|:--------------------:|:-----------------:|
+| 0      | p1                | J4             | P1                   | C4                |
+| 1      | p1^,s2v           | J4^            | P1^,m2v              | C4^               |
+| 2      | s2                | K4b            | m2                   | C4#,D4b           |
+| 3      | s2^               | K4b^           | m2^,M2v              | D4v               |
+| 4      | L2<               | K4<            | M2                   | D4                |
+| 5      | L2>               | K4>            | M2^,m3v              | D4^               |
+| 6      | p3<               | N4<            | m3                   | D4#,E4b           |
+| 7      | p3>               | N4>            | m3^,M3v              | E4v               |
+| 8      | s4<               | O4b<           | M3                   | E4                |
+| 9      | s4>               | O4b>           | M3^,P4v              | E4^,F4v           |
+| 10     | L4v               | O4v            | P4                   | F4                |
+| 11     | L4                | O4             | P4^,A4v              | F4^               |
+| 12     | L4^,s5v           | O4^,Q4v        | A4,d5                | F4#,G4b           |
+| 13     | s5                | Q4             | P5v,d5^              | G4v               |
+| 14     | s5^               | Q4^            | P5                   | G4                |
+| 15     | L5<               | Q4#<           | P5^,m6v              | G4^               |
+| 16     | L5>               | Q4#>           | m6                   | G4#,a4b           |
+| 17     | p6<               | R4<            | m6^,M6v              | a4v               |
+| 18     | p6>               | R4>            | M6                   | a4                |
+| 19     | s7<               | S4<            | M6^,m7v              | a4^               |
+| 20     | s7>               | S4>            | m7                   | a4#,B4b           |
+| 21     | L7v               | S4#v           | m7^,M7v              | B4v               |
+| 22     | L7                | S4#            | M7                   | B4                |
+| 23     | L7^,p8v           | J5v            | M7^,P8v              | B4^,C5v           |
+| 24     | p8                | J5             | P8                   | C5                |
+## 25ed2
+| Degree | Smitonic interval | Smitonic Pitch |
+|:------:|:-----------------:|:--------------:|
+| 0      | p1                | J4             |
+| 1      | W1                | J4#            |
+| 2      | n2                | J4x,K4bb       |
+| 3      | s2                | K4b            |
+| 4      | L2                | K4             |
+| 5      | W2                | K4#            |
+| 6      | n3                | N4b            |
+| 7      | p3                | N4             |
+| 8      | W3                | N4#            |
+| 9      | n4                | N4x,O4bb       |
+| 10     | s4                | O4b            |
+| 11     | L4                | O4             |
+| 12     | W4                | O4#            |
+| 13     | n5                | Q4b            |
+| 14     | s5                | Q4             |
+| 15     | L5                | Q4#            |
+| 16     | W5                | Q4x,R4bb       |
+| 17     | n6                | R4b            |
+| 18     | p6                | R4             |
+| 19     | W6                | R4#            |
+| 20     | n7                | S4b            |
+| 21     | s7                | S4             |
+| 22     | L7                | S4#            |
+| 23     | W7                | S4x,J5bb       |
+| 24     | n8                | J5b            |
+| 25     | p8                | J5             |
+## 26ed2
+| Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
+|:------:|:-----------------:|:--------------:|:--------------------:|:-----------------:|
+| 0      | p1                | J4             | P1                   | C4                |
+| 1      | p1^,s2v           | J4^            | A1                   | C4#               |
+| 2      | s2                | K4b            | d2                   | C4x,D4bb          |
+| 3      | s2^               | K4b^           | m2                   | D4b               |
+| 4      | L2v               | K4v            | M2                   | D4                |
+| 5      | L2                | K4             | A2                   | D4#               |
+| 6      | L2^,p3v           | K4^,N4v        | d3                   | D4x,E4bb          |
+| 7      | p3                | N4             | m3                   | E4b               |
+| 8      | p3^,s4v           | N4^            | M3                   | E4                |
+| 9      | s4                | O4b            | A3                   | E4#               |
+| 10     | s4^               | O4b^           | d4                   | F4b               |
+| 11     | L4v               | O4v            | P4                   | F4                |
+| 12     | L4                | O4             | A4                   | F4#               |
+| 13     | L4^,s5v           | O4^,Q4v        | AA4,dd5              | F4x,G4bb          |
+| 14     | s5                | Q4             | d5                   | G4b               |
+| 15     | s5^               | Q4^            | P5                   | G4                |
+| 16     | L5v               | Q4#v           | A5                   | G4#               |
+| 17     | L5                | Q4#            | d6                   | G4x,a4bb          |
+| 18     | L5^,p6v           | R4v            | m6                   | a4b               |
+| 19     | p6                | R4             | M6                   | a4                |
+| 20     | p6^,s7v           | R4^,S4v        | A6                   | a4#               |
+| 21     | s7                | S4             | d7                   | a4x,B4bb          |
+| 22     | s7^               | S4^            | m7                   | B4b               |
+| 23     | L7v               | S4#v           | M7                   | B4                |
+| 24     | L7                | S4#            | A7                   | B4#               |
+| 25     | L7^,p8v           | J5v            | d8                   | C5b               |
+| 26     | p8                | J5             | P8                   | C5                |

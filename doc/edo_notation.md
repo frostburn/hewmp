@@ -444,3 +444,38 @@ Bellow are listed slightly opinionated tables for the simplest ways to notate ea
 | 24     | L7                | S4#            | A7                   | B4#               |
 | 25     | L7^,p8v           | J5v            | d8                   | C5b               |
 | 26     | p8                | J5             | P8                   | C5                |
+## 31ed2
+| Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
+|:------:|:-----------------:|:--------------:|:--------------------:|:-----------------:|
+| 0      | p1                | J4             | P1                   | C4                |
+| 1      | p1^               | J4^            | P1^                  | C4^               |
+| 2      | s2v               | K4bv           | A1                   | C4#               |
+| 3      | s2                | K4b            | m2                   | D4b               |
+| 4      | s2^               | K4b^           | m2^,M2v              | D4v               |
+| 5      | n3v               | K4<            | M2                   | D4                |
+| 6      | n3                | K4>            | M2^                  | D4^               |
+| 7      | n3^               | K4#v,N4b^      | m3v                  | D4#               |
+| 8      | n4v               | N4<            | m3                   | E4b               |
+| 9      | n4                | N4>            | m3^,M3v              | E4v               |
+| 10     | n4^               | N4#v           | M3                   | E4                |
+| 11     | s4<               | N4#            | d4                   | F4b               |
+| 12     | s4>               | N4#^           | P4v                  | F4v               |
+| 13     | L4v               | O4v            | P4                   | F4                |
+| 14     | L4                | O4             | P4^                  | F4^               |
+| 15     | L4^               | O4^            | A4                   | F4#               |
+| 16     | s5v               | Q4v            | d5                   | G4b               |
+| 17     | s5                | Q4             | P5v                  | G4v               |
+| 18     | s5^               | Q4^            | P5                   | G4                |
+| 19     | n6v               | R4bv           | P5^                  | G4^               |
+| 20     | n6                | R4b            | A5                   | G4#               |
+| 21     | n6^               | R4b^           | m6                   | a4b               |
+| 22     | n7v               | R4<            | m6^,M6v              | a4v               |
+| 23     | n7                | R4>            | M6                   | a4                |
+| 24     | n7^               | R4#v,S4b^      | M6^                  | a4^               |
+| 25     | s7<               | S4<            | m7v                  | a4#               |
+| 26     | s7>               | S4>            | m7                   | B4b               |
+| 27     | L7v               | S4#v           | m7^,M7v              | B4v               |
+| 28     | L7                | S4#            | M7                   | B4                |
+| 29     | L7^               | S4#^           | d8                   | C5b               |
+| 30     | p8v               | J5v            | P8v                  | C5v               |
+| 31     | p8                | J5             | P8                   | C5                |

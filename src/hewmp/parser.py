@@ -327,6 +327,9 @@ class Playhead(Event):
     def __init__(self, time=0, duration=0):
         super().__init__(time, duration)
 
+    def to_json(self):
+        raise ValueError("Playheads cannot be converted to json")
+
     def retime(self, time, duration):
         return self.__class__(time, duration)
 
@@ -581,18 +584,12 @@ class Pattern(MusicBase, Transposable):
     def to_json(self):
         raise ValueError("Cannot convert unrealized Pattern to json")
 
-    def realize(self, semantic=SEMANTIC):
-        start_time = None
-        end_time = None
+    def realize(self, semantic=SEMANTIC, start_time=None, end_time=None):
         flat = []
         tempo = None
         tuning = None
         for event in self.flatten():
-            if isinstance(event, Playstop):
-                end_time = event.end_time
-            elif isinstance(event, Playhead):
-                start_time = event.time
-            else:
+            if not isinstance(event, Playhead):
                 flat.append(event)
             if isinstance(event, Tempo):
                 tempo = event
@@ -694,6 +691,46 @@ class RealPattern(RealEvent):
             "realduration": self.realduration,
             "events": [event.to_json() for event in self.events]
         }
+
+
+def sync_playheads(patterns):
+    start_universal_time = None
+    end_universal_time = None
+    tempi = []
+    end_times = []
+    for pattern in patterns:
+        start_time = None
+        end_time = None
+        tempo = None
+        for event in pattern.flatten():
+            if isinstance(event, Playstop):
+                end_time = event.end_time
+            elif isinstance(event, Playhead):
+                start_time = event.time
+            elif isinstance(event, Tempo):
+                tempo = event
+        tempi.append(tempo)
+        end_times.append(end_time)
+        if start_time is not None:
+            universal = start_time * tempo.beat_unit
+            if start_universal_time is None or universal > start_universal_time:
+                start_universal_time = universal
+    for tempo, end_time in zip(tempi, end_times):
+        if end_time is not None:
+            universal = end_time * tempo.beat_unit
+            if start_universal_time is None or universal > start_universal_time:
+                if end_universal_time is None or universal < end_universal_time:
+                    end_universal_time = universal
+    result = []
+    for tempo in tempi:
+        start_time = None
+        end_time = None
+        if start_universal_time is not None:
+            start_time = start_universal_time / tempo.beat_unit
+        if end_universal_time is not None:
+            end_time = end_universal_time / tempo.beat_unit
+        result.append((start_time, end_time))
+    return result
 
 
 DEFAULT_CONFIG = {
@@ -1514,14 +1551,14 @@ def tracks_to_midi(tracks, freq_to_midi, reserve_channel_10=True, transpose=0, r
     """
     midi = mido.MidiFile()
     channel_offset = 0
-    for pattern in tracks:
+    for pattern, (start_time, end_time) in zip(tracks, sync_playheads(tracks)):
         max_polyphony = getattr(pattern, "max_polyphony", 15)
         if pattern.duration <= 0:
             continue
         track = mido.MidiTrack()
         midi.tracks.append(track)
 
-        data = pattern.realize().to_json()
+        data = pattern.realize(start_time=start_time, end_time=end_time).to_json()
         base_frequency = None
         mapping = None
         velocity = 85
@@ -1609,7 +1646,7 @@ def tracks_to_midi(tracks, freq_to_midi, reserve_channel_10=True, transpose=0, r
                 track.append(message)
                 current_time = time
         target_time = int(round(resolution * data["realduration"]))
-        message = mido.MetaMessage("end_of_track", time=(target_time - current_time))
+        message = mido.MetaMessage("end_of_track", time=max(0, target_time - current_time))
         track.append(message)
 
         channel_offset += max_polyphony
@@ -1686,8 +1723,8 @@ if __name__ == "__main__":
             "semantic": SEMANTIC,
             "tracks": [],
         }
-        for pattern in patterns:
-            result["tracks"].append(pattern.realize(semantic).to_json())
+        for pattern, (start_time, end_time) in zip(patterns, sync_playheads(patterns)):
+            result["tracks"].append(pattern.realize(semantic, start_time, end_time).to_json())
         if args.simplify:
             simplify_tracks(result)
         json.dump(result, args.outfile)

@@ -1311,13 +1311,15 @@ def parse_track(lexer, default_config):
                     subpattern_time = time
                     subpattern_duration = Fraction(1)
                     time += subpattern_duration
+                    pitch = current_pitch
                 else:
                     replaced = pattern.pop()
                     subpattern_time = replaced.time
                     subpattern_duration = replaced.duration
+                    pitch = replaced.pitch
                 if token.startswith("="):
                     token = token[1:]
-                subpattern = parse_chord(token, current_pitch, interval_parser)
+                subpattern = parse_chord(token, pitch, interval_parser)
                 subpattern.time = subpattern_time
                 subpattern.duration = subpattern_duration
                 pattern.append(subpattern)
@@ -1672,9 +1674,16 @@ if __name__ == "__main__":
     parser.add_argument('--pitch-bend-depth', type=int, default=2)
     parser.add_argument('--override-channel-10', action='store_true')
     parser.add_argument('--midi-transpose', type=int, default=0)
+    parser.add_argument('--track', type=int)
     args = parser.parse_args()
 
     patterns, config = parse_file(args.infile)
+    if args.track is not None:
+        tracks = patterns
+        patterns = []
+        for index, track in enumerate(tracks):
+            if index == 0 or index == args.track:
+                patterns.append(track)
     if args.infile is not sys.stdin:
         args.infile.close()
 

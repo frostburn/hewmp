@@ -135,6 +135,20 @@ def make_basic_chord(base, arrow_tokens, chords=BASIC_CHORDS_):
     return chord
 
 
+QUALITY_RANKING = ["nn", "dd", "n", "d", "s", "m", "P", "M", "L", "A", "W", "AA", "WW"]
+def interval_key(token):
+    quality = ""
+    while not token[0].isdigit():
+        quality += token[0]
+        token = token[1:]
+    value = ""
+    while token and token[0].isdigit():
+        value += token[0]
+        token = token[1:]
+    value = int(value)
+    return (value, QUALITY_RANKING.index(quality), token)
+
+
 def expand_chord(token):
     from .smitonic import SMITONIC_BASIC_CHORDS, SMITONIC_EXTRA_CHORDS
 
@@ -184,4 +198,4 @@ def expand_chord(token):
     if chord is None:
         raise ValueError("Unrecognized chord {}".format(base))
 
-    return chord + added_intervals
+    return sorted(chord + added_intervals, key=interval_key)

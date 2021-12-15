@@ -1,6 +1,6 @@
 from fractions import Fraction
 from numpy import array, dot, isclose
-from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX, RealTuning, GatedNote
+from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX, RealTuning, GatedNote, sync_playheads
 from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interval
 from hewmp.smitonic import smitonic_tokenize_interval, SMITONIC_INFLECTIONS, smitonic_tokenize_pitch
 
@@ -129,7 +129,8 @@ def test_playhead():
     P1=M- ~M3- ~P5 | M2=m+ ~m3+ ~P5 |> M2-=m+ ~m3+ ~P5 ||
     """
     pattern = parse_text(text)[0][0]
-    data = pattern.realize().to_json()
+    start_time, end_time = sync_playheads([pattern])[0]
+    data = pattern.realize(start_time=start_time, end_time=end_time).to_json()
     assert Fraction(data["time"]) == 6
     assert Fraction(data["duration"]) == 3
     has_tempo = False
@@ -204,6 +205,16 @@ def test_utonal():
     assert isclose((notes[1].pitch - notes[0].pitch)[:3], [1, 1, -1]).all()
 
 
+def test_added_tone_inversion():
+    text = "=M-add2_3"
+    pattern = parse_text(text)[0][0]
+    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    assert isclose(notes[0].pitch[:3], [0, 0, 0]).all()
+    assert isclose(notes[1].pitch[:3], [-3, 2, 0]).all()
+    assert isclose(notes[2].pitch[:3], [-2, 0, 1]).all()
+    assert isclose(notes[3].pitch[:3], [-2, 1, 0]).all()
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_pitch()
@@ -220,3 +231,4 @@ if __name__ == '__main__':
     test_pitch_equality()
     test_otonal()
     test_utonal()
+    test_added_tone_inversion()

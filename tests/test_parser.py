@@ -215,6 +215,15 @@ def test_added_tone_inversion():
     assert isclose(notes[3].pitch[:3], [-2, 1, 0]).all()
 
 
+def test_removed_tone():
+    text = "=domno3"
+    pattern = parse_text(text)[0][0]
+    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    assert isclose(notes[0].pitch[:2], [0, 0]).all()
+    assert isclose(notes[1].pitch[:2], [-1, 1]).all()
+    assert isclose(notes[2].pitch[:2], [4, -2]).all()
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_pitch()
@@ -232,3 +241,4 @@ if __name__ == '__main__':
     test_otonal()
     test_utonal()
     test_added_tone_inversion()
+    test_removed_tone()

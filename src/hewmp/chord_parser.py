@@ -135,8 +135,7 @@ def make_basic_chord(base, arrow_tokens, chords=BASIC_CHORDS_):
     return chord
 
 
-QUALITY_RANKING = ["nn", "dd", "n", "d", "s", "m", "P", "M", "L", "A", "W", "AA", "WW"]
-def interval_key(token):
+def split_interval(token):
     quality = ""
     while not token[0].isdigit():
         quality += token[0]
@@ -146,6 +145,12 @@ def interval_key(token):
         value += token[0]
         token = token[1:]
     value = int(value)
+    return quality, value, token
+
+
+QUALITY_RANKING = ["nn", "dd", "n", "d", "s", "m", "P", "M", "L", "A", "W", "AA", "WW"]
+def interval_key(token):
+    quality, value, token = split_interval(token)
     return (value, QUALITY_RANKING.index(quality), token)
 
 
@@ -159,6 +164,10 @@ def expand_chord(token):
 
     added_tones = token.split("add")
     token = added_tones.pop(0)
+
+    removed_tones = token.split("no")
+    token = removed_tones.pop(0)
+    removed_tones = [int(tone) for tone in removed_tones]
 
     added_intervals = [accidental_to_quality(tone) for tone in added_tones]
 
@@ -198,4 +207,10 @@ def expand_chord(token):
     if chord is None:
         raise ValueError("Unrecognized chord {}".format(base))
 
-    return sorted(chord + added_intervals, key=interval_key)
+    result = sorted(chord + added_intervals, key=interval_key)
+    for tone in removed_tones:
+        for chord_tone in result[:]:
+            _, value, _ = split_interval(chord_tone)
+            if value == tone:
+                result.remove(chord_tone)
+    return result

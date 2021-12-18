@@ -430,6 +430,9 @@ class UserMessage(Event):
         result["message"] = self.message
         return result
 
+    def escape(self):
+        return '"{}"'.format(self.message.replace("$", "$$").replace('"', '$"'))
+
 
 class ProgramChange(Event):
     def __init__(self, name, program, time, duration=0):
@@ -1368,10 +1371,12 @@ def parse_track(lexer, default_config):
     pattern.duration = pattern.logical_duration
 
     if "CR" in config["flags"]:
-        comma_reduce_pattern(pattern, comma_list, config["CRD"])
+        comma_reduce_pattern(pattern, config["tuning"].comma_list, config["CRD"])
 
     if max_polyphony is not None:
         pattern.max_polyphony = max_polyphony
+
+    config["interval_parser"] = interval_parser
     return pattern, config
 
 
@@ -1446,6 +1451,8 @@ def _tokenize_absolute_pitch(pitch, inflections):
 
 
 def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, absolute_time=False):
+    if isinstance(pattern, UserMessage):
+        return pattern.escape()
     if isinstance(pattern, Articulation):
         for symbol, value in ARTICULATIONS.items():
             if value == pattern.gate_ratio:
@@ -1475,6 +1482,8 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
         local_time = Fraction(0)
         for subpattern in pattern:
             force_tokenize = False
+            if isinstance(subpattern, UserMessage):
+                force_tokenize = True
             if isinstance(subpattern, Articulation):
                 force_tokenize = True
                 if main and subpattern.time == 0 and subpattern.gate_ratio == ARTICULATIONS[";"]:
@@ -1706,6 +1715,7 @@ if __name__ == "__main__":
         for pattern in patterns:
             if pattern.duration <= 0:
                 continue
+            pattern.transpose(config["interval_parser"].base_pitch)
             args.outfile.write("---\n")
             args.outfile.write(tokenize_pattern(pattern, _chord, _pitch, True))
             args.outfile.write("\n")

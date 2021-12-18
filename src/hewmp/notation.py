@@ -83,10 +83,12 @@ def tokenize_otonal_utonal(pitches, primes):
         num_otonal = 1
         num_utonal = 1
         for coord, prime, o, u in zip(pitch, primes, otonal_root, utonal_root):
-            if coord != int(coord):
+            exp_otonal = coord + o
+            exp_utonal = u - coord
+            if exp_otonal != int(exp_otonal) or exp_utonal != int(exp_utonal):
                 raise ValueError("Non-integral monzo")
-            num_otonal *= prime**int(coord + o)
-            num_utonal *= prime**int(u - coord)
+            num_otonal *= prime**int(exp_otonal)
+            num_utonal *= prime**int(exp_utonal)
         otonal.append(num_otonal)
         utonal.append(num_utonal)
 
@@ -158,7 +160,11 @@ def tokenize_interval(pitch, inflections, *extra_indices):
 
     Assumes that the first two coordinates form the pythagorean basis
     """
-    twos, threes, arrow_counts = basis_and_arrows(pitch, inflections)
+    derooted = pitch
+    for index in extra_indices:
+        derooted[index] = 0
+    derooted, root = extract_root(derooted)
+    twos, threes, arrow_counts = basis_and_arrows(derooted, inflections)
     arrow_str = tokenize_arrows(arrow_counts)
 
     index = threes + PYTHAGOREAN_INDEX_P1
@@ -180,7 +186,11 @@ def tokenize_interval(pitch, inflections, *extra_indices):
     sign = "-" if value < 0 else ""
     value = abs(value) + 1
 
-    return "{}{}{}{}{}".format(sign, quality, value, arrow_str, tokenize_extras(pitch, *extra_indices))
+    root_str = ""
+    if root != 1:
+        root_str = "/{}".format(root)
+
+    return "{}{}{}{}{}{}".format(sign, quality, value, arrow_str, root_str, tokenize_extras(pitch, *extra_indices))
 
 
 LYDIAN = ("F", "C", "G", "D", "a", "E", "B")
@@ -233,11 +243,19 @@ def tokenize_pitch(pitch, inflections, *extra_indices):
 
     Assumes that the first two coordinates form the pythagorean basis
     """
+    fractional_pitch = pitch - around(pitch)
+    for index in extra_indices:
+        fractional_pitch[index] = 0
+    pitch = pitch - fractional_pitch
     letter, octave, arrow_counts = notate_pitch(pitch, inflections)
     accidental = "b" * arrow_counts.pop("b", 0) + "#" * arrow_counts.pop("#", 0) + "x" * arrow_counts.pop("x", 0)
     arrow_str = tokenize_arrows(arrow_counts)
 
-    return "{}{}{}{}{}".format(letter, octave, accidental, arrow_str, tokenize_extras(pitch, *extra_indices))
+    fractional_transposition = ""
+    if fractional_pitch.any():
+        fractional_transposition = "&" + tokenize_interval(fractional_pitch, inflections, *extra_indices)
+
+    return "{}{}{}{}{}{}".format(letter, octave, accidental, arrow_str, fractional_transposition, tokenize_extras(pitch, *extra_indices))
 
 
 def get_inflections():

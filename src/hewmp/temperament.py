@@ -144,13 +144,16 @@ def comma_reduce(pitch, comma_list, persistence=5, cache=None):
     return best
 
 
-def comma_root(pitch, degree, comma_list, persistence=5):
+def comma_root(pitch, degree, comma_list, persistence=5, cache=None):
     """
     Find the nth degree root of a pitch using commas from the list.
     Has the same frequency as the nth fraction of the pitch, but with integral representation.
 
     Returns None if the root couldn't be found.
     """
+    cache_key = (tuple(pitch), degree)
+    if cache is not None and cache_key in cache:
+        return cache[cache_key]
     best = None
     def combine(coefs):
         nonlocal best
@@ -169,6 +172,11 @@ def comma_root(pitch, degree, comma_list, persistence=5):
             combine(coefs + [i])
 
     combine([])
+    if cache is not None:
+        if best is not None:
+            cache[cache_key] = array(best)
+        else:
+            cache[cache_key] = None
     return best
 
 

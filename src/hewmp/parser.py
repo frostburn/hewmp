@@ -10,7 +10,7 @@ from fractions import Fraction
 from .lexer import Lexer, CONFIGS, TRACK_START
 from .chord_parser import expand_chord, separate_by_arrows
 from .temperaments import TEMPERAMENTS, EQUAL_TEMPERAMENTS
-from .temperament import temper_subgroup, comma_reduce, comma_equals
+from .temperament import temper_subgroup, comma_reduce, comma_equals, comma_root
 from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch, reverse_inflections
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
@@ -911,6 +911,9 @@ class IntervalParser:
         self.edn_divided = edn_divided
         self.base_pitch = zero_pitch()
         self.smitonic_base_pitch = zero_pitch()
+        self.comma_list = None
+        self.comma_root_cache = None
+        self.persistence = 5
 
     def set_base_pitch(self, token):
         if token[0] in BASIC_PITCHES:
@@ -991,6 +994,11 @@ class IntervalParser:
         if direction is not None:
             pitch *= direction
 
+        if self.comma_list is not None and self.comma_root_cache is not None:
+            pitch = comma_root(pitch * exponent_degree, root_degree, self.comma_list, persistence=self.persistence, cache=self.comma_root_cache)
+            if return_root_degree:
+                raise ValueError("Cannot return root degree when solving for comma roots")
+            return pitch, absolute
         if return_root_degree:
             return pitch, absolute, exponent_degree, root_degree
         return pitch / root_degree * exponent_degree, absolute
@@ -1139,19 +1147,17 @@ def parse_track(lexer, default_config):
     transposed_pattern = None
     current_pitch = zero_pitch()
     timestamp = None
-    interval_parser = IntervalParser()
+    if "interval_parser" in default_config:
+        interval_parser = default_config["interval_parser"]
+    else:
+        interval_parser = IntervalParser()
 
     config = {}
     config.update(default_config)
     config["tuning"] = config["tuning"].copy()
     config["tempo"] = config["tempo"].copy()
     config["flags"] = list(config["flags"])
-    interval_parser.edn_divisions = config["tuning"].edn_divisions
-    interval_parser.edn_divided = config["tuning"].edn_divided
     current_notation = config["N"]
-    comma_list = None
-    subgroup = None
-    constraints = None
     max_polyphony = None
 
     for token_obj in lexer:
@@ -1177,6 +1183,8 @@ def parse_track(lexer, default_config):
                 if tuning_name in TEMPERAMENTS:
                     comma_list, subgroup = TEMPERAMENTS[tuning_name]
                     subgroup = subgroup.split(".")
+                    config["tuning"].subgroup = [interval_parser.parse(basis_vector)[0] for basis_vector in subgroup]
+                    config["tuning"].comma_list = [interval_parser.parse(comma)[0] for comma in comma_list]
                 elif tuning_name in EQUAL_TEMPERAMENTS:
                     edn_divisions, edn_divided = EQUAL_TEMPERAMENTS[tuning_name]
                     config["tuning"].edn_divisions = edn_divisions
@@ -1190,12 +1198,16 @@ def parse_track(lexer, default_config):
                     raise ParsingError("Unrecognized tuning '{}'".format(tuning_name))
             if config_key == "CL":
                 comma_list = [comma.strip() for comma in token.split(",")]
+                config["tuning"].comma_list = [interval_parser.parse(comma)[0] for comma in comma_list]
             if config_key == "SG":
                 subgroup = [basis_fraction.strip() for basis_fraction in token.split(".")]
+                config["tuning"].subgroup = [interval_parser.parse(basis_vector)[0] for basis_vector in subgroup]
             if config_key == "C":
                 constraints = [constraint.strip() for constraint in token.split(",")]
+                config["tuning"].constraints = [interval_parser.parse(constraint)[0] for constraint in constraints]
             if config_key == "CRD":
                 config[config_key] = int(token)
+                interval_parser.persistence = int(token)
             if config_key == "L":
                 config["tempo"].beat_unit = Fraction(token)
             if config_key == "Q":
@@ -1241,6 +1253,11 @@ def parse_track(lexer, default_config):
                 max_polyphony = int(token)
             if config_key == "F":
                 config["flags"] = [flag.strip() for flag in token.split(",")]
+                if "CR" in config["flags"]:
+                    config["comma_reduction_cache"] = {}
+                if "CRS" in config["flags"]:
+                    interval_parser.comma_list = config["tuning"].comma_list
+                    interval_parser.comma_root_cache = {}
             config_mode = False
             continue
 
@@ -1350,18 +1367,13 @@ def parse_track(lexer, default_config):
                     note = Note(pitch, time)
                     pattern.append(note)
                     time += note.duration
+                if "comma_reduction_cache" in config:
+                    current_pitch = comma_reduce(current_pitch, config["tuning"].comma_list, persistence=config["CRD"], cache=config["comma_reduction_cache"])
 
     pattern.insert(0, Articulation(ARTICULATIONS[";"]))
     pattern.insert(0, Dynamic(DYNAMICS["mf"]))
 
     pattern.insert(0, config["tempo"])
-
-    if subgroup is not None:
-        config["tuning"].subgroup = [interval_parser.parse(basis_vector)[0] for basis_vector in subgroup]
-    if comma_list is not None:
-        config["tuning"].comma_list = [interval_parser.parse(comma)[0] for comma in comma_list]
-    if constraints is not None:
-        config["tuning"].constraints = [interval_parser.parse(constraint)[0] for constraint in constraints]
 
     if "unmapEDN" in config["flags"]:
         config["tuning"].warts = None
@@ -1369,9 +1381,6 @@ def parse_track(lexer, default_config):
     pattern.insert(0, config["tuning"])
 
     pattern.duration = pattern.logical_duration
-
-    if "CR" in config["flags"]:
-        comma_reduce_pattern(pattern, config["tuning"].comma_list, config["CRD"])
 
     if max_polyphony is not None:
         pattern.max_polyphony = max_polyphony
@@ -1716,6 +1725,8 @@ if __name__ == "__main__":
             if pattern.duration <= 0:
                 continue
             pattern.transpose(config["interval_parser"].base_pitch)
+            if "comma_reduction_cache" in config:
+                comma_reduce_pattern(pattern, config["tuning"].comma_list, config["CRD"], config["comma_reduction_cache"])
             args.outfile.write("---\n")
             args.outfile.write(tokenize_pattern(pattern, _chord, _pitch, True))
             args.outfile.write("\n")

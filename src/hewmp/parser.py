@@ -995,10 +995,11 @@ class IntervalParser:
             pitch *= direction
 
         if self.comma_list is not None and self.comma_root_cache is not None:
-            pitch = comma_root(pitch * exponent_degree, root_degree, self.comma_list, persistence=self.persistence, cache=self.comma_root_cache)
-            if return_root_degree:
-                raise ValueError("Cannot return root degree when solving for comma roots")
-            return pitch, absolute
+            maybe_pitch = comma_root(pitch * exponent_degree, root_degree, self.comma_list, persistence=self.persistence, cache=self.comma_root_cache)
+            if maybe_pitch is not None:
+                if return_root_degree:
+                    raise ValueError("Cannot return root degree when solving for comma roots")
+                return maybe_pitch, absolute
         if return_root_degree:
             return pitch, absolute, exponent_degree, root_degree
         return pitch / root_degree * exponent_degree, absolute

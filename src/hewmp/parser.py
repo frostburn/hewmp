@@ -1265,6 +1265,10 @@ def parse_track(lexer, default_config):
         if time_mode:
             if token == "]":
                 time_mode = False
+            elif token == "?":
+                time -= pattern[-1].duration
+                pattern[-1].duration = pattern[-1].logical_duration
+                time += pattern[-1].duration
             else:
                 duration_token = token
                 time_token = ""

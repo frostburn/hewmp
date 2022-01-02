@@ -224,6 +224,20 @@ def test_removed_tone():
     assert isclose(notes[2].pitch[:2], [4, -2]).all()
 
 
+def test_stretch_to_logical_duration():
+    text = "(P1 M2 M2)[?] P1"
+    pattern = parse_text(text)[0][0]
+    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    assert notes[0].duration == 1
+    assert notes[0].time == 0
+    assert notes[1].duration == 1
+    assert notes[1].time == 1
+    assert notes[2].duration == 1
+    assert notes[2].time == 2
+    assert notes[3].duration == 1
+    assert notes[3].time == 3
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_pitch()
@@ -242,3 +256,4 @@ if __name__ == '__main__':
     test_utonal()
     test_added_tone_inversion()
     test_removed_tone()
+    test_stretch_to_logical_duration()

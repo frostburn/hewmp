@@ -224,6 +224,17 @@ def test_removed_tone():
     assert isclose(notes[2].pitch[:2], [4, -2]).all()
 
 
+def test_extended_duration():
+    text = "P1|[+1]|P5=M-|[+2]||"
+    pattern = parse_text(text)[0][0]
+    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    assert notes[0].duration == 2
+    assert notes[0].time == 0
+    for i in range(1, 4):
+        assert notes[i].duration == 3
+        assert notes[i].time == 2
+
+
 def test_stretch_to_logical_duration():
     text = "(P1 M2 M2)[?] P1"
     pattern = parse_text(text)[0][0]
@@ -236,6 +247,42 @@ def test_stretch_to_logical_duration():
     assert notes[2].time == 2
     assert notes[3].duration == 1
     assert notes[3].time == 3
+
+
+def test_tuplet_hold():
+    text = "(P1 ~M3- ~P5 ~P8)[2 ! +1] P1"
+    pattern = parse_text(text)[0][0]
+    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    assert notes[0].duration == 3
+    assert notes[0].time == 0
+    assert notes[1].duration == 2.5
+    assert notes[1].time == 0.5
+    assert notes[2].duration == 2
+    assert notes[2].time == 1
+    assert notes[3].duration == 1.5
+    assert notes[3].time == 1.5
+    assert notes[4].duration == 1
+    assert notes[4].time == 3
+
+
+def test_reverse_time():
+    text = "(P1 P8 P8 P8)[<]"
+    pattern = parse_text(text)[0][0]
+    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    for i in range(4):
+        assert notes[i].duration == 0.25
+        assert notes[i].time == 0.75 - 0.25*i
+        assert notes[i].pitch[0] == i
+
+
+def test_absolute_time():
+    text = "P1[@2] P8[@0]"
+    pattern = parse_text(text)[0][0]
+    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    assert notes[0].duration == 1
+    assert notes[0].time == 2
+    assert notes[1].duration == 1
+    assert notes[1].time == 0
 
 
 if __name__ == '__main__':
@@ -256,4 +303,8 @@ if __name__ == '__main__':
     test_utonal()
     test_added_tone_inversion()
     test_removed_tone()
+    test_extended_duration()
     test_stretch_to_logical_duration()
+    test_tuplet_hold()
+    test_reverse_time()
+    test_absolute_time()

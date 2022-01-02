@@ -77,6 +77,14 @@ class MusicBase:
     def end_time(self):
         return self.time + self.duration
 
+    @end_time.setter
+    def end_time(self, value):
+        self.duration = value - self.time
+
+    @property
+    def logical_duration(self):
+        return self.duration
+
     def to_json(self):
         return {
             "time": str(self.time),
@@ -1265,27 +1273,47 @@ def parse_track(lexer, default_config):
         if time_mode:
             if token == "]":
                 time_mode = False
+            elif token == ".":
+                time -= pattern[-1].duration
+                pattern[-1].duration = 1
+                time += pattern[-1].duration
             elif token == "?":
                 time -= pattern[-1].duration
                 pattern[-1].duration = pattern[-1].logical_duration
                 time += pattern[-1].duration
+            elif token == "<":
+                if isinstance(pattern[-1], Pattern):
+                    logical_duration = pattern[-1].logical_duration
+                    for subpattern in pattern[-1]:
+                        start_time = subpattern.time
+                        end_time = subpattern.end_time
+                        subpattern.time = logical_duration - end_time
+                        subpattern.end_time = logical_duration - start_time
+            elif token == "!":
+                if isinstance(pattern[-1], Pattern):
+                    logical_duration = pattern[-1].logical_duration
+                    for subpattern in pattern[-1]:
+                        subpattern.end_time = logical_duration
+            elif token.startswith("+") or token.startswith("-"):
+                time -= pattern[-1].duration
+                extension = Fraction(token)
+                if isinstance(pattern[-1], Pattern):
+                    logical_extension = pattern[-1].logical_duration * extension / pattern[-1].duration
+                    for subpattern in pattern[-1]:
+                        subpattern.end_time += logical_extension
+                pattern[-1].duration += extension
+                time += pattern[-1].duration
+            elif token.startswith("@"):
+                time_token = token[1:]
+                if time_token == "T":
+                    time = timestamp
+                else:
+                    time = Fraction(time_token)
+                pattern[-1].time = time
             else:
                 duration_token = token
-                time_token = ""
                 time -= pattern[-1].duration
-                if "@" in token:
-                    duration_token, time_token = token.split("@", 1)
-                if duration_token:
-                    if duration_token.startswith("-") or duration_token.startswith("+"):
-                        pattern[-1].duration += Fraction(duration_token)
-                    else:
-                        pattern[-1].duration *= Fraction(duration_token)
-                if time_token:
-                    if time_token == "T":
-                        time = timestamp
-                    else:
-                        time = Fraction(time_token)
-                    pattern[-1].time = time
+                pattern[-1].duration *= Fraction(duration_token)
                 time += pattern[-1].duration
             continue
 

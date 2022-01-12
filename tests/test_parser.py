@@ -5,6 +5,11 @@ from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interva
 from hewmp.smitonic import smitonic_tokenize_interval, SMITONIC_INFLECTIONS, smitonic_tokenize_pitch
 
 
+def get_notes(text):
+    pattern = parse_text(text)[0][0]
+    return [note for note in pattern.flatten() if isinstance(note, Note)]
+
+
 def test_parse_interval():
     mapping = array([12, 19, 28])
     interval_parser = IntervalParser()
@@ -189,8 +194,7 @@ def test_pitch_equality():
 
 def test_otonal():
     text = "4:5:6"
-    pattern = parse_text(text)[0][0]
-    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    notes = get_notes(text)
     assert isclose((notes[1].pitch - notes[0].pitch)[:3], [-2, 0, 1]).all()
     assert isclose((notes[2].pitch - notes[0].pitch)[:3], [-1, 1, 0]).all()
     assert isclose((notes[2].pitch - notes[1].pitch)[:3], [1, 1, -1]).all()
@@ -198,8 +202,7 @@ def test_otonal():
 
 def test_utonal():
     text = "6;5;4"
-    pattern = parse_text(text)[0][0]
-    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    notes = get_notes(text)
     assert isclose((notes[2].pitch - notes[1].pitch)[:3], [-2, 0, 1]).all()
     assert isclose((notes[2].pitch - notes[0].pitch)[:3], [-1, 1, 0]).all()
     assert isclose((notes[1].pitch - notes[0].pitch)[:3], [1, 1, -1]).all()
@@ -207,8 +210,7 @@ def test_utonal():
 
 def test_added_tone_inversion():
     text = "=M-add2_3"
-    pattern = parse_text(text)[0][0]
-    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    notes = get_notes(text)
     assert isclose(notes[0].pitch[:3], [0, 0, 0]).all()
     assert isclose(notes[1].pitch[:3], [-3, 2, 0]).all()
     assert isclose(notes[2].pitch[:3], [-2, 0, 1]).all()
@@ -217,8 +219,7 @@ def test_added_tone_inversion():
 
 def test_removed_tone():
     text = "=domno3"
-    pattern = parse_text(text)[0][0]
-    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    notes = get_notes(text)
     assert isclose(notes[0].pitch[:2], [0, 0]).all()
     assert isclose(notes[1].pitch[:2], [-1, 1]).all()
     assert isclose(notes[2].pitch[:2], [4, -2]).all()
@@ -226,8 +227,7 @@ def test_removed_tone():
 
 def test_extended_duration():
     text = "P1|[+1]|P5=M-|[+2]||"
-    pattern = parse_text(text)[0][0]
-    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    notes = get_notes(text)
     assert notes[0].duration == 2
     assert notes[0].time == 0
     for i in range(1, 4):
@@ -237,8 +237,7 @@ def test_extended_duration():
 
 def test_stretch_to_logical_duration():
     text = "(P1 M2 M2)[?] P1"
-    pattern = parse_text(text)[0][0]
-    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    notes = get_notes(text)
     assert notes[0].duration == 1
     assert notes[0].time == 0
     assert notes[1].duration == 1
@@ -251,8 +250,7 @@ def test_stretch_to_logical_duration():
 
 def test_tuplet_hold():
     text = "(P1 ~M3- ~P5 ~P8)[2 ! +1] P1"
-    pattern = parse_text(text)[0][0]
-    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    notes = get_notes(text)
     assert notes[0].duration == 3
     assert notes[0].time == 0
     assert notes[1].duration == 2.5
@@ -266,9 +264,8 @@ def test_tuplet_hold():
 
 
 def test_reverse_time():
-    text = "(P1 P8 P8 P8)[<]"
-    pattern = parse_text(text)[0][0]
-    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    text = "(P1 P8 P8 P8)[R]"
+    notes = get_notes(text)
     for i in range(4):
         assert notes[i].duration == 0.25
         assert notes[i].time == 0.75 - 0.25*i
@@ -277,12 +274,60 @@ def test_reverse_time():
 
 def test_absolute_time():
     text = "P1[@2] P8[@0]"
-    pattern = parse_text(text)[0][0]
-    notes = [note for note in pattern.flatten() if isinstance(note, Note)]
+    notes = get_notes(text)
     assert notes[0].duration == 1
     assert notes[0].time == 2
     assert notes[1].duration == 1
     assert notes[1].time == 0
+
+
+def test_rotate_time():
+    text = "(P1 P8[2] P8[3] P8[4])[? >]"
+    notes = get_notes(text)
+    times_durations = []
+    for i in range(4):
+        assert notes[i].pitch[0] == (i-1)%4
+        times_durations.append((notes[i].time, notes[i].duration))
+    assert times_durations == [(0, 4), (4, 1), (5, 2), (7, 3)]
+
+
+def test_rotate_rhythm():
+    text = "(P1 P8[2] P8[3] P8[4])[? ^]"
+    notes = get_notes(text)
+    times_durations = []
+    for i in range(4):
+        assert notes[i].pitch[0] == i
+        times_durations.append((notes[i].time, notes[i].duration))
+    assert times_durations == [(0, 4), (4, 1), (5, 2), (7, 3)]
+
+def test_exponential_rhythm():
+    text = "(P1 P8 P8 P8)[e2]"
+    notes = get_notes(text)
+    denominator = sum(2**i for i in range(4))
+    for i in range(4):
+        assert notes[i].pitch[0] == i
+        assert notes[i].duration * denominator == 2**i
+        assert notes[i].time * denominator == 2**i - 1
+
+
+def test_euclidean_rhythm():
+    text = "(P1 P8 P8 P8)[E6 ?]"
+    notes = get_notes(text)
+    times_durations = []
+    for i in range(4):
+        assert notes[i].pitch[0] == i
+        times_durations.append((notes[i].time, notes[i].duration))
+    assert times_durations == [(0, 2), (2, 1), (3, 2), (5, 1)]
+
+
+def test_mos_rhythm():
+    text = "(P1 P8 P8 P8)[5MOS7 ?]"
+    notes = get_notes(text)
+    times_durations = []
+    for i in range(4):
+        assert notes[i].pitch[0] == i
+        times_durations.append((notes[i].time, notes[i].duration))
+    assert times_durations == [(0, 1), (1, 2), (3, 2), (5, 2)]
 
 
 if __name__ == '__main__':
@@ -308,3 +353,8 @@ if __name__ == '__main__':
     test_tuplet_hold()
     test_reverse_time()
     test_absolute_time()
+    test_rotate_time()
+    test_rotate_rhythm()
+    test_exponential_rhythm()
+    test_euclidean_rhythm()
+    test_mos_rhythm()

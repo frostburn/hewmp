@@ -1,5 +1,5 @@
 from io import StringIO
-from collections import Counter
+from collections import Counter, deque
 from numpy import array, zeros, log, floor, pi, around, dot, exp, cumsum, linspace, concatenate, ones
 from scipy.interpolate import interp1d
 try:
@@ -15,7 +15,7 @@ from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch,
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
 from .smitonic import SMITONIC_INTERVAL_QUALITIES, SMITONIC_BASIC_PITCHES, smitonic_parse_arrows, smitonic_parse_pitch, SMITONIC_INFLECTIONS
-
+from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exponential_rhythm
 
 PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
 E_INDEX = len(PRIMES)
@@ -93,6 +93,9 @@ class MusicBase:
 
     def retime(self, time, duration):
         pass
+
+    def copy(self):
+        return self.retime(self.time, self.duration)
 
 
 class Event(MusicBase):
@@ -190,9 +193,6 @@ class Tuning(Event):
             duration
         )
 
-    def copy(self):
-        return self.retime(self.time, self.duration)
-
     def __repr__(self):
         return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
             self.__class__.__name__,
@@ -276,9 +276,6 @@ class Tempo(Event):
 
     def retime(self, time, duration):
         return self.__class__(self.tempo_unit, self.tempo_duration, self.beat_unit, self.groove_pattern, self.groove_span, time, duration)
-
-    def copy(self):
-        return self.retime(self.time, self.duration)
 
     def to_realtime(self, time, duration):
         start_beat = float(time)
@@ -559,6 +556,9 @@ class Pattern(MusicBase, Transposable):
     def __getitem__(self, index):
         return self.subpatterns[index]
 
+    def __setitem__(self, index, value):
+        self.subpatterns[index] = value
+
     def __len__(self):
         return len(self.subpatterns)
 
@@ -571,6 +571,66 @@ class Pattern(MusicBase, Transposable):
         for subpattern in self.subpatterns:
             result = max(result, subpattern.end_time)
         return result
+
+    def repeat(self, num_repeats, affect_duration=False):
+        logical_duration = self.logical_duration
+        subpatterns = self.subpatterns
+        self.subpatterns = []
+        offset = 0
+        for _ in range(num_repeats):
+            self.subpatterns += [sub.retime(sub.time + offset, sub.duration) for sub in subpatterns]
+            offset += logical_duration
+        if affect_duration:
+            self.duration *= num_repeats
+
+    def fill(self, num_onsets):
+        logical_duration = self.logical_duration
+        subpatterns = self.subpatterns
+        self.subpatterns = []
+        offset = 0
+        while len(self) < num_onsets:
+            for subpattern in subpatterns:
+                self.subpatterns.append(subpattern.retime(subpattern.time + offset, subpattern.duration))
+                if len(self) >= num_onsets:
+                    break
+            offset += logical_duration
+
+    def reverse_time(self):
+        logical_duration = self.logical_duration
+        for subpattern in self:
+            start_time = subpattern.time
+            end_time = subpattern.end_time
+            subpattern.time = logical_duration - end_time
+            subpattern.end_time = logical_duration - start_time
+
+    def reverse_logic(self):
+        self.subpatterns = self.subpatterns[::-1]
+
+    def _rotate_time(self, steps):
+        logical_duration = self.logical_duration
+        offset = self[steps % len(self)].time
+        for subpattern in self:
+            subpattern.time = (subpattern.time - offset) % self.logical_duration
+
+    def _rotate_logic(self, steps):
+        times_durations = [(sub.time, sub.duration) for sub in self]
+        for i in range(len(self)):
+            self.subpatterns[i].time, self.subpatterns[i].duration = times_durations[(i+steps)%len(self)]
+
+    def rotate_rhythm(self, steps):
+        self._rotate_time(steps)
+        self._rotate_logic(steps)
+
+    def rotate_time(self, steps):
+        self._rotate_time(steps)
+        d = deque(self.subpatterns)
+        d.rotate(-steps)
+        self.subpatterns = list(d)
+
+    def stretch_subpatterns(self):
+        logical_duration = self.logical_duration
+        for subpattern in self:
+            subpattern.end_time = logical_duration
 
     def flatten(self):
         logical_duration = self.logical_duration
@@ -1079,6 +1139,13 @@ def comma_reduce_pattern(pattern, comma_list, persistence, cache=None):
             comma_reduce_pattern(subpattern, comma_list, persistence, cache)
 
 
+def patternify(pattern):
+    if not isinstance(pattern, Pattern):
+        pattern = Pattern([pattern], time=pattern.time, duration=pattern.duration)
+        pattern[0].time = Fraction(0)
+    return pattern
+
+
 class RepeatExpander:
     def __init__(self, lexer):
         self.lexer = lexer
@@ -1271,6 +1338,7 @@ def parse_track(lexer, default_config):
             continue
 
         if time_mode:
+            default = False
             if token == "]":
                 time_mode = False
             elif token == ".":
@@ -1281,19 +1349,6 @@ def parse_track(lexer, default_config):
                 time -= pattern[-1].duration
                 pattern[-1].duration = pattern[-1].logical_duration
                 time += pattern[-1].duration
-            elif token == "<":
-                if isinstance(pattern[-1], Pattern):
-                    logical_duration = pattern[-1].logical_duration
-                    for subpattern in pattern[-1]:
-                        start_time = subpattern.time
-                        end_time = subpattern.end_time
-                        subpattern.time = logical_duration - end_time
-                        subpattern.end_time = logical_duration - start_time
-            elif token == "!":
-                if isinstance(pattern[-1], Pattern):
-                    logical_duration = pattern[-1].logical_duration
-                    for subpattern in pattern[-1]:
-                        subpattern.end_time = logical_duration
             elif token.startswith("+") or token.startswith("-"):
                 time -= pattern[-1].duration
                 extension = Fraction(token)
@@ -1310,7 +1365,63 @@ def parse_track(lexer, default_config):
                 else:
                     time = Fraction(time_token)
                 pattern[-1].time = time
+            elif token.lower().startswith("x"):
+                pattern[-1] = patternify(pattern[-1])
+                time -= pattern[-1].duration
+                pattern[-1].repeat(int(token[1:]), affect_duration=(token.startswith("X")))
+                time += pattern[-1].duration
+            elif "E" in token:
+                pattern[-1] = patternify(pattern[-1])
+                onset_token = token[:token.index("E")]
+                if onset_token:
+                    pattern[-1].fill(int(onset_token))
+                num_onsets = len(pattern[-1])
+                num_beats = int(token[token.index("E")+1:])
+                times_durations = sequence_to_time_duration(euclidean_rhythm(num_onsets, num_beats))
+                for subpattern, td in zip(pattern[-1], times_durations):
+                    subpattern.time, subpattern.duration = td
+            elif isinstance(pattern[-1], Pattern):
+                if token == "R":
+                    pattern[-1].reverse_time()
+                elif token == "r":
+                    pattern[-1].reverse_logic()
+                elif "<" in token:
+                    pattern[-1].rotate_time(token.count("<"))
+                elif ">" in token:
+                    pattern[-1].rotate_time(-token.count(">"))
+                elif "v" in token:
+                    pattern[-1].rotate_rhythm(token.count("v"))
+                elif "^" in token:
+                    pattern[-1].rotate_rhythm(-token.count("^"))
+                elif token == "!":
+                    pattern[-1].stretch_subpatterns()
+                elif "e" in token:
+                    num_onsets = len(pattern[-1])
+                    root_token = token[:token.index("e")]
+                    if root_token:
+                        root = Fraction(root_token)
+                    else:
+                        root = Fraction(1)
+                    factor = Fraction(token[token.index("e")+1:]) ** (1 / root)
+                    times_durations = exponential_rhythm(num_onsets, factor)
+                    for subpattern, td in zip(pattern[-1], times_durations):
+                        subpattern.time, subpattern.duration = td
+                elif "MOS" in token:
+                    num_onsets = len(pattern[-1])
+                    generator = Fraction(token[:token.index("M")])  # TODO: search for a balanced generator if missing
+                    period_token = token[token.index("S")+1:]
+                    if period_token:
+                        period = Fraction(period_token)
+                    else:
+                        period = Fraction(1)
+                    times_durations = mos_rhythm(num_onsets, generator, period)
+                    for subpattern, td in zip(pattern[-1], times_durations):
+                        subpattern.time, subpattern.duration = td
+                else:
+                    default = True
             else:
+                default = True
+            if default:
                 duration_token = token
                 time -= pattern[-1].duration
                 pattern[-1].duration *= Fraction(duration_token)

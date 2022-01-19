@@ -1,6 +1,6 @@
 from fractions import Fraction
 from numpy import array, dot, isclose
-from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX, RealTuning, GatedNote, sync_playheads
+from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX, Tuning, Note, sync_playheads
 from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interval
 from hewmp.smitonic import smitonic_tokenize_interval, SMITONIC_INFLECTIONS, smitonic_tokenize_pitch
 
@@ -185,9 +185,9 @@ def test_pitch_equality():
     tuning = None
     notes = []
     for event in pattern.events:
-        if isinstance(event, RealTuning):
+        if isinstance(event, Tuning):
             tuning = event
-        if isinstance(event, GatedNote):
+        if isinstance(event, Note):
             notes.append(event)
     assert tuning.equals(notes[0].pitch, notes[1].pitch)
 

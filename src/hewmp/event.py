@@ -30,9 +30,11 @@ DEFAULT_METRIC[1] = 2  # Optimize error for 9 not 3
 
 
 class MusicBase:
-    def __init__(self, time, duration):
+    def __init__(self, time, duration, real_time=None, real_duration=None):
         self.time = Fraction(time)
         self.duration = Fraction(duration)
+        self.real_time = real_time
+        self.real_duration = real_duration
 
     @property
     def end_time(self):
@@ -46,10 +48,20 @@ class MusicBase:
     def logical_duration(self):
         return self.duration
 
+    @property
+    def real_end_time(self):
+        return self.real_time + self.real_duration
+
+    @real_end_time.setter
+    def real_end_time(self, value):
+        self.real_duration = value - self.real_time
+
     def to_json(self):
         return {
             "time": str(self.time),
             "duration": str(self.duration),
+            "realTime": None if self.real_time is None else float(self.real_time),
+            "realDuration": None if self.real_time is None else float(self.real_duration),
         }
 
     def retime(self, time, duration):
@@ -64,24 +76,9 @@ class Event(MusicBase):
         return [self]
 
 
-class RealEvent:
-    def __init__(self, event, realtime, realduration):
-        self.event = event
-        self.realtime = realtime
-        self.realduration = realduration
-
-    def to_json(self):
-        result = {
-            "realtime": self.realtime,
-            "realduration": self.realduration,
-        }
-        result.update(self.event.to_json())
-        return result
-
-
 class Tuning(Event):
-    def __init__(self, base_frequency, comma_list, constraints, subgroup, edn_divisions=None, edn_divided=None, warts=None, suggested_mapping=None, time=0, duration=0):
-        super().__init__(time, duration)
+    def __init__(self, base_frequency, comma_list, constraints, subgroup, edn_divisions=None, edn_divided=None, warts=None, suggested_mapping=None, semantic=None, time=0, duration=0, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
         self.base_frequency = base_frequency
         self.comma_list = comma_list
         self.constraints = constraints
@@ -90,6 +87,8 @@ class Tuning(Event):
         self.edn_divided = edn_divided
         self.warts = warts
         self.suggested_mapping = suggested_mapping
+        self.semantic = semantic
+        self.cache = {}
 
     def suggest_mapping(self):
         JI = log(array(PRIMES))
@@ -133,6 +132,7 @@ class Tuning(Event):
             "edn": [None if self.edn_divisions is None else str(self.edn_divisions), None if self.edn_divided is None else str(self.edn_divided)],
             "warts": None if self.warts is None else list(self.warts),
             "suggestedMapping": list(self.suggested_mapping),
+            "semantic": self.semantic,
         })
         return result
 
@@ -150,12 +150,13 @@ class Tuning(Event):
             self.edn_divided,
             warts,
             array(self.suggested_mapping),
+            self.semantic,
             time,
             duration
         )
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
             self.__class__.__name__,
             self.base_frequency,
             self.comma_list,
@@ -165,43 +166,30 @@ class Tuning(Event):
             self.edn_divided,
             self.warts,
             self.suggested_mapping,
+            self.semantic,
             self.time,
             self.duration,
+            self.real_time,
+            self.real_duration,
         )
 
-
-class RealTuning(RealEvent):
-    def __init__(self, tuning, realtime, realduration, semantic):
-        super().__init__(tuning, realtime, realduration)
-        self.semantic = semantic
-        self.cache = {}
-
-    @property
-    def tuning(self):
-        return self.event
-
     def pitch_to_freq_rads(self, pitch):
-        nats = dot(self.tuning.suggested_mapping, pitch)
+        nats = dot(self.suggested_mapping, pitch)
         freq_offset = pitch[self.semantic.index("Hz")] if "Hz" in self.semantic else 0.0
-        freq = self.tuning.base_frequency * exp(nats) + freq_offset
+        freq = self.base_frequency * exp(nats) + freq_offset
         rads = pitch[self.semantic.index("rad")] if "rad" in self.semantic else 0.0
         return freq, rads
-
-    def to_json(self):
-        result = super().to_json()
-        result.update(self.tuning.to_json())
-        return result
 
     def equals(self, pitch_a, pitch_b, persistence=5):
         """
         Check if two pitches are comma-equal
         """
-        return comma_equals(pitch_a, pitch_b, self.tuning.comma_list, persistence=persistence, cache=self.cache)
+        return comma_equals(pitch_a, pitch_b, self.comma_list, persistence=persistence, cache=self.cache)
 
 
 class Tempo(Event):
-    def __init__(self, tempo_unit, tempo_duration, beat_unit, groove_pattern=None, groove_span=None, time=0, duration=0):
-        super().__init__(time, duration)
+    def __init__(self, tempo_unit, tempo_duration, beat_unit, groove_pattern=None, groove_span=None, time=0, duration=0, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
         self.tempo_unit = tempo_unit
         self.tempo_duration = tempo_duration
         self.beat_unit = beat_unit
@@ -238,7 +226,7 @@ class Tempo(Event):
     def retime(self, time, duration):
         return self.__class__(self.tempo_unit, self.tempo_duration, self.beat_unit, self.groove_pattern, self.groove_span, time, duration)
 
-    def to_realtime(self, time, duration):
+    def to_real_time(self, time, duration):
         start_beat = float(time)
         end_beat = float(time + duration)
         beat_duration = float(self.beat_duration)
@@ -256,7 +244,7 @@ class Tempo(Event):
         return start_time*beat_duration, (end_time - start_time)*beat_duration
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
             self.__class__.__name__,
             self.tempo_unit,
             self.tempo_duration,
@@ -265,12 +253,14 @@ class Tempo(Event):
             self.groove_span,
             self.time,
             self.duration,
+            self.real_time,
+            self.real_duration,
         )
 
 
 class Rest(Event):
-    def __init__(self, emit=False, time=0, duration=1):
-        super().__init__(time, duration)
+    def __init__(self, emit=False, time=0, duration=1, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
         self.emit = emit
 
     def flatten(self):
@@ -290,8 +280,10 @@ class Rest(Event):
 
 
 class Playhead(Event):
-    def __init__(self, time=0, duration=0):
-        super().__init__(time, duration)
+    def __init__(self, time=0, duration=0, real_time=None, real_duration=None):
+        if real_time is not None or real_duration is not None:
+            raise ValueError("Playheads shouldn't be realized")
+        super().__init__(time, duration, real_time=None, real_duration=None)
 
     def to_json(self):
         raise ValueError("Playheads cannot be converted to json")
@@ -305,8 +297,8 @@ class Playstop(Playhead):
 
 
 class Dynamic(Event):
-    def __init__(self, velocity, time=0, duration=0):
-        super().__init__(time, duration)
+    def __init__(self, velocity, time=0, duration=0, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
         self.velocity = velocity
 
     def retime(self, time, duration):
@@ -319,15 +311,9 @@ class Dynamic(Event):
         return result
 
 
-class RealDynamic(RealEvent):
-    @property
-    def velocity(self):
-        return self.event.velocity
-
-
 class Articulation(Event):
-    def __init__(self, gate_ratio, time=0, duration=0):
-        super().__init__(time, duration)
+    def __init__(self, gate_ratio, time=0, duration=0, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
         self.gate_ratio = gate_ratio
 
     def retime(self, time, duration):
@@ -341,8 +327,8 @@ class Articulation(Event):
 
 
 class ControlChange(Event):
-    def __init__(self, control, value, time=0, duration=0):
-        super().__init__(time, duration)
+    def __init__(self, control, value, time=0, duration=0, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
         self.control = control
         self.value = value
 
@@ -359,8 +345,8 @@ class ControlChange(Event):
 
 
 class TrackVolume(ControlChange):
-    def __init__(self, volume, time=0, duration=0):
-        super().__init__(7, None, time, duration)
+    def __init__(self, volume, time=0, duration=0, real_time=None, real_duration=None):
+        super().__init__(7, None, time, duration, real_time, real_duration)
         self.volume = volume
 
     @property
@@ -383,8 +369,8 @@ class TrackVolume(ControlChange):
 
 
 class UserMessage(Event):
-    def __init__(self, message, time, duration=0):
-        super().__init__(time, duration)
+    def __init__(self, message, time, duration=0, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
         self.message = message
 
     def retime(self, time, duration):
@@ -401,8 +387,8 @@ class UserMessage(Event):
 
 
 class ProgramChange(Event):
-    def __init__(self, name, program, time, duration=0):
-        super().__init__(time, duration)
+    def __init__(self, name, program, time, duration=0, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
         self.name = name
         self.program = program
 
@@ -422,16 +408,27 @@ class Transposable:
         pass
 
 
-class Note(Event, Transposable):
-    def __init__(self, pitch, time=0, duration=1):
-        super().__init__(time, duration)
+class GatedEvent(Event):
+    def __init__(self, time=0, duration=1, real_time=None, real_duration=None, real_gate_length=None):
+        super().__init__(time, duration, real_time, real_duration)
+        self.real_gate_length = real_gate_length
+
+    def to_json(self):
+        result = super().to_json()
+        result["realGateLength"] = self.real_gate_length
+        return result
+
+
+class Note(GatedEvent, Transposable):
+    def __init__(self, pitch, time=0, duration=1, real_time=None, real_duration=None, real_gate_length=None):
+        super().__init__(time, duration, real_time, real_duration, real_gate_length)
         self.pitch = pitch
 
     def transpose(self, pitch):
         self.pitch = self.pitch + pitch
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.pitch, self.time, self.duration)
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.pitch, self.time, self.duration, self.real_time, self.real_duration, self.real_gate_length)
 
     def to_json(self):
         result = super().to_json()
@@ -445,14 +442,14 @@ class Note(Event, Transposable):
         return self.__class__(array(self.pitch), time, duration)
 
 
-class Percussion(Event):
-    def __init__(self, name, index=None, time=0, duration=1):
-        super().__init__(time, duration)
+class Percussion(GatedEvent):
+    def __init__(self, name, index=None, time=0, duration=1, real_time=None, real_duration=None, real_gate_length=None):
+        super().__init__(time, duration, real_time, real_duration, real_gate_length)
         self.name = name
         self.index = index
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.name, self.index, self.time, self.duration)
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.name, self.index, self.time, self.duration, self.real_time, self.real_duration, self.real_gate_length)
 
     def to_json(self):
         result = super().to_json()
@@ -467,36 +464,9 @@ class Percussion(Event):
         return self.__class__(self.name, self.index, time, duration)
 
 
-class GatedEvent(RealEvent):
-    def __init__(self, event, realtime, realduration, real_gate_length):
-        super().__init__(event, realtime, realduration)
-        self.real_gate_length = real_gate_length
-
-    def to_json(self):
-        result = {"realGateLength": self.real_gate_length}
-        result.update(super().to_json())
-        return result
-
-
-class GatedNote(GatedEvent):
-    @property
-    def pitch(self):
-        return self.event.pitch
-
-
-class GatedPercussion(GatedEvent):
-    @property
-    def index(self):
-        return self.event.index
-
-    @property
-    def name(self):
-        return self.event.name
-
-
 class Pattern(MusicBase, Transposable):
-    def __init__(self, subpatterns=None, time=0, duration=1):
-        super().__init__(time, duration)
+    def __init__(self, subpatterns=None, time=0, duration=1, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
         if subpatterns is None:
             self.subpatterns = []
         else:
@@ -613,9 +583,6 @@ class Pattern(MusicBase, Transposable):
             if isinstance(subpattern, Transposable):
                 subpattern.transpose(pitch)
 
-    def to_json(self):
-        raise ValueError("Cannot convert unrealized Pattern to json")
-
     def realize(self, semantic=SEMANTIC, start_time=None, end_time=None):
         flat = []
         tempo = None
@@ -637,17 +604,18 @@ class Pattern(MusicBase, Transposable):
             TrackVolume: None,
         }
         if start_time is not None:
-            start_realtime, _ = tempo.to_realtime(start_time, 0)
+            start_real_time, _ = tempo.to_real_time(start_time, 0)
         else:
-            start_realtime = 0.0
+            start_real_time = 0.0
         for event in flat:
             if isinstance(event, Articulation):
                 articulation = event
-            realtime, realduration = tempo.to_realtime(event.time, event.duration)
-            if isinstance(event, Note) or isinstance(event, Percussion):
-                _, real_gate_length = tempo.to_realtime(event.time, event.duration * articulation.gate_ratio)
+            real_time, real_duration = tempo.to_real_time(event.time, event.duration)
+            if isinstance(event, GatedEvent):
+                _, real_gate_length = tempo.to_real_time(event.time, event.duration * articulation.gate_ratio)
                 if real_gate_length <= 0:
                     continue
+                event.real_gate_length = real_gate_length
             else:
                 real_gate_length = None
             if start_time is not None and event.time < start_time:
@@ -659,44 +627,37 @@ class Pattern(MusicBase, Transposable):
                 continue
             if start_time is not None:
                 event = event.retime(event.time - start_time, event.duration)
-            realtime -= start_realtime
+            real_time -= start_real_time
             for type_, missing_event in list(missing.items()):
                 if missing_event is not None:
                     extra = missing_event.retime(event.time, 0)
-                    if isinstance(missing_event, Dynamic):
-                        events.append(RealDynamic(extra, realtime, 0.0))
-                    else:
-                        events.append(RealEvent(extra, realtime, 0.0))
+                    extra.real_time = real_time
+                    extra.real_duration = 0.0
+                    events.append(extra)
                     missing[type_] = None
-            if isinstance(event, Tuning):
-                event = RealTuning(event, realtime, realduration, semantic)
-            elif isinstance(event, Dynamic):
-                event = RealDynamic(event, realtime, realduration)
-            elif isinstance(event, Note):
-                event = GatedNote(event, realtime, realduration, real_gate_length)
-            elif isinstance(event, Percussion):
-                event = GatedPercussion(event, realtime, realduration, real_gate_length)
-            else:
-                event = RealEvent(event, realtime, realduration)
+            event.real_time = real_time
+            event.real_duration = real_duration
             events.append(event)
 
         if start_time is None:
             start_time = self.time
         if end_time is None:
             end_time = self.end_time
-        if start_time > tempo.time:
-            events.insert(0, RealEvent(tempo, 0.0, 0.0))
-        if start_time > tuning.time:
-            events.insert(0, RealTuning(tuning, 0.0, 0.0, semantic))
+        for thing in [tempo, tuning]:
+            if start_time > thing.time:
+                extra = thing.copy()
+                extra.real_time = 0.0
+                extra.real_duration = 0.0
+                events.insert(0, extra)
         duration = end_time - start_time
-        realtime, realduration = tempo.to_realtime(start_time, duration)
-        return RealPattern(Pattern(events, start_time, duration), realtime, realduration)
+        real_time, real_duration = tempo.to_real_time(start_time, duration)
+        return Pattern(events, start_time, duration, real_time, real_duration)
 
     def retime(self, time, duration):
         raise NotImplementedError("Pattern retiming not implemented")
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.subpatterns, self.time, self.duration)
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.subpatterns, self.time, self.duration, self.real_time, self.real_duration)
 
     def is_chord(self):
         for note in self:
@@ -706,20 +667,15 @@ class Pattern(MusicBase, Transposable):
                 return False
         return True
 
-
-class RealPattern(RealEvent):
-    def __init__(self, pattern, realtime, realduration):
-        super().__init__(pattern, realtime, realduration)
-
     @property
     def events(self):
-        return self.event.subpatterns
+        return self.subpatterns
 
     def to_json(self):
         return {
-            "time": str(self.event.time),
-            "duration": str(self.event.duration),
-            "realtime": self.realtime,
-            "realduration": self.realduration,
+            "time": str(self.time),
+            "duration": str(self.duration),
+            "realTime": self.real_time,
+            "realDuration": self.real_duration,
             "events": [event.to_json() for event in self.events]
         }

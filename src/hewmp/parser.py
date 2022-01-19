@@ -1015,7 +1015,7 @@ def tracks_to_midi(tracks, freq_to_midi, reserve_channel_10=True, transpose=0, r
             if event["type"] == "dynamic":
                 velocity = int(round(float(127 * Fraction(event["velocity"]))))
             if event["type"] in ("note", "percussion", "programChange") or event.get("subtype") == "controlChange":
-                time = int(round(resolution * event["realtime"]))
+                time = int(round(resolution * event["realTime"]))
             if event["type"] == "note":
                 frequency = base_frequency*exp(dot(mapping, event["pitch"])) + event["pitch"][HZ_INDEX]
                 events.append((time, event, frequency, velocity))
@@ -1035,7 +1035,7 @@ def tracks_to_midi(tracks, freq_to_midi, reserve_channel_10=True, transpose=0, r
                 duration = int(round(resolution * event["realGateLength"]))
                 if duration <= 0:
                     continue
-                max_duration = int(resolution * event["realduration"])
+                max_duration = int(resolution * event["realDuration"])
                 if duration >= max_duration:
                     duration = max_duration - 1
             if event["type"] == "note":
@@ -1089,7 +1089,7 @@ def tracks_to_midi(tracks, freq_to_midi, reserve_channel_10=True, transpose=0, r
                 message = mido.Message(msg_type, note=index, channel=channel, velocity=velocity, time=(time - current_time))
                 track.append(message)
                 current_time = time
-        target_time = int(round(resolution * data["realduration"]))
+        target_time = int(round(resolution * data["realDuration"]))
         message = mido.MetaMessage("end_of_track", time=max(0, target_time - current_time))
         track.append(message)
 

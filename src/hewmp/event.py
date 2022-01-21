@@ -3,6 +3,7 @@ from fractions import Fraction
 from numpy import array, zeros, log, floor, pi, around, dot, exp, cumsum, linspace, concatenate, ones
 from scipy.interpolate import interp1d
 from .temperament import temper_subgroup, comma_reduce, comma_equals, comma_root
+from .notation import tokenize_fraction
 
 
 PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
@@ -439,7 +440,7 @@ class Note(GatedEvent, Transposable):
         return result
 
     def retime(self, time, duration):
-        return self.__class__(array(self.pitch), time, duration)
+        return self.__class__(array(self.pitch), time, duration, real_gate_length=self.real_gate_length)
 
 
 class Percussion(GatedEvent):
@@ -461,7 +462,7 @@ class Percussion(GatedEvent):
         return result
 
     def retime(self, time, duration):
-        return self.__class__(self.name, self.index, time, duration)
+        return self.__class__(self.name, self.index, time, duration, real_gate_length=self.real_gate_length)
 
 
 class Pattern(MusicBase, Transposable):
@@ -616,8 +617,6 @@ class Pattern(MusicBase, Transposable):
                 if real_gate_length <= 0:
                     continue
                 event.real_gate_length = real_gate_length
-            else:
-                real_gate_length = None
             if start_time is not None and event.time < start_time:
                 for type_ in missing:
                     if isinstance(event, type_):

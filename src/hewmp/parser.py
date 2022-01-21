@@ -426,6 +426,16 @@ def patternify(pattern):
     return pattern
 
 
+def parse_time(token):
+    """
+    Better version of Fraction() that can do multiplication
+    """
+    result = Fraction(1)
+    for subtoken in token.split("*"):
+        result *= Fraction(subtoken.strip())
+    return result
+
+
 class RepeatExpander:
     def __init__(self, lexer):
         self.lexer = lexer
@@ -598,6 +608,8 @@ def parse_track(lexer, default_config):
                 interval_parser.edn_divided = edn_divided
             if config_key == "N":
                 current_notation = token.strip()
+                if current_notation not in ["hewmp", "HEWMP", "percussion"]:
+                    raise ParsingError("Unknown notation '{}'".format(current_notation))
                 config[config_key] = current_notation
             if config_key == "I":
                 name = token.strip()
@@ -631,7 +643,7 @@ def parse_track(lexer, default_config):
                 time += pattern[-1].duration
             elif token.startswith("+") or token.startswith("-"):
                 time -= pattern[-1].duration
-                extension = Fraction(token)
+                extension = parse_time(token)
                 if isinstance(pattern[-1], Pattern):
                     logical_extension = pattern[-1].logical_duration * extension / pattern[-1].duration
                     for subpattern in pattern[-1]:
@@ -643,7 +655,7 @@ def parse_track(lexer, default_config):
                 if time_token == "T":
                     time = timestamp
                 else:
-                    time = Fraction(time_token)
+                    time = parse_time(time_token)
                 pattern[-1].time = time
             elif token.lower().startswith("x"):
                 pattern[-1] = patternify(pattern[-1])
@@ -704,7 +716,7 @@ def parse_track(lexer, default_config):
             if default:
                 duration_token = token
                 time -= pattern[-1].duration
-                pattern[-1].duration *= Fraction(duration_token)
+                pattern[-1].duration *= parse_time(duration_token)
                 time += pattern[-1].duration
             continue
 

@@ -1,5 +1,5 @@
 from fractions import Fraction
-from numpy import array, dot, isclose
+from numpy import array, dot, isclose, exp, log
 from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX, Tuning, Note, sync_playheads
 from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interval
 from hewmp.smitonic import smitonic_tokenize_interval, SMITONIC_INFLECTIONS, smitonic_tokenize_pitch
@@ -330,6 +330,29 @@ def test_mos_rhythm():
     assert times_durations == [(0, 1), (1, 2), (3, 2), (5, 2)]
 
 
+def test_tuning_optimization():
+    text = "T:porcupine"
+    pattern = parse_text(text)[0][0]
+    for event in pattern:
+        if isinstance(event, Tuning):
+            tuning = event
+    assert(abs(log(16) - tuning.suggested_mapping[0]*4) < 0.006)
+    assert(abs(log(9) - tuning.suggested_mapping[1]*2) < 0.006)
+    assert(abs(log(5) - tuning.suggested_mapping[2]) < 0.006)
+
+
+def test_constraints():
+    text = "T:porcupine\nC:P8"
+    pattern = parse_text(text)[0][0]
+    for event in pattern:
+        if isinstance(event, Tuning):
+            tuning = event
+    assert isclose(2, exp(tuning.suggested_mapping[0]))
+    error_for_9 = abs(log(9) - tuning.suggested_mapping[1]*2)
+    error_for_5 = abs(log(5) - tuning.suggested_mapping[2])
+    assert(error_for_9 > 0.006 or error_for_5 > 0.006)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_pitch()
@@ -358,3 +381,5 @@ if __name__ == '__main__':
     test_exponential_rhythm()
     test_euclidean_rhythm()
     test_mos_rhythm()
+    test_tuning_optimization()
+    test_constraints()

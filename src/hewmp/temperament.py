@@ -71,7 +71,8 @@ def temper_subgroup(just_mapping, comma_list, constraints, subgroup, num_iterati
             else:
                 subgroup_mapping = minimax(subgroup_just_mapping, subgroup_mapping)
         else:
-            subgroup_mapping / dot(subgroup_mapping, constraint) * dot(subgroup_just_mapping, constraint)
+            subgroup_mapping *= dot(subgroup_just_mapping, constraint) / dot(subgroup_mapping, constraint)
+
 
     mapping = array(just_mapping)
     for i, basis_vector in enumerate(subgroup):

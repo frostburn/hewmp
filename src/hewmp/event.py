@@ -327,6 +327,21 @@ class Articulation(Event):
         return result
 
 
+class ContextChange(Event):
+    def __init__(self, name, time=0, duration=0, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
+        self.name = name
+
+    def retime(self, time, duration):
+        return self.__class__(self.name, time, duration)
+
+    def to_json(self):
+        result = super().to_json()
+        result["type"] = "contextChange"
+        result["name"] = self.name
+        return result
+
+
 class ControlChange(Event):
     def __init__(self, control, value, time=0, duration=0, real_time=None, real_duration=None):
         super().__init__(time, duration, real_time, real_duration)
@@ -603,6 +618,7 @@ class Pattern(MusicBase, Transposable):
             Dynamic: None,
             ProgramChange: None,
             TrackVolume: None,
+            ContextChange: None,
         }
         if start_time is not None:
             start_real_time, _ = tempo.to_real_time(start_time, 0)

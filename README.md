@@ -7,18 +7,18 @@ The acronym stands for Helmholtz / Ellis / Wolf / Monzo / Pakkanen notation.
 
 You can use HEWMP with minimal knowledge of music theory by writing melodies using fractional numbers
 ```
-1/1 5/4 6/5 4/3
+1/1 5/4 3/2 2/1
 ```
 Note frequency is initialized to 440Hz and each ratio multiplies it. Here's the same melody spelled using frequencies.
 ```
 BF:0
 @440Hz @550Hz @660Hz @880Hz
 ```
-Or as *absolute* ratios that don't multiply together and are always calculated from the base frequency.
+Or as *moving* ratios that multiply together as we go along.
 ```
-@1/1 @5/4 @3/2 @2/1
+~1/1 ~5/4 ~6/5 ~4/3
 ```
-Denominators of one can be dropped.
+Plain ratios use the last moved ratio as the base so use *absolute* ratios if you want to use the initial base frequency (denominators of one can be dropped).
 ```
 @1 @5/4 @3/2 @2
 ```
@@ -28,12 +28,12 @@ The project is still in alpha so you will have to clone this repository and inst
 
 ## MIDI Output
 ```
-python -m hewmp.parser examples/minuet.hewmp /tmp/minuet.mid
+python -m hewmp.parser examples/giant_steps.hewmp /tmp/giant_steps.mid
 ```
 ## Translation for Inspection
-The Minuet example is written in relative intervals. If you wish to read it in absolute pitches use the `--absolute` command line argument.
+The example is mostly written in relative intervals. If you wish to read it in absolute pitches use the `--absolute` command line argument.
 ```
-python -m hewmp.parser examples/minuet.hewmp --absolute
+python -m hewmp.parser examples/giant_steps.hewmp --absolute
 ```
 The Giant Steps example is written in relative 5-limit intervals. If you wish to read it in fractional numbers use the `--fractional` command line argument.
 ```
@@ -45,23 +45,23 @@ By default the HEWMP parser outputs JSON to the standard output. The format is s
 ## Descending Intervals
 To cause the pitch to fall use fractions smaller than one
 ```
-1 3/4 4/5 5/6
+1 ~3/4 ~4/5 ~5/6
 ```
-or place a minus sign before the interval
+or place a minus sign before the interval (this makes more sense if you think in terms of cents)
 ```
-1 -4/3 -5/4 -6/5
+1 ~-4/3 ~-5/4 ~-6/5
 ```
 
 ## Note Duration
 Note duration is specified using square brackets `[`, `]` after a note. The default duration is `[1]` (one beat).
 ```
-1/1[2] 6/5 5/4 6/5 10/9[2]
+1/1[2] 6/5 3/2 9/5 2/1[2]
 ```
 
 ## Rests
 To advance time without playing a note use the rest symbol `z`. If you want to include the rest in the output use a capital letter `Z` (only applies if the output format supports explicit rests).
 ```
-1 z 5/4 6/5
+1 z 5/4 3/2
 ```
 
 ## Comments
@@ -74,14 +74,14 @@ $ This is a comment
 ## Barlines
 Barlines `|` can be used to visually organize your music. They have no effect on the sound.
 ```
-1[4] | 5/4[2] 6/5[2] | 5/4 16/15[3] ||
+1[4] | 5/4[2] 3/2[2] | 15/8 2/1[3] ||
 ```
 
 ### Repeats
 A section can be repeated by placing it between `|:` and `:|`. An optional `x` can be attached onto `:|` to specify the number of repeats other than the default two. This means that `x1` has no effect and `x0` effectively removes the section.
 ```
 $ Repeats are literal so the following is an ascending sequence of seven notes
-|: 9/8 :|x7
+|: ~9/8 :|x7
 ```
 
 ### Previewing a Section
@@ -98,42 +98,42 @@ $ This section is ignored
 ### Ties
 To play a note across a barline use additive duration
 ```
-1/1[2] 5/4[2]|[+4] | 6/5 4/3 1/2[2] ||
+1/1[2] 5/4[2]|[+4] | 3/2 2/1 1/1[2] ||
 ```
 
 ## Absolute Pitches
 Using `@` before an interval measures the pitch from the base frequency.
 ```
 $ Go up
-9/8 9/8 9/8
+~9/8 ~9/8 ~9/8
 $ Reset back to 440Hz and go to 660Hz
 @1 @3/2
 $ Go up from there
-9/8 9/8 9/8
+~9/8 ~9/8 ~9/8
 ```
 
-## Floaty Pitches
-To play a note relative to the previous one, but ignore it going forward use `~`. This can be used to play local scales, only using non-floaty pitches to move the root note.
+## (Root) Moving Intervals
+To play a note relative to the previous one and remember it use `~`. This can be used to play local scales by using moving intervals for root motion.
 ```
 $ ii arpeggio
- 9/8 ~6/5 ~3/2 |
+ ~9/8 6/5 3/2 |
 $ V arpeggio
- 4/3 ~5/4 ~3/2 |
+ ~4/3 5/4 3/2 |
 $ I arpeggio
- 2/3 ~5/4 ~3/2 |
-~2[3]          ||
+ ~2/3 5/4 3/2 |
+  2[3]        ||
 ```
 
 ## Composite intervals
 You can add an octave to an interval by prefixing it with `c`
 ```
-1 ~3/2 ~c5/4
+1 3/2 c5/4
 ```
 
 ## Pythagorean basis
 The base notation system of HEWMP is Pythagorean i.e. 3-limit just intonation i.e. fractions built from powers of 2 and 3.
 While the main system is based on relative intervals there is an underlying set of absolute pitches forming a chain of fifths.
-(Please note that the absolute pitch `a` is spelled in lowercase to differentiate it from the augmented interval `A`.)
+(Please note that the absolute pitch `a` is spelled in lowercase to differentiate it from the augmented interval `A`.) TODO: Switch these
 ```
 $ A chain of fifths (3/2) around the base note a4
 F2 C3 G3 D4 a4 E5 B5
@@ -196,7 +196,7 @@ B3 d5
 Remember that in just intonation the augmented fourth `729/512` is different from the diminished fifth `1024/729`.
 
 ## Sharps and Flats
-An absolute pitch can be raised by a fraction of `2187/2048` (approximately `113.685c`) by appending a sharp sign `#` to it (spelled as a hash to remain within ASCII).
+An absolute pitch can be raised by a fraction of `2187/2048` (approximately `113.685c`) by appending a sharp sign `#` to it (spelled as a hash to remain within ASCII). TODO: Add support for unicode
 ```
 a4 a4#
 ```
@@ -218,13 +218,13 @@ If the base interval is perfect `P` or major `M` an augmented version is wider b
 ```
 P1 A1
 ```
-If the base interval is perfect `P` or minor `m` a diminished version is narrower by a fraction of `2187/2048`. This can create negative intervals.
+If the base interval is perfect `P` or minor `m` a diminished version is narrower by a fraction of `2187/2048`. This can create paradoxical intervals that go down in pitch.
 ```
 P1 d1
 ```
 Augmented `A` and diminished `d` stack.
 ```
-P1 dd1
+P1 dd1 AAA1
 ```
 
 ## Inflections
@@ -265,12 +265,12 @@ HEWMP has multiple ways of specifying groups of notes that sound together.
 Use `:` to spell out chords as extended ratios. The first number is always at the current pitch.
 ```
 M2=10:12:15  $ ii
-P4=4:3:5     $ V
--P5=4:5:6:8  $ I
-4:5:6        $ The = sign is optional if you don't want the pitch to change
+P5=4:3:5     $ V
+P1=4:5:6:8   $ I
+4:5:6        $ The '=' sign is optional if you don't want the pitch to change
 ```
 ### Utonal Chords
-As otonal chords are composed of members of the harmonic series, utonal chords by contrast are composed of subharmonics and spelled using `;`.
+Where otonal chords are composed of members of the harmonic series, utonal chords by contrast are composed of subharmonics and spelled using `;`.
 ```
 $ A minor chord written using utonal syntax
 6;5;4
@@ -301,7 +301,7 @@ $ Major seventh chord with the major third replaced by a major second
 ### Comma-separated Pitches
 ```
 $ Minor seventh chord with syntonic inflections
-P1,~m3+,~P5,~m7+
+P1,m3+,P5,m7+
 $ Same as
 =m7+
 $ or
@@ -319,11 +319,11 @@ Duration can be attached to otonal, utonal and symbolic chords. Comma-separated 
 ```
 6;5;4[1/2]
 =sus4[1/2]
-(P1,~P5)[2]
+(P1,P5)[2]
 ```
 
 ## Time Rewind
-The comma operator `,` is actually a time rewind operator that turns back time based on the duration of the last note played.
+The comma operator `,` is actually a time rewind operator that goes back to the start of the last note played so that multiple notes can be specified to play at the same time. Multiple `,` stack and move back by the same amount of time on each usage.
 
 ## Absolute Time
 To rewind time to a specific beat use the `@` symbol followed by a number inside square brackets `[`, `]`.
@@ -332,12 +332,12 @@ To rewind time to a specific beat use the `@` symbol followed by a number inside
 Parenthesis `(`, `)` are actually used to define tuplets. Anything placed inside parenthesis will have total duration of one.
 ```
 $ Steady pedal tone
-1        1    1  1    |  1  1      1 1 ||
+1        1    1  1     |  1  1      1 1 ||
 $ Funky second voice
-3/2[@0] (z 1) 1 (z 1) | (1 1 1)[2] 1 1 ||
+~3/2[@0] (z 1) 1 (z 1) | (1 1 1)[2] 1 1 ||
 ```
 ## Timestamp
-To specify a timestamp use `T`. To jump to the timestamp use `@T` inside square brackets.
+To specify a timestamp use `T`. To jump to the timestamp use `@T` inside square brackets. TODO: Check if this still works
 ```
 $ First section alto voice
 C4         D4 E4     E4 |
@@ -365,16 +365,17 @@ Q:1/4=200     $ Use 200bpm as the global tempo
 $ Chords
 MP:4          $ Reserve four MIDI channels
 L:1/1         $ Play full bars
--P8[0]        $ Play in the alto register
-M2=m7+ | P4=dom-_2 | -P5=M7- | =M- ||
+~-P8[0]       $ Play in the alto register
+~M2=m7+ | ~P4=dom-_2 | ~-P5=M7- | =M- ||
 ---
 $ Melody
 MP:1          $ Reserve one MIDI channel
 L:1/4         $ Play quarter notes
-M2 ~m7+ ~M6- ~P5 | P4 ~-M2 ~M3- ~-P4 | -P5 ~M7- ~M3- ~P4 | ~P5 ~M3- ~P1[2] ||
+~M2 m7+ M6- P5 | ~P4 -M2 M3- -P4 | ~-P5 M7- M3- P4 | P5 M3- P1[2] ||
 ---
 $ Drums
 N:percussion  $ Use percussion notation and MIDI channel 10
+MP:0          $ Don't reserve pitched channels
 L:1/4         $ Play quarter notes
 k h s k,h | k h s k,o | k,h h s k,h | k,c h s z ||
 ```
@@ -452,9 +453,9 @@ SG:2.3.5
 ### Comma List
 The main reason HEWMP is based on relative intervals is to be able to write comma pumps of arbitrary length in just intonation with a finite number of symbols.
 ```
-$ I-vi-ii-V chord progression that pumps the syntonic comma.
+$ I-vi-ii-V chord progression that pumps the syntonic comma downwards.
 $ (The product of the fractions is 80/81)
-|: 2/3=M- 5/6=m+ 4/3=m+ 4/3=M-_2 :|x12
+|: ~2/3=M- ~5/6=m+ ~4/3=m+ ~4/3=M-_2 :|x12
 ```
 Using a comma-list `CL:` you can *temper out* a set of commas so that the pitch doesn't change when pumping the commas. HEWMP accomplishes this by slightly altering the pitch mapping of the primes in the subgroup given by `SG:`.
 ```
@@ -462,9 +463,9 @@ SG:2.3.5
 CL:81/80,128/125
 $ I-vi-ii-V chord progression that pumps the syntonic comma,
 $ but the overall pitch doesn't change.
-|: 2/3=M- 5/6=m+ 4/3=m+ 4/3=M-_2 :|x4
+|: ~2/3=M- ~5/6=m+ ~4/3=m+   ~4/3=M-_2 :|x4
 $ Chord progression that pumps the diesis without changing the overall pitch.
-|: 1/2=M- 5/4=M- 5/4=M-_2 5/4=7-_3 :|x4
+|: ~1/2=M- ~5/4=M- ~5/4=M-_2 ~5/4=7-_3 :|x4
 ```
 ### Temperament/Tuning
 HEWMP comes with a few named presets so that you don't have to type out specific subgroups and comma lists.
@@ -472,7 +473,7 @@ HEWMP comes with a few named presets so that you don't have to type out specific
 $ Same as SG:2.3.5 and CL:250/243
 T:porcupine
 $ Chord progression that pumps the porcupine comma
-|: 5/3=6:4:5 2/3=3:4:5 5/3=6:4:5 2/3=6:5:4 5/6=3:4:5 :|
+|: ~5/3=6:4:5 ~2/3=3:4:5 ~5/3=6:4:5 ~2/3=6:5:4 ~5/6=3:4:5 :|
 ```
 TODO: Document all available temperaments
 ### Constraints
@@ -518,18 +519,19 @@ The `$` character acts as as escape inside double quotes. To enter a double quot
 If you want to specify intervals not affected by tuning use cents.
 ```
 $ 12ed2 A major scale
-0c 200c 200c 100c 200c 200c 200c 100c
+0c 200c 400c 500c 700c 900c 1100c 1200c
 ```
-Warning: Not even `ED:` will round these up.
+Warning: Not even `ED:` will affect something specified in raw cents.
 ## Primes beyond 31
 If a fraction contains primes larger than the supported `31` those will be converted to cents in the output.
 ```
 1 37/31
 ```
+Warning: This can cause some surprises when tempering.
 ## Hz Offset
-Beating of similarly tuned notes is a musical phenomenon that is often percieved as a rhythm instead of a pitch difference. Use `Hz` to specify a frequency offset. See also [Phase Offset](#phase).
+Beating of similarly tuned notes is a musical phenomenon that is often perceived as a rhythm instead of a pitch difference. Use `Hz` to specify a frequency offset. See also [Phase Offset](#phase).
 ```
-1,1 z 1,~1Hz z 1,~2Hz
+1,1 z 1,1Hz z 1,2Hz
 ```
 
 ## Transposing
@@ -541,25 +543,25 @@ To combine two intervals use the `&` symbol. This is mainly useful for specifyin
 ## EDN Steps
 The shorthand to enter cents equal to the current `ED:` step size is `1\`. To specify the number of divisions of `2` add a second number after `\`. To specify another interval to divide besides `2` append it after a second backslash.
 ```
-0\ 2\ 5\ 5\
+0\ 2\ 7\ 12\
 
-@0\19 5\19 5\19 9\19
+0\19 5\19 10\19 19\19
 
-@0\10\3 5\10\3
+0\10\3 5\10\3
 ```
 
 ## Interval Roots
 To specify fractional pitch monzos append a slash `/` and the desired root degree.
 ```
-$ Neutral arpeggio
-P1 ~P5/2 ~P5
+$ Arpeggiated neutral chord
+P1 P5/2 P5
 ```
 Warning: Interval roots may produce fractional steps if the relevant components of the `ED:` mapping are not divisible by the root degree.
 ### Interval Exponents
 To further multiply the fractional pitch monzo append an asterisk `*` and the desired exponent.
 ```
 $ Step through equal divisions of the pure fourth
-P1 ~P4/3 ~P4/3*2 ~P4
+P1 P4/3 P4/3*2 P4
 ```
 
 ## <a name="pronunciation"></a> Pronunciation
@@ -621,7 +623,7 @@ To control when the beats of two similarly tuned notes occur use a phase offset 
 ```
 (1,1Hz&90deg)[5]
 ```
-
+Warning: Phase offset is ignored in MIDI output.
 ## <a name="smitonic"></a> Smitonic Extension
 Because HEWMP is mainly focused on notating just intonation and temperaments thereof it can produce quite surprising results for edos. First an expression is parsed into a fraction and then the prime components of that fraction are used to decide what scale degree should represent that factor. If a prime component is mapped inaccurately the error will compound. This is especially damaging if the prime in question is 3 as it breaks the whole Pythagorean basis of the notation.
 

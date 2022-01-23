@@ -610,7 +610,9 @@ def parse_track(lexer, default_config):
                 current_notation = token.strip()
                 if current_notation not in ["hewmp", "HEWMP", "percussion"]:
                     raise ParsingError("Unknown notation '{}'".format(current_notation))
+                current_notation = current_notation.lower()
                 config[config_key] = current_notation
+                pattern.append(ContextChange(current_notation, time))
             if config_key == "I":
                 name = token.strip()
                 program = GM_PROGRAMS.get(name)
@@ -780,9 +782,9 @@ def parse_track(lexer, default_config):
                 subpattern.duration = subpattern_duration
                 pattern.append(subpattern)
             else:
-                floaty = False
+                moves_root = False
                 if token.startswith("~"):
-                    floaty = True
+                    moves_root = True
                     token = token[1:]
                 interval, absolute = interval_parser.parse(token)
 
@@ -792,13 +794,14 @@ def parse_track(lexer, default_config):
                     transposed_pattern.transpose(interval)
                     pattern.append(transposed_pattern)
                     transposed_pattern = None
-                    if not floaty:
+                    if moves_root:
                         current_pitch += interval
                 else:
                     if absolute:
                         current_pitch = zero_pitch()
+                        moves_root = True
                     pitch = current_pitch + interval
-                    if not floaty:
+                    if moves_root:
                         current_pitch = pitch
                     note = Note(pitch, time)
                     pattern.append(note)
@@ -1038,6 +1041,8 @@ def tracks_to_midi(tracks, freq_to_midi, reserve_channel_10=True, transpose=0, r
                 if change_time < 0:
                     time_offset = -change_time
                 events.append((change_time, event, None, None))
+            if event["type"] == "contextChange":
+                events.append((time - 1.1, event, None, None))
         presorted = events
         events = []
         channel = channel_offset
@@ -1072,24 +1077,34 @@ def tracks_to_midi(tracks, freq_to_midi, reserve_channel_10=True, transpose=0, r
                 events.append((time, "program_change", event["program"], None, None, None))
             if event.get("subtype") == "controlChange":
                 events.append((time, "control_change", event["control"], None, event["value"], None))
+            if event["type"] == "contextChange":
+                events.append((time, "_context_change", event["name"], None, None, None))
 
+        default_range = []
+        for ch in range(max_polyphony):
+            ch += channel_offset
+            if reserve_channel_10 and ch >= 9:
+                ch += 1
+            default_range.append(ch)
+        percussion_range = default_range
+        if reserve_channel_10:
+            percussion_range = [9]
+        channel_ranges = {"percussion": percussion_range}
+
+        current_context = "hewmp"
         current_time = 0
         for event in sorted(events):
             time, msg_type, index, bend, velocity, channel = event
             time += time_offset
-            if msg_type == "program_change":
-                for ch in range(max_polyphony):
-                    ch += channel_offset
-                    if reserve_channel_10 and ch >= 9:
-                        ch += 1
+            if msg_type == "_context_change":
+                current_context = index
+            elif msg_type == "program_change":
+                for ch in channel_ranges.get(current_context, default_range):
                     message = mido.Message(msg_type, program=index, channel=ch, time=(time - current_time))
                     track.append(message)
                     current_time = time
             elif msg_type == "control_change":
-                for ch in range(max_polyphony):
-                    ch += channel_offset
-                    if reserve_channel_10 and ch >= 9:
-                        ch += 1
+                for ch in channel_ranges.get(current_context, default_range):
                     message = mido.Message(msg_type, control=index, value=velocity, channel=ch, time=(time - current_time))
                     track.append(message)
                     current_time = time

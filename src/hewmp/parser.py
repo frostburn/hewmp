@@ -14,6 +14,7 @@ from .gm_programs import GM_PROGRAMS
 from .smitonic import SMITONIC_INTERVAL_QUALITIES, SMITONIC_BASIC_PITCHES, smitonic_parse_arrows, smitonic_parse_pitch, SMITONIC_INFLECTIONS
 from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exponential_rhythm
 from .event import *
+from .color import parse_interval as parse_color_interval
 
 
 DEFAULT_INFLECTIONS = {
@@ -338,6 +339,11 @@ class IntervalParser:
                 raise ParsingError("Signed absolute pitch")
             pitch += smitonic_parse_pitch(token, self.smitonic_inflections) - self.smitonic_base_pitch
             absolute = True
+        else:
+            color_monzo = parse_color_interval(token)
+            color_offset = zero_pitch()
+            color_offset[:len(color_monzo)] = color_monzo
+            pitch += color_offset
 
         if direction is not None:
             pitch *= direction

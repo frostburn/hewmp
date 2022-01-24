@@ -248,6 +248,9 @@ The vectors associated with the primes 5, 7 and 11 follow Joe Monzo's original p
 The monzo for `i` and `!` was particularly chosen so that the barbados third `13/10` is spelled `M3i+`. This in turn makes it possible to write the barbados terrad `10:13:15` as `=Mi+` using the chord system (pronounced "major island" see [Pronunciation](#pronunciation) for details).
 The inflections are supposed to resemble arrows pointing in opposite directions while the u and d pairs bring to mind the words *up* and *down*.
 
+## Color Notation
+Color intervals such as `y3` for `5/4` are supported.
+
 ## Figuring Out Spellings
 If you want to see how a certain fraction is spelled use the notation module.
 ```
@@ -412,7 +415,7 @@ Use `V:` to define the volume of a track. Default is `1.0`.
 V:0.5  $ Half as loud
 ```
 ### Notation
-Use `N:` to change what notes mean. Used for writing percussion, but in the future will support alternatives to HEWMP such as color notation. Default is `hewmp`.
+Use `N:` to change what notes mean. Used for writing percussion, but reserved for future alternatives that clash with base HEWMP notation. Default is `hewmp`.
 ```
 N:percussion
 ```

@@ -353,6 +353,47 @@ def test_constraints():
     assert(error_for_9 > 0.006 or error_for_5 > 0.006)
 
 
+def test_color_notation():
+    text = """
+        1/1 w1
+        21/20 zg2
+        16/15 g2
+        10/9 y2
+        9/8 w2
+        8/7 r2
+        7/6 z3
+        32/27 w3
+        6/5 g3
+        5/4 y3
+        9/7 r3
+        21/16 z4
+        4/3 w4
+        27/20 g4
+        7/5 zg5
+        45/32 y4
+        64/45 g5
+        10/7 ry4
+        40/27 y5
+        3/2 w5
+        32/21 r5
+        14/9 z6
+        8/5 g6
+        5/3 y6
+        27/16 w6
+        12/7 r6
+        7/4 z7
+        16/9 w7
+        9/5 g7
+        15/8 y7
+        40/21 ry7
+        2/1 w8
+    """
+    notes = get_notes(text)
+    assert len(notes) == 64
+    for i in range(32):
+        assert (notes[2*i].pitch == notes[2*i + 1].pitch).all()
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_pitch()
@@ -383,3 +424,4 @@ if __name__ == '__main__':
     test_mos_rhythm()
     test_tuning_optimization()
     test_constraints()
+    test_color_notation()

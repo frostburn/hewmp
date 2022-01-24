@@ -60,7 +60,7 @@ def test_transposition_persistence():
 
 
 def test_floaty_transposition():
-    pattern_a = parse_text("M2&~100c M2")[0][0]
+    pattern_a = parse_text("M2&100c M2")[0][0]
     pattern_b = parse_text("M2 M2")[0][0]
 
     for event in pattern_a:
@@ -264,7 +264,7 @@ def test_tuplet_hold():
 
 
 def test_reverse_time():
-    text = "(P1 P8 P8 P8)[R]"
+    text = "(P1 ~P8 ~P8 ~P8)[R]"
     notes = get_notes(text)
     for i in range(4):
         assert notes[i].duration == 0.25
@@ -282,7 +282,7 @@ def test_absolute_time():
 
 
 def test_rotate_time():
-    text = "(P1 P8[2] P8[3] P8[4])[? >]"
+    text = "(P1 ~P8[2] ~P8[3] ~P8[4])[? >]"
     notes = get_notes(text)
     times_durations = []
     for i in range(4):
@@ -292,7 +292,7 @@ def test_rotate_time():
 
 
 def test_rotate_rhythm():
-    text = "(P1 P8[2] P8[3] P8[4])[? ^]"
+    text = "(P1 ~P8[2] ~P8[3] ~P8[4])[? ^]"
     notes = get_notes(text)
     times_durations = []
     for i in range(4):
@@ -301,7 +301,7 @@ def test_rotate_rhythm():
     assert times_durations == [(0, 4), (4, 1), (5, 2), (7, 3)]
 
 def test_exponential_rhythm():
-    text = "(P1 P8 P8 P8)[e2]"
+    text = "(P1 ~P8 ~P8 ~P8)[e2]"
     notes = get_notes(text)
     denominator = sum(2**i for i in range(4))
     for i in range(4):
@@ -311,7 +311,7 @@ def test_exponential_rhythm():
 
 
 def test_euclidean_rhythm():
-    text = "(P1 P8 P8 P8)[E6 ?]"
+    text = "(P1 ~P8 ~P8 ~P8)[E6 ?]"
     notes = get_notes(text)
     times_durations = []
     for i in range(4):
@@ -321,7 +321,7 @@ def test_euclidean_rhythm():
 
 
 def test_mos_rhythm():
-    text = "(P1 P8 P8 P8)[5MOS7 ?]"
+    text = "(P1 ~P8 ~P8 ~P8)[5MOS7 ?]"
     notes = get_notes(text)
     times_durations = []
     for i in range(4):

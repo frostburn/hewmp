@@ -14,7 +14,7 @@ from .gm_programs import GM_PROGRAMS
 from .smitonic import SMITONIC_INTERVAL_QUALITIES, SMITONIC_BASIC_PITCHES, smitonic_parse_arrows, smitonic_parse_pitch, SMITONIC_INFLECTIONS
 from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exponential_rhythm
 from .event import *
-from .color import parse_interval as parse_color_interval
+from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 
 
 DEFAULT_INFLECTIONS = {
@@ -303,7 +303,16 @@ class IntervalParser:
                     exponent_degree = int(exponent_token)
                 root_degree = int(degree_token)
 
-        if token[0].isdigit():
+        # Quick non-exhaustive check for color notation
+        is_colored = (
+            "o" in token or "u" in token or (
+                (token[0] == "L" or token[0] == "s") and (
+                    not token[1].isdigit() or token[1] in UNICODE_EXPONENTS
+                )
+            )
+        )
+
+        if token[0].isdigit() and not is_colored:
             if token.endswith("c"):
                 cents_in_nats = float(token[:-1])/1200*log(2)
                 pitch[E_INDEX] = cents_in_nats
@@ -332,7 +341,7 @@ class IntervalParser:
                 raise ParsingError("Signed absolute pitch")
             pitch += parse_pitch(token, self.inflections) - self.base_pitch
             absolute = True
-        elif token[0] in SMITONIC_INTERVAL_QUALITIES:
+        elif token[0] in SMITONIC_INTERVAL_QUALITIES and not is_colored:
             pitch += smitonic_parse_arrows(token, self.smitonic_inflections)
         elif token[0] in SMITONIC_BASIC_PITCHES:
             if direction is not None:

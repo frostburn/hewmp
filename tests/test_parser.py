@@ -21,6 +21,13 @@ def test_parse_interval():
     assert (interval_parser.parse("d7+2")[0][:3] == array([7, -1, -2])).all()
 
 
+def test_parse_higher_prime():
+    text = "46/27 M6u | 8464/6561 M3u2"
+    notes = get_notes(text)
+    assert (notes[0].pitch == notes[1].pitch).all()
+    assert (notes[2].pitch == notes[3].pitch).all()
+
+
 def test_parse_pitch():
     mapping = array([12, 19, 28])
     interval_parser = IntervalParser()
@@ -353,7 +360,7 @@ def test_constraints():
     assert(error_for_9 > 0.006 or error_for_5 > 0.006)
 
 
-def test_color_notation():
+def test_basic_color_notation():
     text = """
         1/1 w1
         21/20 zg2
@@ -394,8 +401,33 @@ def test_color_notation():
         assert (notes[2*i].pitch == notes[2*i + 1].pitch).all()
 
 
+def test_color_exponents():
+    text = "y3 yy3 y^33 y⁴3 y³⁴3"
+    notes = get_notes(text)
+    monzos = [[-2, 0, 1], [2, -4, 2], [-5, -1, 3], [-1, -5, 4], [-24, -34, 34]]
+    for note, monzo in zip(notes, monzos):
+        assert list(note.pitch[:3]) == monzo
+
+
+def test_higher_prime_color_notation():
+    text = "1o4 3o6 17u7 19o3 23u2"
+    notes = get_notes(text)
+    monzos = [[-3, 0, 0, 0, 1], [-3, 0, 0, 0, 0, 1], [5, 0, 0, 0, 0, 0, -1], [-4, 0, 0, 0, 0, 0, 0, 1], [0, 3, 0, 0, 0, 0, 0, 0, -1]]
+    for note, monzo in zip(notes, monzos):
+        assert list(note.pitch[:len(monzo)]) == monzo
+
+
+def test_large_small_color_notation():
+    text = "w3 Lw3 sw3 LLw3 s⁴w3"
+    notes = get_notes(text)
+    monzos = [[5, -3], [-6, 4], [16, -10], [-17, 11], [49, -31]]
+    for note, monzo in zip(notes, monzos):
+        assert list(note.pitch[:2]) == monzo
+
+
 if __name__ == '__main__':
     test_parse_interval()
+    test_parse_higher_prime()
     test_parse_pitch()
     test_transposition()
     test_transposition_persistence()
@@ -424,4 +456,7 @@ if __name__ == '__main__':
     test_mos_rhythm()
     test_tuning_optimization()
     test_constraints()
-    test_color_notation()
+    test_basic_color_notation()
+    test_color_exponents()
+    test_higher_prime_color_notation()
+    test_large_small_color_notation()

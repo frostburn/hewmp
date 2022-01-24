@@ -94,8 +94,11 @@ def parse_exponent(token):
         num = int(token[0])
         token = token[1:]
     elif token[0] in UNICODE_EXPONENTS:
-        num = UNICODE_EXPONENTS[token[0]]
-        token = token[1:]
+        num = 0
+        while token[0] in UNICODE_EXPONENTS:
+            num *= 10
+            num += UNICODE_EXPONENTS[token[0]]
+            token = token[1:]
     return token, num
 
 
@@ -131,8 +134,8 @@ def parse_interval(token):
             if token.startswith(prefix):
                 token = token[len(prefix):]
                 index, amount = ABBREVIATIONS[prefix]
-
-                monzo[index] += amount
+                token, exponent = parse_exponent(token)
+                monzo[index] += amount * exponent
                 break
         else:
             break

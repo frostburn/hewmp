@@ -598,7 +598,7 @@ def parse_track(lexer, default_config):
             if config_key == "G":
                 span_token, pattern_token = token.split("=")
                 config["tempo"].groove_span = Fraction(span_token)
-                config["tempo"].groove_pattern = list(map(Fraction, pattern_token.split(" ")))
+                config["tempo"].groove_pattern = list(map(Fraction, filter(None, pattern_token.split(" "))))
             if config_key == "V":
                 track_volume = TrackVolume(Fraction(token), time)
                 pattern.append(track_volume)
@@ -894,11 +894,11 @@ def _tokenize_fractions_chord(pattern):
         pitches.append(note.pitch)
     root_fraction = tokenize_fraction(pattern[0].pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX)
     chord = tokenize_otonal_utonal(pitches, PRIMES)
-    return "@{}={}".format(root_fraction, chord)
+    return "{}={}".format(root_fraction, chord)
 
 
 def _tokenize_fractions_pitch(pitch):
-    return "@{}".format(tokenize_fraction(pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX))
+    return "{}".format(tokenize_fraction(pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX))
 
 
 def _tokenize_absolute_chord(pattern, inflections):

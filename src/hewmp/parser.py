@@ -1056,7 +1056,7 @@ def tracks_to_midi(tracks, freq_to_midi, reserve_channel_10=True, transpose=0, r
                 mapping = event["suggestedMapping"]
             if event["type"] == "dynamic":
                 velocity = int(round(float(127 * Fraction(event["velocity"]))))
-            if event["type"] in ("note", "percussion", "programChange") or event.get("subtype") == "controlChange":
+            if event["type"] in ("note", "percussion", "programChange", "contextChange") or event.get("subtype") == "controlChange":
                 time = int(round(resolution * event["realTime"]))
             if event["type"] == "note":
                 frequency = base_frequency*exp(dot(mapping, event["pitch"])) + event["pitch"][HZ_INDEX]

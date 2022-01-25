@@ -280,20 +280,33 @@ class Rest(Event):
         return self.__class__(self.emit, time, duration)
 
 
-class Playhead(Event):
-    def __init__(self, time=0, duration=0, real_time=None, real_duration=None):
+class Spacer(Event):
+    def __init__(self, value, time=0, duration=0, real_time=None, real_duration=None):
         if real_time is not None or real_duration is not None:
-            raise ValueError("Playheads shouldn't be realized")
+            raise ValueError("Spacers shouldn't be realized")
         super().__init__(time, duration, real_time=None, real_duration=None)
+        self.value = value
 
     def to_json(self):
-        raise ValueError("Playheads cannot be converted to json")
+        raise ValueError("Spacers cannot be converted to json")
 
     def retime(self, time, duration):
-        return self.__class__(time, duration)
+        return self.__class__(self.value, time, duration)
 
 
-class Playstop(Playhead):
+class NewLine(Spacer):
+    pass
+
+
+class BarLine(Spacer):
+    pass
+
+
+class Playhead(Spacer):
+    pass
+
+
+class Playstop(Spacer):
     pass
 
 
@@ -513,6 +526,21 @@ class Pattern(MusicBase, Transposable):
         return iter(self.subpatterns)
 
     @property
+    def last(self):
+        for event in reversed(self.subpatterns):
+            if not isinstance(event, Spacer):
+                return event
+        raise IndexError("No last event found")
+
+    @last.setter
+    def last(self, value):
+        for i in range(len(self)):
+            i += 1
+            if not isinstance(self[-i], Spacer):
+                self[-i] = value
+                return
+
+    @property
     def logical_duration(self):
         result = 0
         for subpattern in self.subpatterns:
@@ -604,7 +632,7 @@ class Pattern(MusicBase, Transposable):
         tempo = None
         tuning = None
         for event in self.flatten():
-            if not isinstance(event, Playhead):
+            if not isinstance(event, Spacer):
                 flat.append(event)
             if isinstance(event, Tempo):
                 tempo = event

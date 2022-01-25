@@ -651,61 +651,61 @@ def parse_track(lexer, default_config):
             if token == "]":
                 time_mode = False
             elif token == ".":
-                time -= pattern[-1].duration
-                pattern[-1].duration = 1
-                time += pattern[-1].duration
+                time -= pattern.last.duration
+                pattern.last.duration = 1
+                time += pattern.last.duration
             elif token == "?":
-                time -= pattern[-1].duration
-                pattern[-1].duration = pattern[-1].logical_duration
-                time += pattern[-1].duration
+                time -= pattern.last.duration
+                pattern.last.duration = pattern.last.logical_duration
+                time += pattern.last.duration
             elif token.startswith("+") or token.startswith("-"):
-                time -= pattern[-1].duration
+                time -= pattern.last.duration
                 extension = parse_time(token)
-                if isinstance(pattern[-1], Pattern):
-                    logical_extension = pattern[-1].logical_duration * extension / pattern[-1].duration
-                    for subpattern in pattern[-1]:
+                if isinstance(pattern.last, Pattern):
+                    logical_extension = pattern.last.logical_duration * extension / pattern.last.duration
+                    for subpattern in pattern.last:
                         subpattern.end_time += logical_extension
-                pattern[-1].duration += extension
-                time += pattern[-1].duration
+                pattern.last.duration += extension
+                time += pattern.last.duration
             elif token.startswith("@"):
                 time_token = token[1:]
                 if time_token == "T":
                     time = timestamp
                 else:
                     time = parse_time(time_token)
-                pattern[-1].time = time
+                pattern.last.time = time
             elif token.lower().startswith("x"):
-                pattern[-1] = patternify(pattern[-1])
-                time -= pattern[-1].duration
-                pattern[-1].repeat(int(token[1:]), affect_duration=(token.startswith("X")))
-                time += pattern[-1].duration
+                pattern.last = patternify(pattern.last)
+                time -= pattern.last.duration
+                pattern.last.repeat(int(token[1:]), affect_duration=(token.startswith("X")))
+                time += pattern.last.duration
             elif "E" in token:
-                pattern[-1] = patternify(pattern[-1])
+                pattern.last = patternify(pattern.last)
                 onset_token = token[:token.index("E")]
                 if onset_token:
-                    pattern[-1].fill(int(onset_token))
-                num_onsets = len(pattern[-1])
+                    pattern.last.fill(int(onset_token))
+                num_onsets = len(pattern.last)
                 num_beats = int(token[token.index("E")+1:])
                 times_durations = sequence_to_time_duration(euclidean_rhythm(num_onsets, num_beats))
-                for subpattern, td in zip(pattern[-1], times_durations):
+                for subpattern, td in zip(pattern.last, times_durations):
                     subpattern.time, subpattern.duration = td
-            elif isinstance(pattern[-1], Pattern):
+            elif isinstance(pattern.last, Pattern):
                 if token == "R":
-                    pattern[-1].reverse_time()
+                    pattern.last.reverse_time()
                 elif token == "r":
-                    pattern[-1].reverse_logic()
+                    pattern.last.reverse_logic()
                 elif "<" in token:
-                    pattern[-1].rotate_time(token.count("<"))
+                    pattern.last.rotate_time(token.count("<"))
                 elif ">" in token:
-                    pattern[-1].rotate_time(-token.count(">"))
+                    pattern.last.rotate_time(-token.count(">"))
                 elif "v" in token:
-                    pattern[-1].rotate_rhythm(token.count("v"))
+                    pattern.last.rotate_rhythm(token.count("v"))
                 elif "^" in token:
-                    pattern[-1].rotate_rhythm(-token.count("^"))
+                    pattern.last.rotate_rhythm(-token.count("^"))
                 elif token == "!":
-                    pattern[-1].stretch_subpatterns()
+                    pattern.last.stretch_subpatterns()
                 elif "e" in token:
-                    num_onsets = len(pattern[-1])
+                    num_onsets = len(pattern.last)
                     root_token = token[:token.index("e")]
                     if root_token:
                         root = Fraction(root_token)
@@ -713,10 +713,10 @@ def parse_track(lexer, default_config):
                         root = Fraction(1)
                     factor = Fraction(token[token.index("e")+1:]) ** (1 / root)
                     times_durations = exponential_rhythm(num_onsets, factor)
-                    for subpattern, td in zip(pattern[-1], times_durations):
+                    for subpattern, td in zip(pattern.last, times_durations):
                         subpattern.time, subpattern.duration = td
                 elif "MOS" in token:
-                    num_onsets = len(pattern[-1])
+                    num_onsets = len(pattern.last)
                     generator = Fraction(token[:token.index("M")])  # TODO: search for a balanced generator if missing
                     period_token = token[token.index("S")+1:]
                     if period_token:
@@ -724,7 +724,7 @@ def parse_track(lexer, default_config):
                     else:
                         period = Fraction(1)
                     times_durations = mos_rhythm(num_onsets, generator, period)
-                    for subpattern, td in zip(pattern[-1], times_durations):
+                    for subpattern, td in zip(pattern.last, times_durations):
                         subpattern.time, subpattern.duration = td
                 else:
                     default = True
@@ -732,9 +732,9 @@ def parse_track(lexer, default_config):
                 default = True
             if default:
                 duration_token = token
-                time -= pattern[-1].duration
-                pattern[-1].duration *= parse_time(duration_token)
-                time += pattern[-1].duration
+                time -= pattern.last.duration
+                pattern.last.duration *= parse_time(duration_token)
+                time += pattern.last.duration
             continue
 
         if token == "(":
@@ -753,7 +753,7 @@ def parse_track(lexer, default_config):
         elif token == "&":
             transposed_pattern = pattern.pop()
         elif token == ",":
-            time -= pattern[-1].duration
+            time -= pattern.last.duration
         elif token in ARTICULATIONS:
             articulation = Articulation(ARTICULATIONS[token], time)
             pattern.append(articulation)
@@ -766,10 +766,14 @@ def parse_track(lexer, default_config):
             time += rest.duration
         elif token == "T":
             timestamp = time
+        elif token == "\n":
+            pattern.append(NewLine(token, time))
+        elif token == "|":
+            pattern.append(BarLine(token, time))
         elif token == "|>":
-            pattern.append(Playhead(time))
+            pattern.append(Playhead(token, time))
         elif token == ">|":
-            pattern.append(Playstop(time))
+            pattern.append(Playstop(token, time))
         elif token.startswith('"'):
             message = UserMessage(token[1:], time)
             pattern.append(message)
@@ -914,6 +918,14 @@ def _tokenize_absolute_pitch(pitch, inflections):
 
 
 def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, absolute_time=False):
+    if isinstance(pattern, Spacer):
+        return pattern.value
+    if isinstance(pattern, ProgramChange):
+        return "I:{}".format(pattern.name)
+    if isinstance(pattern, ContextChange):
+        return "N:{}".format(pattern.name)
+    if isinstance(pattern, TrackVolume):
+        return "V:{}".format(pattern.volume)
     if isinstance(pattern, UserMessage):
         return pattern.escape()
     if isinstance(pattern, Articulation):
@@ -945,7 +957,7 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
         local_time = Fraction(0)
         for subpattern in pattern:
             force_tokenize = False
-            if isinstance(subpattern, UserMessage):
+            if isinstance(subpattern, (ProgramChange, ContextChange, TrackVolume, Spacer, UserMessage)):
                 force_tokenize = True
             if isinstance(subpattern, Articulation):
                 force_tokenize = True

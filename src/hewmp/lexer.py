@@ -51,7 +51,7 @@ class Lexer:
         self.done = False
         self.peeked_token = None
         self.reading_config_value = False
-        self.reading_first_token = True
+        self.on_a_new_line = True
         self.reading_string = False
         self.reading_escape = False
 
@@ -59,8 +59,8 @@ class Lexer:
         return self
 
     def __next__(self):
-        was_first_token = self.reading_first_token
-        self.reading_first_token = False
+        was_on_a_new_line = self.on_a_new_line
+        self.on_a_new_line = False
         if self.peeked_token is not None:
             token_obj = self.peeked_token
             self.peeked_token = None
@@ -102,11 +102,11 @@ class Lexer:
                     self.reading_escape = False
                 continue
 
-            if character == "|" and next_character in (":", ">") and not commenting:
-                token += character
-            elif character.isspace() or (character in SPACERS and token not in (":", ">")):
-                if character == "\n":
-                    commenting = False
+            if character == "\n":
+                commenting = False
+                self.on_a_new_line = True
+                return Token(character, whitespace)
+            elif character.isspace():
                 whitespace += character
             elif character in COMMENT:
                 commenting = True
@@ -120,7 +120,7 @@ class Lexer:
                 whitespace += character
 
             if token:
-                if token == TRACK_START and (was_first_token or "\n" in whitespace):
+                if token == TRACK_START and was_on_a_new_line:
                     return Token(token, whitespace)
                 if token in PLAY_CONTROL:
                     return Token(token, whitespace)
@@ -128,8 +128,10 @@ class Lexer:
                     return Token(token, whitespace)
                 if character not in (":", ">") and next_character in SPACERS:
                     return Token(token, whitespace)
+                if token in SPACERS and next_character not in (":", ">"):
+                    return Token(token, whitespace)
 
-                if token in CONFIGS and (was_first_token or "\n" in whitespace):
+                if token in CONFIGS and was_on_a_new_line:
                     self.reading_config_value = True
                     return Token(token, whitespace)
 

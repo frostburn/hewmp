@@ -425,6 +425,15 @@ def test_large_small_color_notation():
         assert list(note.pitch[:2]) == monzo
 
 
+def test_wa_comma():
+    text = "-ssw2 LLw-2 -wq1 wp1"
+    notes = get_notes(text)
+    for note in notes:
+        assert note.pitch[0] == -19
+        assert note.pitch[1] == 12
+        assert (note.pitch[2:] == 0).all()
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -460,3 +469,4 @@ if __name__ == '__main__':
     test_color_exponents()
     test_higher_prime_color_notation()
     test_large_small_color_notation()
+    test_wa_comma()

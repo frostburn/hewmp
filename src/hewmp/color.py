@@ -1,8 +1,9 @@
 # coding: utf-8
-from numpy import dot, zeros, sign
+from numpy import dot, zeros, sign, array
 
 
 PSEUDO_EDO_MAPPING = (7, 11, 16, 20, 24, 26, 29, 30, 32, 34, 37)
+WA_COMMA = (-19, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 
 LONG_FORMS = {
@@ -141,6 +142,13 @@ def parse_interval(token):
             break
     if token[0] == "w":
         token = token[1:]
+    wa_commas = 0
+    while token[0] == "p":
+        wa_commas += 1
+        token = token[1:]
+    while token[0] == "q":
+        wa_commas -= 1
+        token = token[1:]
     stepspan = int(token)
     stepspan -= sign(stepspan)
-    return monzo_from_parts(stepspan, magnitude, monzo)
+    return monzo_from_parts(stepspan, magnitude, monzo) + wa_commas * array(WA_COMMA)

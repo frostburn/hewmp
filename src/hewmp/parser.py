@@ -7,15 +7,17 @@ except ImportError:
     mido = None
 from fractions import Fraction
 from .lexer import Lexer, CONFIGS, TRACK_START
+from .extra_chords import EXTRA_CHORDS
 from .chord_parser import expand_chord, separate_by_arrows
 from .temperaments import TEMPERAMENTS, EQUAL_TEMPERAMENTS
 from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch, reverse_inflections
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
-from .smitonic import SMITONIC_INTERVAL_QUALITIES, SMITONIC_BASIC_PITCHES, smitonic_parse_arrows, smitonic_parse_pitch, SMITONIC_INFLECTIONS
+from .smitonic import SMITONIC_INTERVAL_QUALITIES, SMITONIC_BASIC_PITCHES, smitonic_parse_arrows, smitonic_parse_pitch, SMITONIC_INFLECTIONS,  SMITONIC_EXTRA_CHORDS
 from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exponential_rhythm
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
+from .color import expand_chord as expand_color_chord
 
 
 DEFAULT_INFLECTIONS = {
@@ -427,7 +429,14 @@ def parse_chord(token, transposition, interval_parser):
         result = parse_utonal(token, interval_parser)
         result.transpose(transposition)
     else:
-        subtokens = expand_chord(token)
+        if token in EXTRA_CHORDS:
+            subtokens = EXTRA_CHORDS[token]
+        elif token in SMITONIC_EXTRA_CHORDS:
+            subtokens = SMITONIC_EXTRA_CHORDS[token]
+        else:
+            subtokens = expand_color_chord(token)
+            if subtokens is None:
+                subtokens = expand_chord(token)
         result = Pattern()
         for subtoken in subtokens:
             pitch, absolute = interval_parser.parse(subtoken)

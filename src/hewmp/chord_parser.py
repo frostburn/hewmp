@@ -1,4 +1,4 @@
-from .extra_chords import EXTRA_CHORDS
+from .util import Splitter
 
 
 ARROWS = "+-><^vudUDAVMWi!*%"
@@ -154,27 +154,18 @@ def interval_key(token):
     return (value, QUALITY_RANKING.index(quality), token)
 
 
+TONE_SPLITTER = Splitter(("add", "no", "sus"))
+
+
 def expand_chord(token):
-    from .smitonic import SMITONIC_BASIC_CHORDS, SMITONIC_EXTRA_CHORDS
+    from .smitonic import SMITONIC_BASIC_CHORDS
 
-    if token in EXTRA_CHORDS:
-        return EXTRA_CHORDS[token]
-    if token in SMITONIC_EXTRA_CHORDS:
-        return SMITONIC_EXTRA_CHORDS[token]
-
-    added_tones = token.split("add")
-    token = added_tones.pop(0)
-
-    removed_tones = token.split("no")
-    token = removed_tones.pop(0)
-    removed_tones = [int(tone) for tone in removed_tones]
-
-    added_intervals = [accidental_to_quality(tone) for tone in added_tones]
-
+    token, tones = TONE_SPLITTER(token)
+    added_intervals = list(map(accidental_to_quality, tones["add"]))
+    removed_tones = [int(tone) for tone in tones["no"]]
     sus_replacement = None
-    if "sus" in token and not token.startswith("sus"):
-        token, sus_token = token.split("sus")
-        sus_replacement = accidental_to_quality(sus_token)
+    for replacement in tones["sus"]:
+        sus_replacement = accidental_to_quality(replacement)
 
     prefix = ""
     if token.startswith("M") or token.startswith("d") or token.startswith("u"):

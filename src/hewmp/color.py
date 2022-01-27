@@ -1,5 +1,6 @@
 # coding: utf-8
 from numpy import dot, zeros, sign, array
+from .util import Splitter
 
 
 PSEUDO_EDO_MAPPING = (7, 11, 16, 20, 24, 26, 29, 30, 32, 34, 37)
@@ -156,3 +157,89 @@ def parse_interval(token):
     stepspan = int(token)
     stepspan -= sign(stepspan)
     return monzo_from_parts(stepspan, magnitude, monzo) + wa_commas * array(WA_COMMA)
+
+
+def make_harmonic_chord(limit, full=False, close_voicing=False):
+    if limit % 2 == 0 and not full:
+        raise ColorParsingError("Only full harmonic chords can be even")
+    result = []
+    skip = 1 if full else 2
+    if close_voicing:
+        if limit == 1:
+            return ["4/4"]
+        if limit == 3:
+            return ["4/4", "6/4"]
+        if limit == 5:
+            return ["4/4", "5/4", "6/4"]
+        for i in range(7, limit+1, skip):
+            result.append("{}/4".format(i))
+        return ["4/4", "5/4", "6/4"] + result
+    else:
+        for i in range(1, limit+1, skip):
+            result.append("{}/1".format(i))
+        return result
+
+
+TONE_SPLITTER = Splitter(("+", "no", "\\"))
+
+
+def expand_chord(token):
+    token, tones = TONE_SPLITTER(token)
+    added_tones = tones["+"]
+    removed_tones = tones["no"]
+    replacements = tones["\\"]
+
+    for replacement in replacements:
+        added_tones.append(replacement)
+        if replacement[-1] in "24":
+            removed_tones.append(3)
+        else:
+            removed_tones.append(replacement[-1])
+
+    removed_tones = [int(tone) for tone in removed_tones]
+
+    if token[0] == "h":
+        token = token[1:]
+        full = False
+        close_voicing = False
+        if token[0] == "f":
+            full = True
+            token = token[1:]
+        if token[0] == "c":
+            close_voicing = True
+            token = token[1:]
+        if token[0] == "f":
+            full = True
+            token = token[1:]
+        chord = make_harmonic_chord(int(token), full, close_voicing)
+
+        for tone in removed_tones:
+            if tone == 5:
+                if "3/1" in chord:
+                    chord.remove("3/1")
+                if "6/4" in chord:
+                    chord.remove("6/4")
+            if tone == 3:
+                if "5/1" in chord:
+                    chord.remove("5/1")
+                if "5/4" in chord:
+                    chord.remove("5/4")
+            for harmonic in ["{}/1".format(tone), "{}/4".format(tone)]:
+                if harmonic in chord:
+                    chord.remove(harmonic)
+        for tone in added_tones:
+            if tone.isdigit():
+                tone = int(tone)
+                if tone > 13:
+                    chord.append("{}{}".format(tone, chord[0][1:]))
+                else:
+                    chord.append("w{}".format(tone))
+            else:
+                chord.append(tone)
+
+        # TODO: Convert to colors and sort
+
+        return chord
+
+    # Singal to fall through to other chord parsers
+    return None

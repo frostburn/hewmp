@@ -182,7 +182,7 @@ def tokenize_interval(pitch, inflections, *extra_indices):
         index -= len(PYTHAGOREAN_QUALITIES)
         quality = ""
         while index >= 0:
-            quality += "A"
+            quality += "a"
             index -= 7
 
     value = 7*twos + 11*threes
@@ -196,7 +196,7 @@ def tokenize_interval(pitch, inflections, *extra_indices):
     return "{}{}{}{}{}{}".format(sign, quality, value, arrow_str, root_str, tokenize_extras(pitch, *extra_indices))
 
 
-LYDIAN = ("F", "C", "G", "D", "a", "E", "B")
+LYDIAN = ("F", "C", "G", "D", "A", "E", "B")
 LYDIAN_INDEX_A = 4
 REFERENCE_OCTAVE = 4
 LETTER_OCTAVES = {
@@ -204,7 +204,7 @@ LETTER_OCTAVES = {
     "C": -4,
     "G": -3,
     "D": -1,
-    "a": 0,
+    "A": 0,
     "E": 2,
     "B": 3,
 }

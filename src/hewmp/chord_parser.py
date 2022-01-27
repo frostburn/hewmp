@@ -45,7 +45,7 @@ def accidental_to_quality(token):
         else:
             quality = "d"
     if base[0] == "#":
-        quality = "A"
+        quality = "a"
     return "{}{}{}".format(quality, interval_class, "".join(separated))
 
 
@@ -58,7 +58,7 @@ FLAVOR_CHORDS = {
 
     "11": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0), ("P11", 0)),
 
-    "#11": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0), ("A11", 0)),
+    "#11": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0), ("a11", 0)),
 
     "13": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0), ("P11", 0), ("M13", 0)),
 }
@@ -82,6 +82,7 @@ def make_flavor_chord(base, arrow_tokens):
     return chord
 
 
+# TODO: Neutral chords
 BASIC_CHORDS = {
     "M": (("P1", "M3", "P5"), (1,)),
     "m": (("P1", "m3", "P5"), (1,)),
@@ -98,7 +99,7 @@ BASIC_CHORDS = {
 
     "M11": (("P1", "M3", "P5", "M7", "M9", "P11"), (1, 3, 5)),
     "m11": (("P1", "m3", "P5", "m7+", "M9", "P11"), (1, 3, 5)),
-    "M#11": (("P1", "M3", "P5", "M7", "M9", "A11"), (1, 3, 5)),
+    "M#11": (("P1", "M3", "P5", "M7", "M9", "a11"), (1, 3, 5)),
     "dom11": (("P1", "M3", "P5", "m7", "M9", "P11"), (1,)),
 
     "domb12": (("P1", "M3-", "P5", "m7", "M9", "d12"), (1,)),
@@ -106,7 +107,7 @@ BASIC_CHORDS = {
     "M13": (("P1", "M3", "P5", "M7", "M9", "M13"), (1, 3, 5)),
     "dom13": (("P1", "M3-", "P5", "m7", "M9", "M13"), (1,)),
 
-    "M#15": (("P1", "M3", "P5", "M7", "M9", "M13", "A15"), (1, 3, 5)),
+    "M#15": (("P1", "M3", "P5", "M7", "M9", "M13", "a15"), (1, 3, 5)),
 }
 
 
@@ -148,7 +149,7 @@ def split_interval(token):
     return quality, value, token
 
 
-QUALITY_RANKING = ["nn", "dd", "n", "d", "s", "m", "P", "M", "L", "A", "W", "AA", "WW"]
+QUALITY_RANKING = ["nn", "dd", "n", "d", "s", "m", "P", "M", "L", "a", "W", "aa", "WW"]
 def interval_key(token):
     quality, value, token = split_interval(token)
     return (value, QUALITY_RANKING.index(quality), token)

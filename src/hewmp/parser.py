@@ -143,13 +143,13 @@ BASIC_INTERVALS = {
     "M6": (-4, 3),
     "M3": (-6, 4),
     "M7": (-7, 5),
-    "A4": (-9, 6),
-    "A1": (-11, 7),
-    "A5": (-12, 8),
-    "A2": (-14, 9),
-    "A6": (-15, 10),
-    "A3": (-17, 11),
-    "A7": (-18, 12),
+    "a4": (-9, 6),
+    "a1": (-11, 7),
+    "a5": (-12, 8),
+    "a2": (-14, 9),
+    "a6": (-15, 10),
+    "a3": (-17, 11),
+    "a7": (-18, 12),
 
     # Extra neutral intervals
     "N2": (2.5, -1.5),
@@ -168,14 +168,14 @@ BASIC_INTERVALS = {
 
 
 AUGMENTED_INFLECTION = (-11, 7)
-INTERVAL_QUALITIES = "dmPMAN"
+INTERVAL_QUALITIES = "dmPNMa"
 
 
 def parse_arrows(token, inflections):
     quality = token[0]
     token = token[1:]
     augmented = 0
-    while token[0] == "A":
+    while token[0] == "a":
         augmented += 1
         token = token[1:]
     while token[0] == "d":
@@ -206,18 +206,12 @@ def parse_arrows(token, inflections):
     return result
 
 
-# The following are reserved by something more important:
-# A - augmented
-# b - flat
-# c - cents
-# d - diminished
-# f - forte
 BASIC_PITCHES = {
     "F": (6, -4),
     "C": (4, -3),
     "G": (3, -2),
     "D": (1, -1),
-    "a": (0, 0),
+    "A": (0, 0),
     "E": (-2, 1),
     "B": (-3, 2),
 }

@@ -13,7 +13,7 @@ def get_notes(text):
 def test_parse_interval():
     mapping = array([12, 19, 28])
     interval_parser = IntervalParser()
-    scale = ["P1", "m2", "M2", "m3+", "M3-", "P4", "A4", "P5", "m6+", "M6-", "m7+", "M7-", "P8", "m9", "M9"]
+    scale = ["P1", "m2", "M2", "m3+", "M3-", "P4", "a4", "P5", "m6+", "M6-", "m7+", "M7-", "P8", "m9", "M9"]
     edo12 = [dot(mapping, interval_parser.parse(s)[0][:len(mapping)]) for s in scale]
     assert edo12 == list(range(15))
 
@@ -31,11 +31,11 @@ def test_parse_higher_prime():
 def test_parse_pitch():
     mapping = array([12, 19, 28])
     interval_parser = IntervalParser()
-    scale = ["C4", "C4#", "D4", "E4b", "F4b", "F4", "G4b", "F4x", "F4#x", "a4", "C5bb", "B4"]
+    scale = ["C4", "C4#", "D4", "E4b", "F4b", "F4", "G4b", "F4x", "F4#x", "A4", "C5bb", "B4"]
     edo12 = [dot(mapping, interval_parser.parse(s)[0][:len(mapping)]) for s in scale]
     assert edo12 == list(range(-9, 3))
 
-    assert (interval_parser.parse("a-2x<")[0][:4] == array([-34, 16, 0, 1])).all()
+    assert (interval_parser.parse("A-2x<")[0][:4] == array([-34, 16, 0, 1])).all()
 
 
 def test_neutral_intervals():
@@ -48,7 +48,7 @@ def test_neutral_intervals():
 
 
 def test_bonus_intervals():
-    text = "m9/2 m5 M7/2 M4 d15/2 m8 A1/2 M1"
+    text = "m9/2 m5 M7/2 M4 d15/2 m8 a1/2 M1"
     notes = get_notes(text)
     assert (notes[0].pitch == notes[1].pitch).all()
     assert (notes[2].pitch == notes[3].pitch).all()
@@ -57,7 +57,7 @@ def test_bonus_intervals():
 
 
 def test_half_sharps():
-    text = "a4&N3 C5#f C4&N3 E4f a4&N6 F5s"
+    text = "A4&N3 C5#f C4&N3 E4f A4&N6 F5s"
     notes = get_notes(text)
     assert (notes[0].pitch == notes[1].pitch).all()
     assert (notes[2].pitch == notes[3].pitch).all()
@@ -108,7 +108,7 @@ def test_floaty_transposition():
 
 def test_pitch_translation():
     inflections = reverse_inflections(DEFAULT_INFLECTIONS)
-    for letter in "aBCDEFG":
+    for letter in "ABCDEFG":
         for octave in ("3", "4"):
             for accidental in ("" ,"b", "#", "x"):
                 for arrow in ("", "-", "<2", "+2^3"):
@@ -121,7 +121,7 @@ def test_pitch_translation():
 def test_interval_translation():
     inflections = reverse_inflections(DEFAULT_INFLECTIONS)
     for value in range(1, 12):
-        qualities = ["dd", "d", "A", "AA"]
+        qualities = ["dd", "d", "a", "aa"]
         if value in (1, 4, 5, 8, 11):
             qualities.append("P")
         else:

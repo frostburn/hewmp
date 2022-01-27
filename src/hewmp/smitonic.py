@@ -194,8 +194,6 @@ def smitonic_tokenize_interval(pitch, inflections, *extra_indices):
 
     return "{}{}{}{}{}".format(sign, quality, value, arrow_str, tokenize_extras(pitch, *extra_indices))
 
-# So we use JKNOQRS
-# So we use JKOQRSU
 
 NEREVARINE = ("U", "R", "O", "J", "S", "Q", "K")
 NEREVARINE_INDEX_J = 3

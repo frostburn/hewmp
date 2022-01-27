@@ -82,7 +82,6 @@ def make_flavor_chord(base, arrow_tokens):
     return chord
 
 
-# TODO: Neutral chords
 BASIC_CHORDS = {
     "M": (("P1", "M3", "P5"), (1,)),
     "m": (("P1", "m3", "P5"), (1,)),

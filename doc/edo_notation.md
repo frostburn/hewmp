@@ -1,21 +1,20 @@
 # HEWMP Notation for EDOs
 Bellow are listed slightly opinionated tables for the simplest ways to notate each equal division of the octave up to 26ed2.
-TODO: Fix smitonics and replace with neutrals whenever possible
 TODO: Implement ups and downs
 ## 3ed2
 | Degree | Smitonic Interval | Smitonic Pitch |
 |:------:|:-----------------:|:--------------:|
 | 0      | p1                | J4             |
-| 1      | p3                | N4             |
+| 1      | p3                | O4             |
 | 2      | p6                | R4             |
 | 3      | p8                | J5             |
 ## 4ed2
 | Degree | Smitonic Interval | Smitonic Pitch |
 |:------:|:-----------------:|:--------------:|
 | 0      | p1                | J4             |
-| 1      | p3                | N4             |
-| 2      | L4,s5             | O4,Q4          |
-| 3      | p6                | R4             |
+| 1      | p3                | O4             |
+| 2      | L4,s5             | Q4,R4          |
+| 3      | p6                | S4             |
 | 4      | p8                | J5             |
 ## 5ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
@@ -24,17 +23,17 @@ TODO: Implement ups and downs
 | 1      | M2                   | D4                |
 | 2      | P4                   | F4                |
 | 3      | P5                   | G4                |
-| 4      | M6                   | a4                |
+| 4      | M6                   | A4                |
 | 5      | P8                   | C5                |
 ## 6ed2
 | Degree | Smitonic Interval | Smitonic Pitch |
 |:------:|:-----------------:|:--------------:|
 | 0      | p1                | J4             |
-| 1      | p3-               | N4-            |
-| 2      | p3+               | N4+            |
-| 3      | L4,s5             | O4,Q4          |
-| 4      | p6-               | R4-            |
-| 5      | p6+               | R4+            |
+| 1      | p3-               | O4-            |
+| 2      | p3+               | O4+            |
+| 3      | L4,s5             | Q4,R4          |
+| 4      | p6-               | S4-            |
+| 5      | p6+               | S4+            |
 | 6      | p8                | J5             |
 ## 7ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
@@ -44,47 +43,47 @@ TODO: Implement ups and downs
 | 2      | M3                   | E4                |
 | 3      | P4                   | F4                |
 | 4      | P5                   | G4                |
-| 5      | M6                   | a4                |
+| 5      | M6                   | A4                |
 | 6      | M7                   | B4                |
 | 7      | P8                   | C5                |
 ## 8ed2
 | Degree | Smitonic Interval | Smitonic Pitch |
 |:------:|:-----------------:|:--------------:|
 | 0      | p1                | J4             |
-| 1      | p3v               | N4v            |
-| 2      | p3                | N4             |
-| 3      | p3^               | N4^            |
-| 4      | L4,s5             | O4,Q4          |
-| 5      | p6v               | R4v            |
-| 6      | p6                | R4             |
-| 7      | p6^               | R4^            |
+| 1      | p3-               | O4-            |
+| 2      | p3                | O4             |
+| 3      | p3+               | O4+            |
+| 4      | L4,s5             | Q4,R4          |
+| 5      | p6-               | S4-            |
+| 6      | p6                | S4             |
+| 7      | p6+               | S4+            |
 | 8      | p8                | J5             |
 ## 9ed2
 | Degree | Smitonic Interval | Smitonic Pitch |
 |:------:|:-----------------:|:--------------:|
 | 0      | p1                | J4             |
 | 1      | s2                | K4b            |
-| 2      | n3                | K4#,N4b        |
-| 3      | W3                | N4#            |
-| 4      | L4                | O4             |
-| 5      | s5                | Q4             |
-| 6      | n6                | R4b            |
-| 7      | W6                | R4#,S4b        |
-| 8      | L7                | S4#            |
+| 2      | n3                | K4#,O4b        |
+| 3      | W3                | O4#            |
+| 4      | L4                | Q4             |
+| 5      | s5                | R4             |
+| 6      | n6                | S4b            |
+| 7      | W6                | S4#,U4b        |
+| 8      | L7                | U4#            |
 | 9      | p8                | J5             |
 ## 10ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
 |:------:|:--------------------:|:-----------------:|
 | 0      | P1                   | C4                |
-| 1      | M2-                  | D4-               |
-| 2      | M2                   | D4                |
-| 3      | M2+                  | D4+               |
+| 1      | N2                   | C4s,D4f           |
+| 2      | M2,m3                | D4                |
+| 3      | N3                   | D4s,F4f           |
 | 4      | P4                   | F4                |
-| 5      | P4+,P5-              | F4+,G4-           |
+| 5      | M4,m5                | F4s,G4f           |
 | 6      | P5                   | G4                |
-| 7      | P5+                  | G4+               |
-| 8      | M6                   | a4                |
-| 9      | M6+                  | a4+               |
+| 7      | N6                   | G4s,A4f           |
+| 8      | M6,m7                | A4                |
+| 9      | N7                   | A4s,C5f           |
 | 10     | P8                   | C5                |
 ## 11ed2
 | Degree | Smitonic Interval | Smitonic Pitch |
@@ -92,14 +91,14 @@ TODO: Implement ups and downs
 | 0      | p1                | J4             |
 | 1      | s2                | J4#,K4b        |
 | 2      | L2                | K4             |
-| 3      | p3                | N4             |
-| 4      | s4                | N4#,O4b        |
-| 5      | L4                | O4             |
-| 6      | s5                | Q4             |
-| 7      | L5                | Q4#,R4b        |
-| 8      | p6                | R4             |
-| 9      | s7                | S4             |
-| 10     | L7                | S4#,J5b        |
+| 3      | p3                | O4             |
+| 4      | s4                | O4#,Q4b        |
+| 5      | L4                | Q4             |
+| 6      | s5                | R4             |
+| 7      | L5                | R4#,S4b        |
+| 8      | p6                | S4             |
+| 9      | s7                | U4             |
+| 10     | L7                | U4#,J5b        |
 | 11     | p8                | J5             |
 ## 12ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
@@ -110,47 +109,47 @@ TODO: Implement ups and downs
 | 3      | m3                   | D4#,E4b           |
 | 4      | M3                   | E4                |
 | 5      | P4                   | F4                |
-| 6      | A4,d5                | F4#,G4b           |
+| 6      | a4,d5                | F4#,G4b           |
 | 7      | P5                   | G4                |
-| 8      | m6                   | G4#,a4b           |
-| 9      | M6                   | a4                |
-| 10     | m7                   | a4#,B4b           |
+| 8      | m6                   | G4#,A4b           |
+| 9      | M6                   | A4                |
+| 10     | m7                   | A4#,B4b           |
 | 11     | M7                   | B4                |
 | 12     | P8                   | C5                |
 ## 13ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch | Smitonic Interval | Smitonic Pitch |
 |:------:|:--------------------:|:-----------------:|:-----------------:|:--------------:|
 | 0      | P1                   | C4                | p1                | J4             |
-| 1      | P1^                  | C4^               | s2                | K4b            |
-| 2      | M2v                  | D4v               | n3                | N4b            |
-| 3      | M2                   | D4                | n4                | N4b^           |
-| 4      | P4v                  | F4v               | n4^               | N4#v           |
-| 5      | P4                   | F4                | L4v               | N4#            |
-| 6      | P4^                  | F4^               | L4                | O4             |
-| 7      | P5v                  | G4v               | s5                | Q4             |
-| 8      | P5                   | G4                | n6                | R4b            |
-| 9      | P5^                  | G4^               | n7                | S4b            |
-| 10     | M6v                  | a4v               | n7^               | S4b^           |
-| 11     | M6                   | a4                | L7v               | S4#v           |
-| 12     | M6^                  | a4^               | L7                | S4#            |
+| 1      | N2                   | C4^               | s2                | K4b            |
+| 2      | N2^,M2v              | D4v               | n3                | O4b            |
+| 3      | M2                   | D4                | n4                | O4b^           |
+| 4      | N3                   | D4^,F4v           | n4^               | O4#v           |
+| 5      | P4                   | F4                | L4v               | O4#            |
+| 6      | P4^                  | F4^               | L4                | Q4             |
+| 7      | P5v                  | G4v               | s5                | R4             |
+| 8      | P5                   | G4                | n6                | S4b            |
+| 9      | N6                   | G4^               | n7                | U4b            |
+| 10     | m7                   | A4v               | n7^               | U4b^           |
+| 11     | m7^,N7v              | A4                | L7v               | U4#v           |
+| 12     | N7                   | A4^,C5v           | L7                | U4#            |
 | 13     | P8                   | C5                | p8                | J5             |
 ## 14ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
 |:------:|:--------------------:|:-----------------:|
 | 0      | P1                   | C4                |
-| 1      | P1>,M2<              | C4>,D4<           |
-| 2      | M2                   | D4                |
-| 3      | M2>,M3<              | D4>,E4<           |
-| 4      | M3                   | E4                |
-| 5      | M3>,P4<              | E4>,F4<           |
+| 1      | P1>,N2<              | C4>,D4<           |
+| 2      | N2                   | D4                |
+| 3      | N2>,N3<              | D4>,E4<           |
+| 4      | N3                   | E4                |
+| 5      | N3>,P4<              | E4>,F4<           |
 | 6      | P4                   | F4                |
 | 7      | P4>,P5<              | F4>,G4<           |
 | 8      | P5                   | G4                |
-| 9      | P5>,M6<              | G4>,a4<           |
-| 10     | M6                   | a4                |
-| 11     | M6>,M7<              | a4>,B4<           |
-| 12     | M7                   | B4                |
-| 13     | M7>,P8<              | B4>,C5<           |
+| 9      | P5>,N6<              | G4>,A4<           |
+| 10     | N6                   | A4                |
+| 11     | N6>,N7<              | A4>,B4<           |
+| 12     | N7                   | B4                |
+| 13     | N7>,P8<              | B4>,C5<           |
 | 14     | P8                   | C5                |
 ## 15ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
@@ -166,50 +165,50 @@ TODO: Implement ups and downs
 | 8      | P5-                  | G4-               |
 | 9      | P5                   | G4                |
 | 10     | P5+                  | G4+               |
-| 11     | M6-                  | a4-               |
-| 12     | M6                   | a4                |
-| 13     | M6+                  | a4+               |
+| 11     | M6-                  | A4-               |
+| 12     | M6                   | A4                |
+| 13     | M6+                  | A4+               |
 | 14     | P8-                  | C5-               |
 | 15     | P8                   | C5                |
 ## 16ed2
 | Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
 |:------:|:-----------------:|:--------------:|:--------------------:|:-----------------:|
 | 0      | p1                | J4             | P1                   | C4                |
-| 1      | WW1,nn2           | J4x            | d1,A2                | C4b,D4#           |
+| 1      | WW1,nn2           | J4x            | d1,a2                | C4b,D4#           |
 | 2      | s2                | K4b            | M2                   | D4                |
 | 3      | W2                | K4#            | m2                   | D4b,E4#           |
-| 4      | n3                | N4b            | M3                   | E4                |
-| 5      | W3                | N4#            | m3                   | E4b               |
-| 6      | n4                | O4bb           | d3,A4                | F4#               |
-| 7      | L4                | O4             | P4                   | F4                |
-| 8      | WW4,nn5           | O4x,Q4bb       | d4,A5                | F4b,G4#           |
-| 9      | s5                | Q4             | P5                   | G4                |
-| 10     | W5                | Q4x            | d5,A6                | G4b,a4#           |
-| 11     | n6                | R4b            | M6                   | a4                |
-| 12     | W6                | R4#            | m6                   | a4b,B4#           |
-| 13     | n7                | S4b            | M7                   | B4                |
-| 14     | L7                | S4#            | m7                   | B4b               |
-| 15     | WW7,nn8           | J5bb           | d7,A8                | C5#               |
+| 4      | n3                | O4b            | M3                   | E4                |
+| 5      | W3                | O4#            | m3                   | E4b               |
+| 6      | n4                | Q4bb           | d3,a4                | F4#               |
+| 7      | L4                | Q4             | P4                   | F4                |
+| 8      | WW4,nn5           | Q4x,R4bb       | d4,a5                | F4b,G4#           |
+| 9      | s5                | R4             | P5                   | G4                |
+| 10     | W5                | R4x            | d5,a6                | G4b,A4#           |
+| 11     | n6                | S4b            | M6                   | A4                |
+| 12     | W6                | S4#            | m6                   | A4b,B4#           |
+| 13     | n7                | U4b            | M7                   | B4                |
+| 14     | L7                | U4#            | m7                   | B4b               |
+| 15     | WW7,nn8           | J5bb           | d7,a8                | C5#               |
 | 16     | p8                | J5             | P8                   | C5                |
 ## 17ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
 |:------:|:--------------------:|:-----------------:|
 | 0      | P1                   | C4                |
-| 1      | m2                   | D4b               |
-| 2      | m2+,M2-              | D4-               |
+| 1      | m2                   | C4s,D4b           |
+| 2      | N2                   | D4f               |
 | 3      | M2                   | D4                |
-| 4      | m3                   | E4b               |
-| 5      | m3+,M3-              | E4-               |
+| 4      | m3                   | D4s,E4b           |
+| 5      | N3                   | E4f               |
 | 6      | M3                   | E4                |
 | 7      | P4                   | F4                |
-| 8      | P4+                  | F4+               |
-| 9      | P5-                  | G4-               |
+| 8      | M4                   | F4s               |
+| 9      | m5                   | G4f               |
 | 10     | P5                   | G4                |
-| 11     | m6                   | a4b               |
-| 12     | m6+,M6-              | a4-               |
-| 13     | M6                   | a4                |
-| 14     | m7                   | B4b               |
-| 15     | m7+,M7-              | B4-               |
+| 11     | m6                   | G4s,A4b           |
+| 12     | N6                   | A4f               |
+| 13     | M6                   | A4                |
+| 14     | m7                   | A4s,B4b           |
+| 15     | N7                   | B4f               |
 | 16     | M7                   | B4                |
 | 17     | P8                   | C5                |
 ## 18ed2
@@ -219,67 +218,67 @@ TODO: Implement ups and downs
 | 1      | W1,n2             | J4#            |
 | 2      | s2                | K4b            |
 | 3      | L2                | K4             |
-| 4      | W2,n3             | K4#,N4b        |
-| 5      | p3                | N4             |
-| 6      | W3,n4             | N4#            |
-| 7      | s4                | O4b            |
-| 8      | L4                | O4             |
-| 9      | W4,n5             | O4#,Q4b        |
-| 10     | s5                | Q4             |
-| 11     | L5                | Q4#            |
-| 12     | W5,n6             | R4b            |
-| 13     | p6                | R4             |
-| 14     | W6,n7             | R4#,S4b        |
-| 15     | s7                | S4             |
-| 16     | L7                | S4#            |
+| 4      | W2,n3             | K4#,O4b        |
+| 5      | p3                | O4             |
+| 6      | W3,n4             | O4#            |
+| 7      | s4                | Q4b            |
+| 8      | L4                | Q4             |
+| 9      | W4,n5             | Q4#,R4b        |
+| 10     | s5                | R4             |
+| 11     | L5                | R4#            |
+| 12     | W5,n6             | S4b            |
+| 13     | p6                | S4             |
+| 14     | W6,n7             | S4#,U4b        |
+| 15     | s7                | U4             |
+| 16     | L7                | U4#            |
 | 17     | W7,n8             | J5b            |
 | 18     | p8                | J5             |
 ## 19ed2
 | Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
 |:------:|:-----------------:|:--------------:|:--------------------:|:-----------------:|
 | 0      | p1                | J4             | P1                   | C4                |
-| 1      | s2                | K4b            | A1,d2                | C4#               |
+| 1      | s2                | K4b            | a1,d2                | C4#               |
 | 2      | s2^               | K4b^           | m2                   | D4b               |
 | 3      | L2v               | K4v            | M2                   | D4                |
-| 4      | L2                | K4             | A2,d3                | D4#               |
-| 5      | p3                | N4             | m3                   | E4b               |
-| 6      | s4                | O4b            | M3                   | E4                |
-| 7      | s4^               | O4b^           | A3,d4                | E4#,F4b           |
-| 8      | L4v               | O4v            | P4                   | F4                |
-| 9      | L4                | O4             | A4                   | F4#               |
-| 10     | s5                | Q4             | d5                   | G4b               |
-| 11     | s5^               | Q4^            | P5                   | G4                |
-| 12     | L5v               | Q4#v           | A5,d6                | G4#               |
-| 13     | L5                | Q4#            | m6                   | a4b               |
-| 14     | p6                | R4             | M6                   | a4                |
-| 15     | s7                | S4             | A6,d7                | a4#               |
-| 16     | s7^               | S4^            | m7                   | B4b               |
-| 17     | L7v               | S4#v           | M7                   | B4                |
-| 18     | L7                | S4#            | A7,d8                | B4#,C5b           |
+| 4      | L2                | K4             | a2,d3                | D4#               |
+| 5      | p3                | O4             | m3                   | E4b               |
+| 6      | s4                | Q4b            | M3                   | E4                |
+| 7      | s4^               | Q4b^           | a3,d4                | E4#,F4b           |
+| 8      | L4v               | Q4v            | P4                   | F4                |
+| 9      | L4                | Q4             | a4                   | F4#               |
+| 10     | s5                | R4             | d5                   | G4b               |
+| 11     | s5^               | R4^            | P5                   | G4                |
+| 12     | L5v               | R4#v           | a5,d6                | G4#               |
+| 13     | L5                | R4#            | m6                   | A4b               |
+| 14     | p6                | S4             | M6                   | A4                |
+| 15     | s7                | U4             | a6,d7                | A4#               |
+| 16     | s7^               | U4^            | m7                   | B4b               |
+| 17     | L7v               | U4#v           | M7                   | B4                |
+| 18     | L7                | U4#            | a7,d8                | B4#,C5b           |
 | 19     | p8                | J5             | P8                   | C5                |
 ## 20ed2
 | Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
 |:------:|:-----------------:|:--------------:|:--------------------:|:-----------------:|
 | 0      | p1                | J4             | P1                   | C4                |
-| 1      | p1^,s2v           | J4^            | P1^                  | C4^               |
-| 2      | s2                | K4b            | P1+,M2-              | C4+,D4-           |
-| 3      | s2^,n3v           | K4b^,N4bv      | M2v                  | D4v               |
-| 4      | n3                | N4b            | M2                   | D4                |
-| 5      | n3^,n4v           | N4b^           | M2^                  | D4^               |
-| 6      | n4                | N4#v           | M2+,M3-              | D4+,E4-           |
-| 7      | n4^               | N4#            | M3v                  | E4v               |
-| 8      | L4v               | O4v            | M3                   | E4                |
-| 9      | L4                | O4             | M3^                  | E4^               |
-| 10     | L4^,s5v           | O4^,Q4v        | M3+,P5-              | E4+,G4-           |
-| 11     | s5                | Q4             | P5v                  | G4v               |
-| 12     | s5^,n6v           | Q4^            | P5                   | G4                |
-| 13     | n6                | R4b            | P5^                  | G4^               |
-| 14     | n6^,n7v           | R4b^,S4bv      | P5+,M6-              | G4+,a4-           |
-| 15     | n7                | S4b            | M6v                  | a4v               |
-| 16     | n7^               | S4b^           | M6                   | a4                |
-| 17     | L7v               | S4#v           | M6^                  | a4^               |
-| 18     | L7                | S4#            | M6+,P8-              | a4+,C5-           |
-| 19     | L7^               | J5v            | P8v                  | C5v               |
+| 1      | p1^,s2v           | J4^            | P1^,N2v              | C4^               |
+| 2      | s2                | K4b            | N2                   | C4s,D4f           |
+| 3      | s2^,n3v           | K4b^,O4bv      | M2v,N2^              | D4v               |
+| 4      | n3                | O4b            | M2                   | D4                |
+| 5      | n3^,n4v           | O4b^           | M2^,N3v              | D4^               |
+| 6      | n4                | O4#v           | N3                   | D4s,E4f           |
+| 7      | n4^               | O4#            | N3^,P4v              | E4v               |
+| 8      | L4v               | Q4v            | P4                   | E4                |
+| 9      | L4                | Q4             | P4^                  | E4^               |
+| 10     | L4^,s5v           | Q4^,R4v        | M4,m5                | E4s,G4f           |
+| 11     | s5                | R4             | P5v                  | G4v               |
+| 12     | s5^,n6v           | R4^            | P5                   | G4                |
+| 13     | n6                | S4b            | P5^,N6v              | G4^               |
+| 14     | n6^,n7v           | S4b^,U4bv      | N6                   | G4s,A4f           |
+| 15     | n7                | U4b            | N6^,m7v              | A4v               |
+| 16     | n7^               | U4b^           | m7                   | A4                |
+| 17     | L7v               | U4#v           | m7^,N7v              | A4^               |
+| 18     | L7                | U4#            | N7                   | A4s,C5f           |
+| 19     | L7^               | J5v            | N7^,P8v              | C5v               |
 | 20     | p8                | J5             | P8                   | C5                |
 ## 21ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
@@ -298,9 +297,9 @@ TODO: Implement ups and downs
 | 11     | P5v                  | G4v               |
 | 12     | P5                   | G4                |
 | 13     | P5^                  | G4^               |
-| 14     | M6v                  | a4v               |
-| 15     | M6                   | a4                |
-| 16     | M6^                  | a4^               |
+| 14     | M6v                  | A4v               |
+| 15     | M6                   | A4                |
+| 16     | M6^                  | A4^               |
 | 17     | M7v                  | B4v               |
 | 18     | M7                   | B4                |
 | 19     | M7^                  | B4^               |
@@ -310,82 +309,82 @@ TODO: Implement ups and downs
 | Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
 |:------:|:-----------------:|:--------------:|:--------------------:|:-----------------:|
 | 0      | p1                | J4             | P1                   | C4                |
-| 1      | p1^,s2v           | J4^            | m2                   | D4b               |
+| 1      | p1+,s2-           | J4+            | m2                   | D4b               |
 | 2      | s2                | J4#,K4b        | m2+                  | D4b+              |
-| 3      | s2^,L2v           | K4v            | M2-                  | D4-               |
+| 3      | s2+,L2-           | K4-            | M2-                  | D4-               |
 | 4      | L2                | K4             | M2                   | D4                |
-| 5      | L2^,p3v           | K4^,N4v        | m3                   | E4b               |
-| 6      | p3                | N4             | m3+                  | E4b+              |
-| 7      | p3^,s4v           | N4^            | M3-                  | E4-               |
-| 8      | s4                | N4#,O4b        | M3                   | E4                |
-| 9      | s4^,L4v           | O4v            | P4                   | F4                |
-| 10     | L4                | O4             | P4+                  | F4+               |
-| 11     | L4^,s5v           | O4^,Q4v        | A4-,d5+              | F4#-,G4b+         |
-| 12     | s5                | Q4             | P5-                  | G4-               |
-| 13     | s5^,L5v           | Q4^            | P5                   | G4                |
-| 14     | L5                | Q4#,R4b        | m6                   | a4b               |
-| 15     | L5^,p6v           | R4v            | m6+                  | a4b+              |
-| 16     | p6                | R4             | M6-                  | a4-               |
-| 17     | p6^,s7v           | R4^,S4v        | M6                   | a4                |
-| 18     | s7                | S4             | m7                   | B4b               |
-| 19     | s7^,L7v           | S4^            | m7+                  | B4b+              |
-| 20     | L7                | S4#,J5b        | M7-                  | B4-               |
-| 21     | L7^,p8v           | J5v            | M7                   | B4                |
+| 5      | L2+,p3-           | K4+,O4-        | m3                   | E4b               |
+| 6      | p3                | O4             | m3+                  | E4b+              |
+| 7      | p3+,s4-           | O4+            | M3-                  | E4-               |
+| 8      | s4                | O4#,Q4b        | M3                   | E4                |
+| 9      | s4+,L4-           | Q4-            | P4                   | F4                |
+| 10     | L4                | Q4             | P4+                  | F4+               |
+| 11     | L4+,s5-           | Q4+,R4-        | a4-,d5+              | F4#-,G4b+         |
+| 12     | s5                | R4             | P5-                  | G4-               |
+| 13     | s5+,L5-           | R4+            | P5                   | G4                |
+| 14     | L5                | R4#,S4b        | m6                   | A4b               |
+| 15     | L5+,p6-           | S4-            | m6+                  | A4b+              |
+| 16     | p6                | S4             | M6-                  | A4-               |
+| 17     | p6+,s7-           | S4+,U4-        | M6                   | A4                |
+| 18     | s7                | U4             | m7                   | B4b               |
+| 19     | s7+,L7-           | U4+            | m7+                  | B4b+              |
+| 20     | L7                | U4#,J5b        | M7-                  | B4-               |
+| 21     | L7+,p8-           | J5-            | M7                   | B4                |
 | 22     | p8                | J5             | P8                   | C5                |
 ## 23ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
 |:------:|:--------------------:|:-----------------:|
 | 0      | P1                   | C4                |
 | 1      | d1                   | C4b               |
-| 2      | A2                   | D4#               |
+| 2      | a2                   | D4#               |
 | 3      | M2                   | D4                |
 | 4      | m2                   | D4b               |
-| 5      | d2,A3                | E4#               |
+| 5      | d2,a3                | E4#               |
 | 6      | M3                   | E4                |
 | 7      | m3                   | E4b               |
 | 8      | d3                   | E4bb,F4x          |
-| 9      | A4                   | F4#               |
+| 9      | a4                   | F4#               |
 | 10     | P4                   | F4                |
 | 11     | d4                   | F4b               |
-| 12     | A5                   | G4#               |
+| 12     | a5                   | G4#               |
 | 13     | P5                   | G4                |
 | 14     | d5                   | G4b               |
-| 15     | A6                   | a4#               |
-| 16     | M6                   | a4                |
-| 17     | m6                   | a4b               |
-| 18     | d6,A7                | B4#               |
+| 15     | a6                   | A4#               |
+| 16     | M6                   | A4                |
+| 17     | m6                   | A4b               |
+| 18     | d6,a7                | B4#               |
 | 19     | M7                   | B4                |
 | 20     | m7                   | B4b               |
 | 21     | d7                   | B4bb,C5x          |
-| 22     | A8                   | C5#               |
+| 22     | a8                   | C5#               |
 | 23     | P8                   | C5                |
 ## 24ed2
 | Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
 |:------:|:-----------------:|:--------------:|:--------------------:|:-----------------:|
 | 0      | p1                | J4             | P1                   | C4                |
-| 1      | p1^,s2v           | J4^            | P1^,m2v              | C4^               |
+| 1      | p1^,s2v           | J4^            | M1                   | C4s               |
 | 2      | s2                | K4b            | m2                   | C4#,D4b           |
-| 3      | s2^               | K4b^           | m2^,M2v              | D4v               |
+| 3      | s2^               | K4b^           | N2                   | D4f               |
 | 4      | L2<               | K4<            | M2                   | D4                |
-| 5      | L2>               | K4>            | M2^,m3v              | D4^               |
-| 6      | p3<               | N4<            | m3                   | D4#,E4b           |
-| 7      | p3>               | N4>            | m3^,M3v              | E4v               |
-| 8      | s4<               | O4b<           | M3                   | E4                |
-| 9      | s4>               | O4b>           | M3^,P4v              | E4^,F4v           |
-| 10     | L4v               | O4v            | P4                   | F4                |
-| 11     | L4                | O4             | P4^,A4v              | F4^               |
-| 12     | L4^,s5v           | O4^,Q4v        | A4,d5                | F4#,G4b           |
-| 13     | s5                | Q4             | P5v,d5^              | G4v               |
-| 14     | s5^               | Q4^            | P5                   | G4                |
-| 15     | L5<               | Q4#<           | P5^,m6v              | G4^               |
-| 16     | L5>               | Q4#>           | m6                   | G4#,a4b           |
-| 17     | p6<               | R4<            | m6^,M6v              | a4v               |
-| 18     | p6>               | R4>            | M6                   | a4                |
-| 19     | s7<               | S4<            | M6^,m7v              | a4^               |
-| 20     | s7>               | S4>            | m7                   | a4#,B4b           |
-| 21     | L7v               | S4#v           | m7^,M7v              | B4v               |
-| 22     | L7                | S4#            | M7                   | B4                |
-| 23     | L7^,p8v           | J5v            | M7^,P8v              | B4^,C5v           |
+| 5      | L2>               | K4>            | M2^,m3v              | D4s               |
+| 6      | p3<               | O4<            | m3                   | D4#,E4b           |
+| 7      | p3>               | O4>            | N3                   | E4f               |
+| 8      | s4<               | Q4b<           | M3                   | E4                |
+| 9      | s4>               | Q4b>           | M3^,P4v              | E4s,F4f           |
+| 10     | L4v               | Q4v            | P4                   | F4                |
+| 11     | L4                | Q4             | P4^,a4v              | F4s               |
+| 12     | L4^,s5v           | Q4^,R4v        | a4,d5                | F4#,G4b           |
+| 13     | s5                | R4             | P5v,d5^              | G4f               |
+| 14     | s5^               | R4^            | P5                   | G4                |
+| 15     | L5<               | R4#<           | P5^,m6v              | G4s               |
+| 16     | L5>               | R4#>           | m6                   | G4#,A4b           |
+| 17     | p6<               | S4<            | N6                   | A4f               |
+| 18     | p6>               | S4>            | M6                   | A4                |
+| 19     | s7<               | U4<            | M6^,m7v              | A4s               |
+| 20     | s7>               | U4>            | m7                   | A4#,B4b           |
+| 21     | L7v               | U4#v           | N7                   | B4f               |
+| 22     | L7                | U4#            | M7                   | B4                |
+| 23     | L7^,p8v           | J5v            | M7^,P8v              | B4s,C5f           |
 | 24     | p8                | J5             | P8                   | C5                |
 ## 25ed2
 | Degree | Smitonic interval | Smitonic Pitch |
@@ -396,88 +395,88 @@ TODO: Implement ups and downs
 | 3      | s2                | K4b            |
 | 4      | L2                | K4             |
 | 5      | W2                | K4#            |
-| 6      | n3                | N4b            |
-| 7      | p3                | N4             |
-| 8      | W3                | N4#            |
-| 9      | n4                | N4x,O4bb       |
-| 10     | s4                | O4b            |
-| 11     | L4                | O4             |
-| 12     | W4                | O4#            |
-| 13     | n5                | Q4b            |
-| 14     | s5                | Q4             |
-| 15     | L5                | Q4#            |
-| 16     | W5                | Q4x,R4bb       |
-| 17     | n6                | R4b            |
-| 18     | p6                | R4             |
-| 19     | W6                | R4#            |
-| 20     | n7                | S4b            |
-| 21     | s7                | S4             |
-| 22     | L7                | S4#            |
-| 23     | W7                | S4x,J5bb       |
+| 6      | n3                | O4b            |
+| 7      | p3                | O4             |
+| 8      | W3                | O4#            |
+| 9      | n4                | O4x,Q4bb       |
+| 10     | s4                | Q4b            |
+| 11     | L4                | Q4             |
+| 12     | W4                | Q4#            |
+| 13     | n5                | R4b            |
+| 14     | s5                | R4             |
+| 15     | L5                | R4#            |
+| 16     | W5                | R4x,S4bb       |
+| 17     | n6                | S4b            |
+| 18     | p6                | S4             |
+| 19     | W6                | S4#            |
+| 20     | n7                | U4b            |
+| 21     | s7                | U4             |
+| 22     | L7                | U4#            |
+| 23     | W7                | U4x,J5bb       |
 | 24     | n8                | J5b            |
 | 25     | p8                | J5             |
 ## 26ed2
 | Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
 |:------:|:-----------------:|:--------------:|:--------------------:|:-----------------:|
 | 0      | p1                | J4             | P1                   | C4                |
-| 1      | p1^,s2v           | J4^            | A1                   | C4#               |
+| 1      | p1^,s2v           | J4^            | a1                   | C4#               |
 | 2      | s2                | K4b            | d2                   | C4x,D4bb          |
 | 3      | s2^               | K4b^           | m2                   | D4b               |
 | 4      | L2v               | K4v            | M2                   | D4                |
-| 5      | L2                | K4             | A2                   | D4#               |
-| 6      | L2^,p3v           | K4^,N4v        | d3                   | D4x,E4bb          |
-| 7      | p3                | N4             | m3                   | E4b               |
-| 8      | p3^,s4v           | N4^            | M3                   | E4                |
-| 9      | s4                | O4b            | A3                   | E4#               |
-| 10     | s4^               | O4b^           | d4                   | F4b               |
-| 11     | L4v               | O4v            | P4                   | F4                |
-| 12     | L4                | O4             | A4                   | F4#               |
-| 13     | L4^,s5v           | O4^,Q4v        | AA4,dd5              | F4x,G4bb          |
-| 14     | s5                | Q4             | d5                   | G4b               |
-| 15     | s5^               | Q4^            | P5                   | G4                |
-| 16     | L5v               | Q4#v           | A5                   | G4#               |
-| 17     | L5                | Q4#            | d6                   | G4x,a4bb          |
-| 18     | L5^,p6v           | R4v            | m6                   | a4b               |
-| 19     | p6                | R4             | M6                   | a4                |
-| 20     | p6^,s7v           | R4^,S4v        | A6                   | a4#               |
-| 21     | s7                | S4             | d7                   | a4x,B4bb          |
-| 22     | s7^               | S4^            | m7                   | B4b               |
-| 23     | L7v               | S4#v           | M7                   | B4                |
-| 24     | L7                | S4#            | A7                   | B4#               |
+| 5      | L2                | K4             | a2                   | D4#               |
+| 6      | L2^,p3v           | K4^,O4v        | d3                   | D4x,E4bb          |
+| 7      | p3                | O4             | m3                   | E4b               |
+| 8      | p3^,s4v           | O4^            | M3                   | E4                |
+| 9      | s4                | Q4b            | a3                   | E4#               |
+| 10     | s4^               | Q4b^           | d4                   | F4b               |
+| 11     | L4v               | Q4v            | P4                   | F4                |
+| 12     | L4                | Q4             | a4                   | F4#               |
+| 13     | L4^,s5v           | Q4^,R4v        | aa4,dd5              | F4x,G4bb          |
+| 14     | s5                | R4             | d5                   | G4b               |
+| 15     | s5^               | R4^            | P5                   | G4                |
+| 16     | L5v               | R4#v           | a5                   | G4#               |
+| 17     | L5                | R4#            | d6                   | G4x,A4bb          |
+| 18     | L5^,p6v           | S4v            | m6                   | A4b               |
+| 19     | p6                | S4             | M6                   | A4                |
+| 20     | p6^,s7v           | S4^,U4v        | a6                   | A4#               |
+| 21     | s7                | U4             | d7                   | A4x,B4bb          |
+| 22     | s7^               | U4^            | m7                   | B4b               |
+| 23     | L7v               | U4#v           | M7                   | B4                |
+| 24     | L7                | U4#            | a7                   | B4#               |
 | 25     | L7^,p8v           | J5v            | d8                   | C5b               |
 | 26     | p8                | J5             | P8                   | C5                |
 ## 31ed2
 | Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
 |:------:|:-----------------:|:--------------:|:--------------------:|:-----------------:|
 | 0      | p1                | J4             | P1                   | C4                |
-| 1      | p1^               | J4^            | P1^                  | C4^               |
-| 2      | s2v               | K4bv           | A1                   | C4#               |
+| 1      | p1^               | J4^            | M1,d2                | C4s               |
+| 2      | s2v               | K4bv           | a1                   | C4#               |
 | 3      | s2                | K4b            | m2                   | D4b               |
-| 4      | s2^               | K4b^           | m2^,M2v              | D4v               |
+| 4      | s2^               | K4b^           | N2                   | D4f               |
 | 5      | n3v               | K4<            | M2                   | D4                |
-| 6      | n3                | K4>            | M2^                  | D4^               |
-| 7      | n3^               | K4#v,N4b^      | m3v                  | D4#               |
-| 8      | n4v               | N4<            | m3                   | E4b               |
-| 9      | n4                | N4>            | m3^,M3v              | E4v               |
-| 10     | n4^               | N4#v           | M3                   | E4                |
-| 11     | s4<               | N4#            | d4                   | F4b               |
-| 12     | s4>               | N4#^           | P4v                  | F4v               |
-| 13     | L4v               | O4v            | P4                   | F4                |
-| 14     | L4                | O4             | P4^                  | F4^               |
-| 15     | L4^               | O4^            | A4                   | F4#               |
-| 16     | s5v               | Q4v            | d5                   | G4b               |
-| 17     | s5                | Q4             | P5v                  | G4v               |
-| 18     | s5^               | Q4^            | P5                   | G4                |
-| 19     | n6v               | R4bv           | P5^                  | G4^               |
-| 20     | n6                | R4b            | A5                   | G4#               |
-| 21     | n6^               | R4b^           | m6                   | a4b               |
-| 22     | n7v               | R4<            | m6^,M6v              | a4v               |
-| 23     | n7                | R4>            | M6                   | a4                |
-| 24     | n7^               | R4#v,S4b^      | M6^                  | a4^               |
-| 25     | s7<               | S4<            | m7v                  | a4#               |
-| 26     | s7>               | S4>            | m7                   | B4b               |
-| 27     | L7v               | S4#v           | m7^,M7v              | B4v               |
-| 28     | L7                | S4#            | M7                   | B4                |
-| 29     | L7^               | S4#^           | d8                   | C5b               |
-| 30     | p8v               | J5v            | P8v                  | C5v               |
+| 6      | n3                | K4>            | d3                   | D4s               |
+| 7      | n3^               | K4#v,O4b^      | a2                   | D4#               |
+| 8      | n4v               | O4<            | m3                   | E4b               |
+| 9      | n4                | O4>            | N3                   | E4f               |
+| 10     | n4^               | O4#v           | M3                   | E4                |
+| 11     | s4<               | O4#            | d4                   | E4s,F4b           |
+| 12     | s4>               | O4#^           | a3,m4                | E4#,F4f           |
+| 13     | L4v               | Q4v            | P4                   | F4                |
+| 14     | L4                | Q4             | M4                   | F4s               |
+| 15     | L4^               | Q4^            | a4                   | F4#               |
+| 16     | s5v               | R4v            | d5                   | G4b               |
+| 17     | s5                | R4             | m5                   | G4f               |
+| 18     | s5^               | R4^            | P5                   | G4                |
+| 19     | n6v               | S4bv           | M5,d6                | G4s               |
+| 20     | n6                | S4b            | a5                   | G4#               |
+| 21     | n6^               | S4b^           | m6                   | A4b               |
+| 22     | n7v               | S4<            | N6                   | A4f               |
+| 23     | n7                | S4>            | M6                   | A4                |
+| 24     | n7^               | S4#v,U4b^      | M6^                  | A4s               |
+| 25     | s7<               | U4<            | m7v                  | A4#               |
+| 26     | s7>               | U4>            | m7                   | B4b               |
+| 27     | L7v               | U4#v           | N7                   | B4f               |
+| 28     | L7                | U4#            | M7                   | B4                |
+| 29     | L7^               | U4#^           | d8                   | B4s,C5b           |
+| 30     | p8v               | J5v            | a7,m8                | B4#,C5f           |
 | 31     | p8                | J5             | P8                   | C5                |

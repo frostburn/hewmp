@@ -55,11 +55,17 @@ def hewmp_spellings(interval_parser, steps, edn_divided, preferred_arrows):
             index = int(dot(steps, pitch[:len(steps)]))
             spellings[index].append(token)
     for value in range(1, 9):
-        for quality in "dA":
+        qualities = "da"
+        if value in (1, 4, 5, 8):
+            qualities += "mM"
+        else:
+            qualities += "N"
+        for quality in qualities:
             token = "{}{}".format(quality, value)
             pitch = interval_parser.parse(token)[0]
-            index = int(dot(steps, pitch[:len(steps)]))
-            spellings[index].append(token)
+            index = dot(steps, pitch[:len(steps)])
+            if index == int(index):
+                spellings[int(index)].append(token)
 
     required = set(range(steps[PRIMES.index(edn_divided)]))
     spelled = set(spellings.keys())
@@ -67,7 +73,7 @@ def hewmp_spellings(interval_parser, steps, edn_divided, preferred_arrows):
     if missing:
         new_spellings = defaultdict(list)
         for value in range(1, 9):
-            for quality in ("dd", "AA"):
+            for quality in ("dd", "aa"):
                 token = "{}{}".format(quality, value)
                 pitch = interval_parser.parse(token)[0]
                 index = int(dot(steps, pitch[:len(steps)]))
@@ -95,12 +101,18 @@ def hewmp_spellings(interval_parser, steps, edn_divided, preferred_arrows):
                         index = int(dot(steps, pitch[:len(steps)]))
                         new_spellings[index].append(token)
             for value in range(1, 9):
-                for quality in "dA":
+                qualities = "da"
+                if value in (1, 4, 5, 8):
+                    qualities += "mM"
+                else:
+                    qualities += "N"
+                for quality in qualities:
                     for arrow in pair:
                         token = "{}{}{}".format(quality, value, arrow)
                         pitch = interval_parser.parse(token)[0]
-                        index = int(dot(steps, pitch[:len(steps)]))
-                        new_spellings[index].append(token)
+                        index = dot(steps, pitch[:len(steps)])
+                        if index == int(index):
+                            new_spellings[int(index)].append(token)
             still_missing = required - spelled - set(new_spellings.keys())
             if len(still_missing) < len(missing):
                 update_list_dict(spellings, new_spellings)
@@ -112,7 +124,7 @@ def hewmp_spellings(interval_parser, steps, edn_divided, preferred_arrows):
 def hewmp_pitch_spellings(interval_parser, steps, edn_divided, preferred_arrows):
     spellings = defaultdict(list)
     bases = []
-    for letter in "CDEFGaBc":
+    for letter in "CDEFGABc":
         octave = 4
         if letter == "c":
             letter = "C"
@@ -123,11 +135,12 @@ def hewmp_pitch_spellings(interval_parser, steps, edn_divided, preferred_arrows)
         index = int(dot(steps, pitch[:len(steps)]))
         spellings[index].append(token)
     for base in bases:
-        for accidental in "#b":
+        for accidental in "#bsf":
             token = "{}{}".format(base, accidental)
             pitch = interval_parser.parse(token)[0]
-            index = int(dot(steps, pitch[:len(steps)]))
-            spellings[index].append(token)
+            index = dot(steps, pitch[:len(steps)])
+            if index == int(index):
+                spellings[int(index)].append(token)
 
     required = set(range(steps[PRIMES.index(edn_divided)]))
     spelled = set(spellings.keys())
@@ -158,12 +171,13 @@ def hewmp_pitch_spellings(interval_parser, steps, edn_divided, preferred_arrows)
                     index = int(dot(steps, pitch[:len(steps)]))
                     new_spellings[index].append(token)
             for base in bases:
-                for accidental in "#b":
+                for accidental in "#bsf":
                     for arrow in pair:
                         token = "{}{}{}".format(base, accidental, arrow)
                         pitch = interval_parser.parse(token)[0]
-                        index = int(dot(steps, pitch[:len(steps)]))
-                        new_spellings[index].append(token)
+                        index = dot(steps, pitch[:len(steps)])
+                        if index == int(index):
+                            new_spellings[int(index)].append(token)
             still_missing = required - spelled - set(new_spellings.keys())
             if len(still_missing) < len(missing):
                 update_list_dict(spellings, new_spellings)
@@ -210,7 +224,7 @@ def smitonic_spellings(interval_parser, steps, edn_divided, preferred_arrows):
             update_list_dict(spellings, new_spellings)
         spelled = set(spellings.keys())
         missing = required - spelled
-        arrow_pairs = ["<>", "^v", "-+", "i!", "*%", "AV", "ud", "UD", "MW"]
+        arrow_pairs = ["-+", "<>", "^v", "i!", "*%", "AV", "ud", "UD", "MW"]
         if preferred_arrows:
             arrow_pairs.insert(0, preferred_arrows)
         while missing and arrow_pairs:
@@ -247,7 +261,7 @@ def smitonic_spellings(interval_parser, steps, edn_divided, preferred_arrows):
 def smitonic_pitch_spellings(interval_parser, steps, edn_divided, preferred_arrows):
     spellings = defaultdict(list)
     bases = []
-    for letter in "JKNOQRSj":
+    for letter in "JKOQRSUj":
         octave = 4
         if letter == "j":
             letter = "J"
@@ -283,7 +297,7 @@ def smitonic_pitch_spellings(interval_parser, steps, edn_divided, preferred_arro
             update_list_dict(spellings, new_spellings)
         spelled = set(spellings.keys())
         missing = required - spelled
-        arrow_pairs = ["<>", "^v", "-+", "i!", "*%", "AV", "ud", "UD", "MW"]
+        arrow_pairs = ["-+", "<>", "^v", "i!", "*%", "AV", "ud", "UD", "MW"]
         if preferred_arrows:
             arrow_pairs.insert(0, preferred_arrows)
         while missing and arrow_pairs:
@@ -337,7 +351,7 @@ if __name__ == '__main__':
         spellings, missing = smitonic_spellings(interval_parser, steps, edn_divided, args.arrows)
         pitch_spellings, _ = smitonic_pitch_spellings(interval_parser, steps, edn_divided, args.arrows)
     else:
-        for unison in ["d1", "P1W", "P1v", "P1D", "P1<", "P1!", "P1-", "P1d", "P1%", "P1V", "P1A", "P1*", "P1u", "P1+", "P1i", "P1>", "P1U", "P1^", "P1M", "A1"]:
+        for unison in ["d1", "P1W", "P1v", "P1D", "P1<", "P1!", "P1-", "P1d", "P1%", "P1V", "P1A", "P1*", "P1u", "P1+", "P1i", "P1>", "P1U", "P1^", "P1M", "a1"]:
             pitch = interval_parser.parse(unison)[0]
             print(unison, "=", int(dot(steps, pitch[:len(steps)])))
         spellings, missing = hewmp_spellings(interval_parser, steps, edn_divided, args.arrows)

@@ -133,10 +133,9 @@ You can add an octave to an interval by prefixing it with `c`
 ## Pythagorean basis
 The base notation system of HEWMP is Pythagorean i.e. 3-limit just intonation i.e. fractions built from powers of 2 and 3.
 While the main system is based on relative intervals there is an underlying set of absolute pitches forming a chain of fifths.
-(Please note that the absolute pitch `a` is spelled in lowercase to differentiate it from the augmented interval `A`.) TODO: Switch these
 ```
-$ A chain of fifths (3/2) around the base note a4
-F2 C3 G3 D4 a4 E5 B5
+$ A chain of fifths (3/2) around the base note A4
+F2 C3 G3 D4 A4 E5 B5
 z z z
 $ The same spelled using fractions
 @16/81 @8/27 @4/9 @2/3 @1 @3/2 @9/4
@@ -144,11 +143,11 @@ $ The same spelled using fractions
 Adding one to the number after an absolute pitch raises it by an octave.
 ```
 $ Two A notes an octave apart
-a4 a5
+A4 A5
 $ The same
 @1 @2
 ```
-From the basic pitches we can derive the basic set of intervals `P1`, `m2`, `M2`, `m3`, `M3`, `P4`, `d5`, `A4`, `P5`, `m6`, `M6`, `m7` and `M7`.
+From the basic pitches we can derive the basic set of intervals `P1`, `m2`, `M2`, `m3`, `M3`, `P4`, `d5`, `a4`, `P5`, `m6`, `M6`, `m7` and `M7`.
 ```
 $ Perfect unison
 C4 C4
@@ -166,7 +165,7 @@ $ Perfect fifth
 C4 G4
 C4 P5
 $ Major sixth
-C4 a4
+C4 A4
 C4 M6
 $ Major seventh
 C4 B4
@@ -181,14 +180,14 @@ $ Minor sixth
 E4 C5
 E4 m6
 $ Minor third
-a4 C5
-a4 m3
+A4 C5
+A4 m3
 $ Minor second
 B4 C5
 B4 m2
 $ Augmented fourth
 F4 B4
-F4 A4
+F4 a4
 $ Diminished fifth
 B3 F4
 B3 d5
@@ -196,35 +195,54 @@ B3 d5
 Remember that in just intonation the augmented fourth `729/512` is different from the diminished fifth `1024/729`.
 
 ## Sharps and Flats
-An absolute pitch can be raised by a fraction of `2187/2048` (approximately `113.685c`) by appending a sharp sign `#` to it (spelled as a hash to remain within ASCII). TODO: Add support for unicode
+An absolute pitch can be raised by a fraction of `2187/2048` (approximately `113.685c`) by appending a sharp sign `#` to it (spelled as a hash to remain within ASCII). Unicode `♯` is also supported.
 ```
-a4 a4#
+A4 A4#
 ```
-To raise the pitch by double the amount use a double sharp sign `x` (spelled as a lowercase 'ex' to remain within ASCII).
+To raise the pitch by double the amount use a double sharp sign `x` (spelled as a lowercase 'ex' to remain within ASCII). Unicode `𝄪` is also supported.
 ```
-a4 a4x
+A4 A4x
 ```
-To lower the pitch by `2187/2048` append a flat sign `b` (spelled as a lowercase 'bee').
+To lower the pitch by `2187/2048` append a flat sign `b` (spelled as a lowercase 'bee'). Unicode `♭` and `𝄫` also supported.
 ```
-a4 a4b
+A4 A4b
 ```
 You can stack any number of `#`, `x` or `b` (in that order) to modify the pitch further.
 ```
-a4 a4bb
+A4 A4bb
 ```
 
 ## Augmented and Diminished Intervals
 If the base interval is perfect `P` or major `M` an augmented version is wider by a fraction of `2187/2048`.
 ```
-P1 A1
+P1 a1
 ```
 If the base interval is perfect `P` or minor `m` a diminished version is narrower by a fraction of `2187/2048`. This can create paradoxical intervals that go down in pitch.
 ```
 P1 d1
 ```
-Augmented `A` and diminished `d` stack.
+Augmented `a` and diminished `d` stack.
 ```
-P1 dd1 AAA1
+P1 dd1 aaa1
+```
+
+## Neutral Intervals
+An assortment of intervals between minor and major are also supported. `N3` is exactly half the cents of `P5`.
+```
+N2 N3 N6 N7
+```
+Warning: Not all edos support dividing the fifth in half and this can result in half-edosteps.
+
+## Non-standard Intervals
+The perfect intervals have quarter-tone minor and major versions.
+```
+M1 m4 M4 m5 M5 m8
+```
+
+## Quarter-tones
+The accidentals `s` and `f` act as quarter-tone sharp and flat respectively.
+```
+C4 E4f G4 B4f  $ Neutral 7th arpeggio
 ```
 
 ## Inflections
@@ -345,11 +363,11 @@ To specify a timestamp use `T`. To jump to the timestamp use `@T` inside square 
 $ First section alto voice
 C4         D4 E4     E4 |
 $ First section soprano voice
-(z C5)[@0] B4 (z a4) G4 |
+(z C5)[@0] B4 (z A4) G4 |
 
 T  $ Mark the begining of second section
 $$$$ Second section alto voice
-F4         C4     a4[2]     |
+F4         C4     A4[2]     |
 $$$$ Second section soprano voice
 (z E5)[@T] (z C5) (z F4) C5 |
 
@@ -385,12 +403,12 @@ k h s k,h | k h s k,o | k,h h s k,h | k,c h s z ||
 ## Configuration
 Configuration is usually placed near the top of the score and consists of various shorthands in capital letters followed by a colon.
 ### Base Frequency
-Use the config `BF:` to define what frequency is used for `@P1` and `a4`. Everything else is calculated in reference to this base pitch. Default is 440Hz.
+Use the config `BF:` to define what frequency is used for `@P1` and `A4`. Everything else is calculated in reference to this base pitch. Default is 440Hz.
 ```
 BF:432  $ Now we're vibing
 ```
 ### Base Note
-Us the config `BN:` to change what absolute pitch has the same frequency as `@P1`. Default is `a4,J5`. (`J5` comes from the [Smitonic Extension](#smitonic))
+Us the config `BN:` to change what absolute pitch has the same frequency as `@P1`. Default is `A4,J5`. (`J5` comes from the [Smitonic Extension](#smitonic))
 ```
 BN:C4  $ Start from C=440Hz
 ```
@@ -654,7 +672,7 @@ The smitonic extension to generated by `p3` the *perfect smithird* which is equa
 Because it is only an extension and we're running out of letters, the absolute pitches beneath the smitonic intervals are a ragtag collection.
 ```
 $ A chain of smi3rds around the base note J5
-K4 O4 R4 J5 N5 Q5 S5
+K4 Q4 S4 J5 O5 R5 U5
 z z z
 $ The same spelled using semi-fractions
 @1331/4096/2   @11/16   @11/16/2   @1   @16/11/2   @16/11   @4096/1331/2
@@ -663,15 +681,15 @@ And these in turn define the smitonic intervals.
 ```
 J4 p1 J4  $ Perfect unison
 J4 L2 K4  $ Large smi2nd
-J4 p3 N4  $ Perfect smi3rd
-J4 L4 O4  $ Large smi4th a.k.a. undecimal superfourth 11/8
-J4 s5 Q4  $ Small smi5th a.k.a. undecimal subfifth 16/11
-J4 p6 R4  $ Perfect smi6th
-J4 s7 S4  $ Small smi7th
+J4 p3 O4  $ Perfect smi3rd
+J4 L4 Q4  $ Large smi4th a.k.a. undecimal superfourth 11/8
+J4 s5 R4  $ Small smi5th a.k.a. undecimal subfifth 16/11
+J4 p6 S4  $ Perfect smi6th
+J4 s7 U4  $ Small smi7th
 J4 p8 J5  $ Perfect octave
 
-K4 s2 N4  $ Small smi2nd
-K4 s4 Q4  $ Small smi4th
+K4 s2 O4  $ Small smi2nd
+K4 s4 R4  $ Small smi4th
 K4 n6 S4  $ Narrow smi6th
 
 S4 W3 K5  $ Wide smi3rd
@@ -731,19 +749,19 @@ While not the most accurate edo for the Orgone temperament, 18ed2 does greatly b
 | 2      | d4                   | s2                |
 | 3      | m3                   | L2                |
 | 4      | M2                   | W2,n3             |
-| 5      | A1,d6                | p3                |
+| 5      | a1,d6                | p3                |
 | 6      | d5                   | W3,n4             |
 | 7      | P4                   | s4                |
 | 8      | M3                   | L4                |
-| 9      | A2,d7                | W4,n5             |
+| 9      | a2,d7                | W4,n5             |
 | 10     | m6                   | s5                |
 | 11     | P5                   | L5                |
-| 12     | A4                   | W5,n6             |
-| 13     | A3,d8                | p6                |
+| 12     | a4                   | W5,n6             |
+| 13     | a3,d8                | p6                |
 | 14     | m7                   | W6,n7             |
 | 15     | M6                   | s7                |
-| 16     | A5                   | L7                |
-| 17     | AA4                  | W7,n8             |
+| 16     | a5                   | L7                |
+| 17     | aa4                  | W7,n8             |
 | 18     | P8                   | p8                |
 
 See more [edo notation](doc/edo_notation.md) in the docs.

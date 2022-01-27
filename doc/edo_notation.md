@@ -1,5 +1,7 @@
 # HEWMP Notation for EDOs
 Bellow are listed slightly opinionated tables for the simplest ways to notate each equal division of the octave up to 26ed2.
+TODO: Fix smitonics and replace with neutrals whenever possible
+TODO: Implement ups and downs
 ## 3ed2
 | Degree | Smitonic Interval | Smitonic Pitch |
 |:------:|:-----------------:|:--------------:|

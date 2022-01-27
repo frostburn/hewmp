@@ -1,3 +1,4 @@
+# coding: utf-8
 from io import StringIO
 from collections import Counter
 try:
@@ -149,11 +150,25 @@ BASIC_INTERVALS = {
     "A6": (-15, 10),
     "A3": (-17, 11),
     "A7": (-18, 12),
+
+    # Extra neutral intervals
+    "N2": (2.5, -1.5),
+    "N6": (1.5, -0.5),
+    "N3": (-0.5, 0.5),
+    "N7": (-1.5, 1.5),
+
+    # Bonus non-standard intervals
+    "m4": (7.5, -4.5),
+    "m1": (5.5, -3.5),
+    "m5": (4.5, -2.5),
+    "M4": (-3.5, 2.5),
+    "M1": (-5.5, 3.5),
+    "M5": (-6.5, 4.5),
 }
 
 
 AUGMENTED_INFLECTION = (-11, 7)
-INTERVAL_QUALITIES = "dmPMA"
+INTERVAL_QUALITIES = "dmPMAN"
 
 
 def parse_arrows(token, inflections):
@@ -222,16 +237,25 @@ def parse_pitch(token, inflections):
         token = token[1:]
     octave = int(octave_token)
     sharp = 0
-    while token and token[0] == "#":
+    while token and token[0] in "#♯":
         sharp += 1
         token = token[1:]
-    while token and token[0] == "x":
+    while token and token[0] in "x𝄪":
         sharp += 2
         token = token[1:]
-    while token and token[0] == "b":
+    while token and token[0] in "b♭":
         sharp -= 1
         token = token[1:]
+    while token and token[0] == "𝄫":
+        sharp -= 2
+        token = token[1:]
 
+    while token and token[0] == "s":
+        sharp += 0.5
+        token = token[1:]
+    while token and token[0] == "f":
+        sharp -= 0.5
+        token = token[1:]
 
     result = zero_pitch()
     result[0] += AUGMENTED_INFLECTION[0] * sharp
@@ -251,6 +275,7 @@ def parse_pitch(token, inflections):
     result[1] += basic_pitch[1]
 
     return result
+
 
 class IntervalParser:
     def __init__(self, inflections=DEFAULT_INFLECTIONS, smitonic_inflections=SMITONIC_INFLECTIONS, edn_divisions=Fraction(12), edn_divided=Fraction(2)):

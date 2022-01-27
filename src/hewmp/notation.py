@@ -6,6 +6,9 @@ from collections import Counter
 from numpy import array, log, pi, maximum, isclose, around
 
 
+# TODO: Notate neutral intervals
+
+
 def tokenize_extras(pitch, e_index=None, hz_index=None, rad_index=None):
     """
     Tokenize extra bits like cents, Hz and phase offsets as transpositions

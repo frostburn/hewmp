@@ -38,6 +38,32 @@ def test_parse_pitch():
     assert (interval_parser.parse("a-2x<")[0][:4] == array([-34, 16, 0, 1])).all()
 
 
+def test_neutral_intervals():
+    text = "P5/2 N3 P11/2 N6 m3/2 N2 M13/2 N7"
+    notes = get_notes(text)
+    assert (notes[0].pitch == notes[1].pitch).all()
+    assert (notes[2].pitch == notes[3].pitch).all()
+    assert (notes[4].pitch == notes[5].pitch).all()
+    assert (notes[6].pitch == notes[7].pitch).all()
+
+
+def test_bonus_intervals():
+    text = "m9/2 m5 M7/2 M4 d15/2 m8 A1/2 M1"
+    notes = get_notes(text)
+    assert (notes[0].pitch == notes[1].pitch).all()
+    assert (notes[2].pitch == notes[3].pitch).all()
+    assert (notes[4].pitch == notes[5].pitch).all()
+    assert (notes[6].pitch == notes[7].pitch).all()
+
+
+def test_half_sharps():
+    text = "a4&N3 C5#f C4&N3 E4f a4&N6 F5s"
+    notes = get_notes(text)
+    assert (notes[0].pitch == notes[1].pitch).all()
+    assert (notes[2].pitch == notes[3].pitch).all()
+    assert (notes[4].pitch == notes[5].pitch).all()
+
+
 def test_transposition():
     pattern_a = parse_text("M2&m2")[0][0]
     pattern_b = parse_text("m3")[0][0]
@@ -110,7 +136,7 @@ def test_interval_translation():
 
 def test_smitonic_pitch_translation():
     inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
-    for letter in "JKNOQRS":
+    for letter in "JKOQRSU":
         for octave in ("3", "4"):
             for accidental in ("" ,"b", "#", "x"):
                 for arrow in ("", "-", "<2", "+2^3"):
@@ -438,6 +464,9 @@ if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
     test_parse_pitch()
+    test_neutral_intervals()
+    test_bonus_intervals()
+    test_half_sharps()
     test_transposition()
     test_transposition_persistence()
     test_floaty_transposition()

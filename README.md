@@ -196,15 +196,15 @@ B3 d5
 Remember that in just intonation the augmented fourth `729/512` is different from the diminished fifth `1024/729`.
 
 ## Sharps and Flats
-An absolute pitch can be raised by a fraction of `2187/2048` (approximately `113.685c`) by appending a sharp sign `#` to it (spelled as a hash to remain within ASCII). TODO: Add support for unicode
+An absolute pitch can be raised by a fraction of `2187/2048` (approximately `113.685c`) by appending a sharp sign `#` to it (spelled as a hash to remain within ASCII). Unicode `♯` is also supported.
 ```
 a4 a4#
 ```
-To raise the pitch by double the amount use a double sharp sign `x` (spelled as a lowercase 'ex' to remain within ASCII).
+To raise the pitch by double the amount use a double sharp sign `x` (spelled as a lowercase 'ex' to remain within ASCII). Unicode `𝄪` is also supported.
 ```
 a4 a4x
 ```
-To lower the pitch by `2187/2048` append a flat sign `b` (spelled as a lowercase 'bee').
+To lower the pitch by `2187/2048` append a flat sign `b` (spelled as a lowercase 'bee'). Unicode `♭` and `𝄫` also supported.
 ```
 a4 a4b
 ```
@@ -225,6 +225,25 @@ P1 d1
 Augmented `A` and diminished `d` stack.
 ```
 P1 dd1 AAA1
+```
+
+## Neutral Intervals
+An assortment of intervals between minor and major are also supported. `N3` is exactly half the cents of `P5`.
+```
+N2 N3 N6 N7
+```
+Warning: Not all edos support dividing the fifth in half and this can result in half-edosteps.
+
+## Non-standard Intervals
+The perfect intervals have quarter-tone minor and major versions.
+```
+M1 m4 M4 m5 M5 m8
+```
+
+## Quarter-tones
+The accidentals `s` and `f` act as quarter-tone sharp and flat respectively.
+```
+C4 E4f G4 B4f  $ Neutral 7th arpeggio
 ```
 
 ## Inflections
@@ -628,6 +647,8 @@ To control when the beats of two similarly tuned notes occur use a phase offset 
 ```
 Warning: Phase offset is ignored in MIDI output.
 ## <a name="smitonic"></a> Smitonic Extension
+TODO: Fix pitch names
+
 Because HEWMP is mainly focused on notating just intonation and temperaments thereof it can produce quite surprising results for edos. First an expression is parsed into a fraction and then the prime components of that fraction are used to decide what scale degree should represent that factor. If a prime component is mapped inaccurately the error will compound. This is especially damaging if the prime in question is 3 as it breaks the whole Pythagorean basis of the notation.
 
 Consider 11ed2:

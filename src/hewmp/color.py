@@ -135,6 +135,10 @@ def parse_interval(token):
             if token.startswith(prefix):
                 token = token[len(prefix):]
                 index, amount = ABBREVIATIONS[prefix]
+                if prefix[-1] in "ou":
+                    while token[0] == prefix[-1]:
+                        token = token[1:]
+                        amount += ABBREVIATIONS[prefix][1]
                 token, exponent = parse_exponent(token)
                 monzo[index] += amount * exponent
                 break

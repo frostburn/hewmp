@@ -443,6 +443,13 @@ def test_higher_prime_color_notation():
         assert list(note.pitch[:len(monzo)]) == monzo
 
 
+def test_higher_prime_color_repeats():
+    text = "1oo4 19oo³6"
+    notes = get_notes(text)
+    assert (notes[0].pitch[:5] == [-8, 1, 0, 0, 2]).all()
+    assert (notes[1].pitch[:8] == [-14, -7, 0, 0, 0, 0, 0, 6]).all()
+
+
 def test_large_small_color_notation():
     text = "w3 Lw3 sw3 LLw3 s⁴w3"
     notes = get_notes(text)
@@ -497,5 +504,6 @@ if __name__ == '__main__':
     test_basic_color_notation()
     test_color_exponents()
     test_higher_prime_color_notation()
+    test_higher_prime_color_repeats()
     test_large_small_color_notation()
     test_wa_comma()

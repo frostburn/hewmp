@@ -360,7 +360,7 @@ class IntervalParser:
                 raise ParsingError("Signed absolute pitch")
             pitch += parse_pitch(token, self.inflections) - self.base_pitch
             absolute = True
-        elif token[0] in SMITONIC_INTERVAL_QUALITIES and not is_colored:
+        elif token[0] == "p" or (token[0] in SMITONIC_INTERVAL_QUALITIES and not is_colored):
             pitch += smitonic_parse_arrows(token, self.smitonic_inflections)
         elif token[0] in SMITONIC_BASIC_PITCHES:
             if direction is not None:

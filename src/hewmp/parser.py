@@ -836,6 +836,8 @@ def parse_track(lexer, default_config):
                         current_pitch += interval
                 else:
                     if absolute:
+                        if moves_root:
+                            raise ParsingError("Superfluous root move (~) with an absolute pitch")
                         current_pitch = zero_pitch()
                         moves_root = True
                     pitch = current_pitch + interval

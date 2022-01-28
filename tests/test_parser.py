@@ -134,6 +134,15 @@ def test_interval_translation():
                 assert token == retoken
 
 
+def test_chords():
+    text = "=hdim"
+    notes = get_notes(text)
+    pitches = [[0], [1, 1, -1], [2, 2, -2], [0, 2, -1]]
+    for note, expected in zip(notes, pitches):
+        note.pitch[:len(expected)] -= array(expected)
+        assert (note.pitch == 0).all()
+
+
 def test_smitonic_pitch_translation():
     inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
     for letter in "JKOQRSU":
@@ -467,6 +476,40 @@ def test_wa_comma():
         assert (note.pitch[2:] == 0).all()
 
 
+def test_harmonic_chord():
+    text = "=h31"
+    notes = get_notes(text)
+    odds = [
+        [0],
+        [0, 1],
+        [0, 0, 1],
+        [0, 0, 0, 1],
+        [0, 2],
+        [0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 1],
+        [0, 1, 1],
+        [0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 1, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 2],
+        [0, 3],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    ]
+    for note, odd in zip(notes, odds):
+        note.pitch[:len(odd)] -= array(odd)
+        assert (note.pitch == 0).all()
+
+    text = "=hcf9+15no5\\4"
+    notes = get_notes(text)
+    # TODO: Fix order after sorting is fixed
+    pitches = [[0], [-2, 0, 0, 1], [1], [-2, 2], [-2, 1, 1], [2, -1]]
+    for note, expected in zip(notes, pitches):
+        note.pitch[:len(expected)] -= array(expected)
+        assert (note.pitch == 0).all()
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -479,6 +522,7 @@ if __name__ == '__main__':
     test_floaty_transposition()
     test_pitch_translation()
     test_interval_translation()
+    test_chords()
     test_smitonic_pitch_translation()
     test_smitonic_interval_translation()
     test_playhead()
@@ -507,3 +551,4 @@ if __name__ == '__main__':
     test_higher_prime_color_repeats()
     test_large_small_color_notation()
     test_wa_comma()
+    test_harmonic_chord()

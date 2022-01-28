@@ -18,6 +18,7 @@ from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exp
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
+from .pythagoras import AUGMENTED_INFLECTION, parse_pitch as parse_pythagorean_pitch
 
 
 DEFAULT_INFLECTIONS = {
@@ -126,6 +127,7 @@ def parse_fraction(token):
     return number_to_pitch(int(token))
 
 
+# TODO: Move to pythagoras
 BASIC_INTERVALS = {
     "d2": (19, -12),
     "d6": (18, -11),
@@ -169,7 +171,6 @@ BASIC_INTERVALS = {
 }
 
 
-AUGMENTED_INFLECTION = (-11, 7)
 INTERVAL_QUALITIES = "dmPNMa"
 
 
@@ -221,41 +222,10 @@ REFERENCE_OCTAVE = 4
 
 
 def parse_pitch(token, inflections):
-    letter = token[0]
-    token = token[1:]
-    if token and token[0] == "-":
-        octave_token = token[0]
-        token = token[1:]
-    else:
-        octave_token = ""
-    while token and token[0].isdigit():
-        octave_token += token[0]
-        token = token[1:]
-    octave = int(octave_token)
-    sharp = 0
-    while token and token[0] in "#♯":
-        sharp += 1
-        token = token[1:]
-    while token and token[0] in "x𝄪":
-        sharp += 2
-        token = token[1:]
-    while token and token[0] in "b♭":
-        sharp -= 1
-        token = token[1:]
-    while token and token[0] == "𝄫":
-        sharp -= 2
-        token = token[1:]
-
-    while token and token[0] == "s":
-        sharp += 0.5
-        token = token[1:]
-    while token and token[0] == "f":
-        sharp -= 0.5
-        token = token[1:]
-
     result = zero_pitch()
-    result[0] += AUGMENTED_INFLECTION[0] * sharp
-    result[1] += AUGMENTED_INFLECTION[1] * sharp
+    token, base = parse_pythagorean_pitch(token)
+    result[0] = base[0]
+    result[1] = base[1]
 
     separated = separate_by_arrows(token)
 
@@ -264,11 +234,6 @@ def parse_pitch(token, inflections):
         if len(arrow_token) > 1:
             arrows = int(arrow_token[1:])
         result += inflections[arrow_token[0]]*arrows
-
-    basic_pitch = BASIC_PITCHES[letter]
-
-    result[0] += octave - REFERENCE_OCTAVE + basic_pitch[0]
-    result[1] += basic_pitch[1]
 
     return result
 
@@ -370,10 +335,11 @@ class IntervalParser:
             pitch += smitonic_parse_pitch(token, self.smitonic_inflections) - self.smitonic_base_pitch
             absolute = True
         else:
-            color_monzo = parse_color_interval(token)
+            color_monzo, color_absolute = parse_color_interval(token)
             color_offset = zero_pitch()
             color_offset[:len(color_monzo)] = color_monzo
             pitch += color_offset
+            absolute = absolute or color_absolute
 
         if direction is not None:
             pitch *= direction

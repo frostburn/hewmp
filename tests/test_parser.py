@@ -541,6 +541,13 @@ def test_color_chord():
     expect_pitches(notes, pitches)
 
 
+def test_color_pitches():
+    text = "A4 gB4 yC#5 zgD5 1oE5 3uuF5 LGb5 A♮5"
+    notes = get_notes(text)
+    pitches = [[0], [-7, 6, -1], [-2, 0, 1], [3, -2, -1, 1], [-6, 2, 0, 0, 1], [16, -5, 0, 0, 0, -2], [4, -2], [1]]
+    expect_pitches(notes, pitches)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -585,3 +592,4 @@ if __name__ == '__main__':
     test_harmonic_chord()
     test_subharmonic_chord()
     test_color_chord()
+    test_color_pitches()

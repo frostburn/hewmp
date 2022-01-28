@@ -1,6 +1,7 @@
 # coding: utf-8
 from numpy import dot, zeros, sign, array
 from .util import Splitter
+from .pythagoras import parse_pitch, BASIC_PITCHES
 
 
 PSEUDO_EDO_MAPPING = (7, 11, 16, 20, 24, 26, 29, 30, 32, 34, 37)
@@ -154,9 +155,20 @@ def parse_interval(token):
     while token[0] == "q":
         wa_commas -= 1
         token = token[1:]
-    stepspan = int(token)
+
+    if token[0] in BASIC_PITCHES:
+        absolute = True
+        stepspan = 1
+        token, base = parse_pitch(token)
+    else:
+        base = [0, 0]
+        absolute = False
+        stepspan = int(token)
     stepspan -= sign(stepspan)
-    return monzo_from_parts(stepspan, magnitude, monzo) + wa_commas * array(WA_COMMA)
+    result = monzo_from_parts(stepspan, magnitude, monzo) + wa_commas * array(WA_COMMA)
+    result[0] += base[0]
+    result[1] += base[1]
+    return result, absolute
 
 
 def has_symbol(token, symbols):

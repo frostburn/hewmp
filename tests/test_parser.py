@@ -10,6 +10,14 @@ def get_notes(text):
     return [note for note in pattern.flatten() if isinstance(note, Note)]
 
 
+def expect_pitches(notes, pitches):
+    assert len(notes) == len(pitches)
+    for note, expected in zip(notes, pitches):
+        pitch = note.pitch + 0
+        pitch[:len(expected)] -= array(expected)
+        assert (pitch == 0).all()
+
+
 def test_parse_interval():
     mapping = array([12, 19, 28])
     interval_parser = IntervalParser()
@@ -138,9 +146,12 @@ def test_chords():
     text = "=hdim"
     notes = get_notes(text)
     pitches = [[0], [1, 1, -1], [2, 2, -2], [0, 2, -1]]
-    for note, expected in zip(notes, pitches):
-        note.pitch[:len(expected)] -= array(expected)
-        assert (note.pitch == 0).all()
+    expect_pitches(notes, pitches)
+
+    text = "=sus4"
+    notes = get_notes(text)
+    pitches = [[0], [2, -1], [-1, 1]]
+    expect_pitches(notes, pitches)
 
 
 def test_smitonic_pitch_translation():
@@ -497,17 +508,25 @@ def test_harmonic_chord():
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     ]
-    for note, odd in zip(notes, odds):
-        note.pitch[:len(odd)] -= array(odd)
-        assert (note.pitch == 0).all()
+    expect_pitches(notes, odds)
 
     text = "=hcf9+15no5\\4"
     notes = get_notes(text)
     # TODO: Fix order after sorting is fixed
     pitches = [[0], [-2, 0, 0, 1], [1], [-2, 2], [-2, 1, 1], [2, -1]]
-    for note, expected in zip(notes, pitches):
-        note.pitch[:len(expected)] -= array(expected)
-        assert (note.pitch == 0).all()
+    expect_pitches(notes, pitches)
+
+
+def test_subharmonic_chord():
+    text = "=s9"
+    notes = get_notes(text)
+    pitches = [[0], [0, 2, 0, -1], [0, 2, -1], [0, 1], [0, 2]]
+    expect_pitches(notes, pitches)
+
+    text = "=scf10"
+    notes = get_notes(text)
+    pitches = [[0], [1, -2, 1], [-2, 0, 1], [1, 0, 1, -1], [0, -1, 1], [1], [-1, 0, 1]]
+    expect_pitches(notes, pitches)
 
 
 if __name__ == '__main__':
@@ -552,3 +571,4 @@ if __name__ == '__main__':
     test_large_small_color_notation()
     test_wa_comma()
     test_harmonic_chord()
+    test_subharmonic_chord()

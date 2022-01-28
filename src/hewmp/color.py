@@ -159,6 +159,13 @@ def parse_interval(token):
     return monzo_from_parts(stepspan, magnitude, monzo) + wa_commas * array(WA_COMMA)
 
 
+def has_symbol(token, symbols):
+    for symbol in symbols:
+        if token.startswith(symbol) and len(token) > len(symbol) and token[len(symbol)].isdigit():
+            return True
+    return False
+
+
 def make_harmonic_chord(limit, full=False, close_voicing=False):
     if limit % 2 == 0 and not full:
         raise ColorParsingError("Only full harmonic chords can be even")
@@ -180,6 +187,28 @@ def make_harmonic_chord(limit, full=False, close_voicing=False):
         return result
 
 
+def make_subharmonic_chord(limit, full=False, close_voicing=False):
+    if limit % 2 == 0 and not full:
+        raise ColorParsingError("Only full subharmonic chords can be even")
+
+    result = []
+    skip = 1 if full else 2
+    if close_voicing:
+        if limit == 1:
+            return ["6/6"]
+        if limit == 3:
+            return ["6/6", "6/4"]
+        if limit == 5:
+            return ["6/6", "6/5", "6/4"]
+        for i in reversed(range(7, limit+1, skip)):
+            result.append("{}/{}".format(limit, i))
+        return result + ["{}/6".format(limit), "{}/5".format(limit), "{}/4".format(limit)]
+    else:
+        for i in reversed(range(1, limit+1, skip)):
+            result.append("{}/{}".format(limit, i))
+        return result
+
+
 TONE_SPLITTER = Splitter(("+", "no", "\\"))
 
 
@@ -198,7 +227,7 @@ def expand_chord(token):
 
     removed_tones = [int(tone) for tone in removed_tones]
 
-    if token[0] == "h":
+    if has_symbol(token, ["h", "hc", "hf", "hcf", "hfc"]):
         token = token[1:]
         full = False
         close_voicing = False
@@ -240,6 +269,25 @@ def expand_chord(token):
         # TODO: Convert to colors and sort
 
         return chord
+
+    if has_symbol(token, ["s", "sc", "sf", "scf", "sfc"]):
+        if added_tones:
+            raise ColorParsingError("Adding tones not supported on subharmonic chords")
+        if removed_tones:
+            raise ColorParsingError("Removing tones not supported on subharmonic chords")
+        token = token[1:]
+        full = False
+        close_voicing = False
+        if token[0] == "f":
+            full = True
+            token = token[1:]
+        if token[0] == "c":
+            close_voicing = True
+            token = token[1:]
+        if token[0] == "f":
+            full = True
+            token = token[1:]
+        return make_subharmonic_chord(int(token), full, close_voicing)
 
     # Singal to fall through to other chord parsers
     return None

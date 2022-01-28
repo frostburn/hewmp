@@ -165,7 +165,10 @@ def expand_chord(token):
     removed_tones = [int(tone) for tone in tones["no"]]
     sus_replacement = None
     for replacement in tones["sus"]:
-        sus_replacement = accidental_to_quality(replacement)
+        if not token:
+            token = "sus{}".format(replacement)
+        else:
+            sus_replacement = accidental_to_quality(replacement)
 
     prefix = ""
     if token.startswith("M") or token.startswith("d") or token.startswith("u"):

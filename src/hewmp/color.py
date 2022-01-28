@@ -227,6 +227,36 @@ def expand_chord(token):
 
     removed_tones = [int(tone) for tone in removed_tones]
 
+    if token.lstrip("Ls").startswith(COLOR_PREFIXES):
+        if token[-1].isdigit():
+            num = ""
+            while token[-1].isdigit():
+                num = token[-1] + num
+                token = token[:-1]
+            num = int(num)
+        else:
+            num = 5
+        prefix = token
+        chord = []
+        for i in range(1, num+1, 2):
+            if i % 4 == 1:
+                chord.append("w{}".format(i))
+            else:
+                chord.append("{}{}".format(prefix, i))
+
+        for tone in removed_tones:
+            tone = str(tone)
+            for t in chord[:]:
+                if t.endswith(tone):
+                    chord.remove(t)
+
+        for tone in added_tones:
+            chord.append(tone)
+
+        # TODO: sort
+        return chord
+
+
     if has_symbol(token, ["h", "hc", "hf", "hcf", "hfc"]):
         token = token[1:]
         full = False

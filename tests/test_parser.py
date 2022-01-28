@@ -529,6 +529,18 @@ def test_subharmonic_chord():
     expect_pitches(notes, pitches)
 
 
+def test_color_chord():
+    text = "=y"
+    notes = get_notes(text)
+    pitches = [[0], [-2, 0, 1], [-1, 1]]
+    expect_pitches(notes, pitches)
+
+    text = "=L3oo1u11+w4\\g5no7"
+    notes = get_notes(text)
+    pitches = [[0], [-10, 4, 0, 0, -1, 2], [-2, 2], [-12, 6, 0, 0, -1, 2], [2, -1], [6, -2, -1]]
+    expect_pitches(notes, pitches)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -572,3 +584,4 @@ if __name__ == '__main__':
     test_wa_comma()
     test_harmonic_chord()
     test_subharmonic_chord()
+    test_color_chord()

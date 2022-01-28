@@ -255,6 +255,8 @@ def expand_chord(token):
                 chord.append("w{}".format(i))
             else:
                 chord.append("{}{}".format(prefix, i))
+        if num == 6:
+            chord.append("{}6".format(prefix))
 
         for tone in removed_tones:
             tone = str(tone)

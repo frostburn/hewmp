@@ -540,6 +540,11 @@ def test_color_chord():
     pitches = [[0], [-10, 4, 0, 0, -1, 2], [-2, 2], [-12, 6, 0, 0, -1, 2], [2, -1], [6, -2, -1]]
     expect_pitches(notes, pitches)
 
+    text = "C4=y6 wC4 yE4 wG4 yA4"
+    notes = get_notes(text)
+    for i in range(4):
+        assert (notes[i].pitch == notes[i+4].pitch).all()
+
 
 def test_color_pitches():
     text = "A4 gB4 yC#5 zgD5 1oE5 3uuF5 LGb5 A♮5"

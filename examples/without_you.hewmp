@@ -1,0 +1,64 @@
+$ Without You
+$ by: Kite Giedraitis
+---
+L:1/2
+I:String Ensemble 1
+MP:4
+
+p
+
+z[1/4]
+|:
+ yG4=g7[2]       |[+2]         | yG4=g+r6[2]  |[+2]               |
+ F4=hc7[2]       |[+2]         | Bb4=y[2]     |[+1] Bb4=hc7
+:|
+ Eb4=hc7[2]      |[+1] zGb4=r6 | Ab4=y Ab4=z7 | Ab4=y zGb4=r6     |
+ Eb4=hc7[2]      |[+1] zGb4=r6 | F4=hc7[2]    |[+2]               |
+ yG4=g+r6\zg5[2] | Eb4=hc7[2]  | Bb4=y[2]     |[+2]|[+2]|[+2]||
+
+---
+L:1/8
+I:Acoustic Grand Piano
+MP:11
+
+ff
+
+$ Low bass voice
+yG2 T
+|:
+[+6] w1[2]|[+7] w1     |[+6] w1[2]|[+7] F2     |[+6] w1[2]|[+8]      | w1[6] w1[2]|[+7] yG2
+:|
+z[0 @T]  $ High bass voice
+|:
+yD3[8]    |[+1] w1[6] z|w1[8]     |[+1] w1[6] z|C3[8]     |[+1] w1[7]| Bb2[8]     |[+1] w1[6] z
+:|
+
+$ Treble voices
+z[0 @T]
+|:
+z[2]   (yG3,Bb3,F4   )[2] (yG3,Bb3,F4   )[3] (yG3,Bb3,F4   )|[+2] (yG3,Bb3,F4   )[2] zDb4 C4 Bb3[2] |
+z[2]   (yG3,Bb3,sryE4)[2] (yG3,Bb3,sryE4)[3] (yG3,Bb3,sryE4)|[+2] (yG3,Bb3,sryE4)[2] zDb4 C4 Bb3[2] |
+z[2]   (yA3,C4 ,zEb4 )[2] (yA3,C4 ,zEb4 )[3] (yA3,C4 ,zEb4 )|[+2] (yA3,C4 ,zEb4 )[2] zDb4[2] C4[2]  |
+Bb3[2] (F3, Bb3,yDb4 )[2] (F3, Bb3,yDb4 )[3] (F3, Bb3,yDb4 )|[+2] (F3, Bb3,yDb4 )[2] zAb3 w1 w1[2]
+:|
+
+T
+
+$ Bass voices
+(Eb2,Bb2)[6] (Eb2,Bb2)[2]|[+3] (zGb2,zDb3)[5]|(Ab2,Eb3)[6] (Ab2,Eb3)[2]|[+3] (zGb2,zDb3)[5]|
+(Eb2,Bb2)[6] (Eb2,Bb2)[2]|[+3] (zGb2,zDb3)[5]|
+
+$ Treble voices
+yG3[2 @T] (yG3,Bb3,zDb4)[2] (yG3,Bb3,zDb4)[3] (yG3,Bb3,zDb4)|[+1] (yG3,Bb3,zDb4)[2] z Eb4 D4   Bb3[2] |
+Ab3[2]    (Ab3,yC4     )[2] (Ab3,yC4     )[3] (zGb3,Cb4    )|[+1] (Ab3,yC4     )[2] z Eb4 zDb4 Bb3[2] |
+yG3[2]    (yG3,Bb3,zDb4)[2] (yG3,Bb3,zDb4)[3] (yG3,Bb3,zDb4)|[+1] (yG3,Bb3,zDb4)[2] z Eb4 D4   Bb3[2] | T
+yA3[2]    (yA3,C4,zE4  )[2] (yA3,C4,zE4  )[3] (yA3,C4,zE4  )|[+2] (yA3,C4,zE4)[2] (yA3,C4,zE4)[2] (zAb3,sryB3,yD4)[2] |
+(yG3,Bb3,zDb4)[8]|[+8]|z[2] (F3,Bb3,yD4)[2] (F3,Bb3,yD4)[3] (F3,Bb3,yD4)|[+2] (F3,Bb3,yD4)[3] (F3,Bb3,yD4)[3] |
+(F3,Bb3,yD4)[4] (F3,Bb3,yD4)[3] (F3,Bb3,yD4)|[+8] ||
+
+$ Low bass voice
+F2[6 @T] w1[2]|[+4] z[4]      |yG2[7] Eb2      |[+7] F2|[+6] w1[2]|[+4]    w1[4]   |[+2] w1[6]|[+8] ||
+$ High bass voice
+C3[8 @T]      |[+1] w1[3] z[4]|[+2] T Bb2[5] w1|[+7] z |Bb2[8]    |[+1] w1[5] w1[2]|[+5] w1[3]|[+8] ||
+$ Remaining bass voices
+z[@T] sryE3[3], z zDb3[2] Eb3|[+7]

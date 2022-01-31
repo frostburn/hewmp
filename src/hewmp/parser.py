@@ -256,7 +256,13 @@ class IntervalParser:
         elif token[0] in SMITONIC_BASIC_PITCHES:
             self.smitonic_base_pitch = smitonic_parse_pitch(token, self.smitonic_inflections)
         else:
-            raise ParsingError("Unrecognized absolute pitch {}".format(token))
+            color_monzo, color_absolute = parse_color_interval(token)
+            color_offset = zero_pitch()
+            color_offset[:len(color_monzo)] = color_monzo
+            if color_absolute:
+                self.base_pitch = color_offset
+            else:
+                raise ParsingError("Unrecognized absolute pitch {}".format(token))
 
     def parse(self, token, return_root_degree=False):
         absolute = False
@@ -339,6 +345,8 @@ class IntervalParser:
             color_offset = zero_pitch()
             color_offset[:len(color_monzo)] = color_monzo
             pitch += color_offset
+            if color_absolute:
+                pitch -= self.base_pitch
             absolute = absolute or color_absolute
 
         if direction is not None:
@@ -668,6 +676,7 @@ def parse_track(lexer, default_config):
                 else:
                     time = parse_time(time_token)
                 pattern.last.time = time
+                time += pattern.last.duration
             elif token.lower().startswith("x"):
                 pattern.last = patternify(pattern.last)
                 time -= pattern.last.duration
@@ -940,12 +949,13 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
     if not main:
         if pattern.duration != 1:
             if absolute_time:
-                suffix = "[{}@{}]".format(pattern.duration, pattern.time)
+                suffix = "[{} @{}]".format(pattern.duration, pattern.time)
             else:
                 suffix = "[{}]".format(pattern.duration)
         elif absolute_time:
             suffix = "[@{}]".format(pattern.time)
     if isinstance(pattern, Pattern):
+        pattern.simplify()
         if pattern.is_chord():
             return _tokenize_chord(pattern) + suffix
         subnotations = []
@@ -963,7 +973,9 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
                 force_tokenize = True
                 if main and subpattern.time == 0 and subpattern.velocity == DYNAMICS["mf"]:
                     force_tokenize = False
-            if subpattern.duration == 0 and not force_tokenize:
+            if force_tokenize:
+                subnotations.append(tokenize_pattern(subpattern, _tokenize_chord, _tokenize_pitch))
+            if subpattern.duration == 0:
                 continue
             local_absolute_time = False
             if subpattern.time != local_time:

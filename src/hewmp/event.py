@@ -1,3 +1,4 @@
+from math import gcd
 from collections import deque
 from fractions import Fraction
 from numpy import array, zeros, log, floor, pi, around, dot, exp, cumsum, linspace, concatenate, ones
@@ -546,6 +547,27 @@ class Pattern(MusicBase, Transposable):
         for subpattern in self.subpatterns:
             result = max(result, subpattern.end_time)
         return result
+
+    def simplify(self):
+        common_denominator = 0
+        for subpattern in self.subpatterns:
+            if not isinstance(subpattern.duration, Fraction) or not isinstance(subpattern.time, Fraction):
+                return
+            common_denominator = gcd(subpattern.duration.denominator, common_denominator)
+            if subpattern.time != 0:
+                common_denominator = gcd(subpattern.time.denominator, common_denominator)
+        for subpattern in self.subpatterns:
+            subpattern.time *= common_denominator
+            subpattern.duration *= common_denominator
+
+        common_divisor = 0
+        for subpattern in self.subpatterns:
+            common_divisor = gcd(subpattern.duration.numerator, common_divisor)
+            common_divisor = gcd(subpattern.time.numerator, common_divisor)
+        for subpattern in self.subpatterns:
+            subpattern.time /= common_divisor
+            subpattern.duration /= common_divisor
+
 
     def repeat(self, num_repeats, affect_duration=False):
         logical_duration = self.logical_duration

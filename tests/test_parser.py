@@ -512,8 +512,7 @@ def test_harmonic_chord():
 
     text = "=hcf9+15no5\\4"
     notes = get_notes(text)
-    # TODO: Fix order after sorting is fixed
-    pitches = [[0], [-2, 0, 0, 1], [1], [-2, 2], [-2, 1, 1], [2, -1]]
+    pitches = [[0], [2, -1], [-2, 0, 0, 1], [1], [-2, 2], [-2, 1, 1]]
     expect_pitches(notes, pitches)
 
 
@@ -537,7 +536,7 @@ def test_color_chord():
 
     text = "=L3oo1u11+w4\\g5no7"
     notes = get_notes(text)
-    pitches = [[0], [-10, 4, 0, 0, -1, 2], [-2, 2], [-12, 6, 0, 0, -1, 2], [2, -1], [6, -2, -1]]
+    pitches = [[0], [-10, 4, 0, 0, -1, 2], [2, -1], [6, -2, -1], [-2, 2], [-12, 6, 0, 0, -1, 2]]
     expect_pitches(notes, pitches)
 
     text = "C4=y6 wC4 yE4 wG4 yA4"

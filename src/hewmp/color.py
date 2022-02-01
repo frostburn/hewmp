@@ -391,7 +391,6 @@ def expand_chord(token):
             tone = "w" + tone
         chord.append(tone)
 
-    # TODO: Fix tests for sorting
-    # chord.sort(key=degree_key)
+    chord.sort(key=degree_key)
 
     return chord

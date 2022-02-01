@@ -5,9 +5,9 @@ from numpy import array, zeros, log, floor, pi, around, dot, exp, cumsum, linspa
 from scipy.interpolate import interp1d
 from .temperament import temper_subgroup, comma_reduce, comma_equals, comma_root
 from .notation import tokenize_fraction
+from .monzo import PRIMES
 
 
-PRIMES = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
 E_INDEX = len(PRIMES)
 HZ_INDEX = E_INDEX + 1
 RAD_INDEX = HZ_INDEX + 1

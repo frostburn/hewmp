@@ -1,6 +1,6 @@
 # coding: utf-8
 from io import StringIO
-from collections import Counter
+from collections import Counter, defaultdict
 try:
     import mido
 except ImportError:
@@ -19,6 +19,7 @@ from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
 from .pythagoras import AUGMENTED_INFLECTION, parse_pitch as parse_pythagorean_pitch
+from .monzo import fraction_to_monzo, PRIMES
 
 
 DEFAULT_INFLECTIONS = {
@@ -106,25 +107,12 @@ class ParsingError(Exception):
     pass
 
 
-def number_to_pitch(number):
-    if number < 1:
-        raise ValueError("Non-vectorizable number {}".format(number))
-    pitch = zero_pitch()
-    for i, p in enumerate(PRIMES):
-        while number % p == 0:
-            number //= p
-            pitch[i] += 1
-    pitch[E_INDEX] = log(number)
-    return pitch
-
-
 def parse_fraction(token):
-    if "/" in token:
-        numerator, denominator = token.split("/", 1)
-        numerator = int(numerator)
-        denominator = int(denominator)
-        return number_to_pitch(numerator) - number_to_pitch(denominator)
-    return number_to_pitch(int(token))
+    result = zero_pitch()
+    monzo, unrepresentable = fraction_to_monzo(token)
+    result[:len(monzo)] = monzo
+    result[E_INDEX] = log(float(unrepresentable))
+    return result
 
 
 # TODO: Move to pythagoras
@@ -393,9 +381,35 @@ def parse_utonal(token, interval_parser):
 
 def parse_chord(token, transposition, interval_parser):
     inversion = 0
+    voicing = None
     if "_" in token:
-        token, inversion_token = token.split("_")
-        inversion = int(inversion_token)
+        token, voicing_token = token.split("_")
+        if len(voicing_token) == 1:
+            inversion = int(voicing_token)
+        elif "R" in voicing_token:
+            root_index = voicing_token.index("R")
+            voicing = defaultdict(list)
+
+            octave = 0
+            last = 1
+            for tone in voicing_token[root_index+1:]:
+                tone = int(tone)
+                if tone <= last:
+                    octave += 1
+                last = tone
+                voicing[tone].append(octave)
+
+            octave = 0
+            last = 1
+            for tone in reversed(voicing_token[:root_index]):
+                tone = int(tone)
+                if tone >= last:
+                    octave -= 1
+                last = tone
+                voicing[tone].append(octave)
+        else:
+            raise ParsingError("Unrecognized voicing {}".format(voicing_token))
+
     if ":" in token:
         result = parse_otonal(token, interval_parser)
         result.transpose(transposition)
@@ -411,6 +425,8 @@ def parse_chord(token, transposition, interval_parser):
             subtokens = expand_color_chord(token)
             if subtokens is None:
                 subtokens = expand_chord(token)
+            else:
+                degrees = [int(subtoken[-1]) for subtoken in subtokens]
         result = Pattern()
         for subtoken in subtokens:
             pitch, absolute = interval_parser.parse(subtoken)
@@ -423,6 +439,16 @@ def parse_chord(token, transposition, interval_parser):
     if inversion:
         for i in range(len(result)):  #pylint: disable=consider-using-enumerate
             result[i].pitch[0] -= 1
+    if voicing is not None:
+        for tone, octaves in voicing.items():
+            pitch = result[degrees.index(tone)].pitch + 0
+            for i, octave in enumerate(octaves):
+                if i == 0:
+                    result[degrees.index(tone)].pitch[0] += octave
+                else:
+                    result.append(Note(pitch))
+                    result[-1].pitch[0] += octave
+
     return result
 
 

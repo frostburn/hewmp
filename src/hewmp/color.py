@@ -1,8 +1,10 @@
 # coding: utf-8
+from collections import defaultdict
 from roman import fromRoman, InvalidRomanNumeralError
 from numpy import dot, zeros, sign, array
 from .util import Splitter
 from .pythagoras import parse_pitch, BASIC_PITCHES
+from .monzo import PRIMES, fraction_to_monzo
 
 
 PSEUDO_EDO_MAPPING = (7, 11, 16, 20, 24, 26, 29, 30, 32, 34, 37)
@@ -75,6 +77,12 @@ ABBREVIATIONS = {
 }
 COLOR_PREFIXES = tuple(ABBREVIATIONS.keys())
 
+REVERSE_ABBREVIATIONS = defaultdict(list)
+for key, (index, _sign) in ABBREVIATIONS.items():
+    if _sign < 0:
+        REVERSE_ABBREVIATIONS[index].append(key)
+    else:
+        REVERSE_ABBREVIATIONS[index].insert(0, key)
 
 UNICODE_EXPONENTS = {
     "⁰": 0,
@@ -89,8 +97,55 @@ UNICODE_EXPONENTS = {
     "⁹": 9,
 }
 
+REVERSE_UNICODE_EXPONENTS = {"-": "⁻"}
+for key, value in UNICODE_EXPONENTS.items():
+    REVERSE_UNICODE_EXPONENTS[str(value)] = key
 
-# TODO: Exponents larger than 9
+
+def int_to_unicode_exponent(n):
+    result = ""
+    for char in str(n):
+        result += REVERSE_UNICODE_EXPONENTS[char]
+    return result
+
+
+def fraction_to_color(token):
+    monzo, unrepresentable = fraction_to_monzo(token)
+    if unrepresentable != 1:
+        raise ColorParsingError("Too high primes for color conversion")
+    result = ""
+    for index in range(2, len(PRIMES)):
+        value = monzo[index]
+        if value > 0:
+            prefix = REVERSE_ABBREVIATIONS[index][0]
+        if value < 0:
+            prefix = REVERSE_ABBREVIATIONS[index][1]
+            value = abs(value)
+        if value > 1:
+            prefix += int_to_unicode_exponent(value)
+        if value > 0:
+            result = prefix + result
+    if not result:
+        result = "w"
+    stepspan = dot(PSEUDO_EDO_MAPPING, monzo)
+    if stepspan >= 0:
+        degree = stepspan + 1
+    else:
+        degree = stepspan - 1
+    magnitude = 0
+    for value in monzo[1:]:
+        magnitude += value
+    magnitude = round(magnitude/7)
+    prefix = ""
+    if magnitude < 0:
+        prefix = "s"
+    if magnitude > 0:
+        prefix = "L"
+    if abs(magnitude) > 1:
+        prefix += int_to_unicode_exponent(abs(magnitude))
+    return prefix + result + str(degree)
+
+
 def parse_exponent(token):
     num = 1
     if token[0] == "^":
@@ -229,6 +284,14 @@ def make_subharmonic_chord(limit, full=False, close_voicing=False):
 TONE_SPLITTER = Splitter(("+", "no", "\\"))
 
 
+def degree_key(token):
+    degree_token = ""
+    while token[-1] in "1234567890":
+        degree_token = token[-1] + degree_token
+        token = token[:-1]
+    return int(degree_token)
+
+
 def expand_chord(token):
     token, tones = TONE_SPLITTER(token)
     added_tones = tones["+"]
@@ -243,6 +306,8 @@ def expand_chord(token):
             removed_tones.append(replacement[-1])
 
     removed_tones = [int(tone) for tone in removed_tones]
+
+    chord = None
 
     if token.lstrip("Ls").startswith(COLOR_PREFIXES):
         if token[-1].isdigit():
@@ -263,22 +328,7 @@ def expand_chord(token):
         if num == 6:
             chord.append("{}6".format(prefix))
 
-        for tone in removed_tones:
-            tone = str(tone)
-            for t in chord[:]:
-                if t.endswith(tone):
-                    chord.remove(t)
-
-        for tone in added_tones:
-            if tone.isdigit():
-                tone = "w" + tone
-            chord.append(tone)
-
-        # TODO: sort
-        return chord
-
-
-    if has_symbol(token, ["h", "hc", "hf", "hcf", "hfc"]):
+    elif has_symbol(token, ["h", "hc", "hf", "hcf", "hfc"]):
         token = token[1:]
         full = False
         close_voicing = False
@@ -293,39 +343,25 @@ def expand_chord(token):
             token = token[1:]
         chord = make_harmonic_chord(int(token), full, close_voicing)
 
-        for tone in removed_tones:
-            if tone == 5:
-                if "3/1" in chord:
-                    chord.remove("3/1")
-                if "6/4" in chord:
-                    chord.remove("6/4")
-            if tone == 3:
-                if "5/1" in chord:
-                    chord.remove("5/1")
-                if "5/4" in chord:
-                    chord.remove("5/4")
-            for harmonic in ["{}/1".format(tone), "{}/4".format(tone)]:
-                if harmonic in chord:
-                    chord.remove(harmonic)
-        for tone in added_tones:
-            if tone.isdigit():
-                tone = int(tone)
-                if tone > 13:
-                    chord.append("{}{}".format(tone, chord[0][1:]))
+        for tone in removed_tones[:]:
+            if tone > 13:
+                for harmonic in ["{}/1".format(tone), "{}/4".format(tone)]:
+                    if harmonic in chord:
+                        chord.remove(harmonic)
+                        break
                 else:
-                    chord.append("w{}".format(tone))
-            else:
-                chord.append(tone)
+                    raise ColorParsingError("Failed to find harmonic {} to remove".format(tone))
 
-        # TODO: Convert to colors and sort
+        for tone in added_tones[:]:
+            if tone.isdigit():
+                harmonic = int(tone)
+                if harmonic > 13:
+                    chord.append("{}{}".format(tone, chord[0][1:]))
+                    added_tones.remove(tone)
 
-        return chord
+        chord = [fraction_to_color(tone) for tone in chord]
 
-    if has_symbol(token, ["s", "sc", "sf", "scf", "sfc"]):
-        if added_tones:
-            raise ColorParsingError("Adding tones not supported on subharmonic chords")
-        if removed_tones:
-            raise ColorParsingError("Removing tones not supported on subharmonic chords")
+    elif has_symbol(token, ["s", "sc", "sf", "scf", "sfc"]):
         token = token[1:]
         full = False
         close_voicing = False
@@ -338,7 +374,24 @@ def expand_chord(token):
         if token[0] == "f":
             full = True
             token = token[1:]
-        return make_subharmonic_chord(int(token), full, close_voicing)
+        chord = make_subharmonic_chord(int(token), full, close_voicing)
+        chord = [fraction_to_color(tone) for tone in chord]
 
-    # Singal to fall through to other chord parsers
-    return None
+    if chord is None:
+        return None
+
+    for tone in removed_tones:
+        tone = str(tone)
+        for t in chord[:]:
+            if t.endswith(tone):
+                chord.remove(t)
+
+    for tone in added_tones:
+        if tone.isdigit():
+            tone = "w" + tone
+        chord.append(tone)
+
+    # TODO: Fix tests for sorting
+    # chord.sort(key=degree_key)
+
+    return chord

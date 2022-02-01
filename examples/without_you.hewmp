@@ -9,12 +9,13 @@ p
 
 z[1/4]
 |:
- yG4=g7[2]       |[+2]         | yG4=g+r6[2]  |[+2]               |
- F4=hc7[2]       |[+2]         | Bb4=y[2]     |[+1] Bb4=hc7
+Bb3[0]
+ yVI=g7_R5137[2] |[+2]         | yVI=g+r6_R5136[2] |[+2]               |
+ V=hc7_R5357[2]  |[+2]         | Bb4=y_5R513[2]    |[+1] I=hc7_5R5713  |
 :|
- Eb4=hc7[2]      |[+1] zGb4=r6 | Ab4=y Ab4=z7 | Ab4=y zGb4=r6     |
- Eb4=hc7[2]      |[+1] zGb4=r6 | F4=hc7[2]    |[+2]               |
- yG4=g+r6\zg5[2] | Eb4=hc7[2]  | Bb4=y[2]     |[+2]|[+2]|[+2]||
+ Eb4=hc7[2]      |[+1] zGb4=r6 | Ab4=y Ab4=z7      | Ab4=y zGb4=r6     |
+ Eb4=hc7[2]      |[+1] zGb4=r6 | F4=hc7[2]         |[+2]               |
+ yG4=g+r6\zg5[2] | Eb4=hc7[2]  | Bb4=y[2]          |[+2]|[+2]|[+2]||
 
 ---
 L:1/8
@@ -39,7 +40,7 @@ z[0 @T]
 z[2]   (yG3,Bb3,F4   )[2] (yG3,Bb3,F4   )[3] (yG3,Bb3,F4   )|[+2] (yG3,Bb3,F4   )[2] zDb4 C4 Bb3[2] |
 z[2]   (yG3,Bb3,sryE4)[2] (yG3,Bb3,sryE4)[3] (yG3,Bb3,sryE4)|[+2] (yG3,Bb3,sryE4)[2] zDb4 C4 Bb3[2] |
 z[2]   (yA3,C4 ,zEb4 )[2] (yA3,C4 ,zEb4 )[3] (yA3,C4 ,zEb4 )|[+2] (yA3,C4 ,zEb4 )[2] zDb4[2] C4[2]  |
-Bb3[2] (F3, Bb3,yDb4 )[2] (F3, Bb3,yDb4 )[3] (F3, Bb3,yDb4 )|[+2] (F3, Bb3,yDb4 )[2] zAb3 w1 w1[2]
+Bb3[2] (F3, Bb3,yD4  )[2] (F3, Bb3,yD4  )[3] (F3, Bb3,yD4  )|[+2] (F3, Bb3,yD4  )[2] zAb3 w1 w1[2]
 :|
 
 T
@@ -59,6 +60,6 @@ yA3[2]    (yA3,C4,zE4  )[2] (yA3,C4,zE4  )[3] (yA3,C4,zE4  )|[+2] (yA3,C4,zE4)[2
 $ Low bass voice
 F2[6 @T] w1[2]|[+4] z[4]      |yG2[7] Eb2      |[+7] F2|[+6] w1[2]|[+4]    w1[4]   |[+2] w1[6]|[+8] ||
 $ High bass voice
-C3[8 @T]      |[+1] w1[3] z[4]|[+2] T Bb2[5] w1|[+7] z |Bb2[8]    |[+1] w1[5] w1[2]|[+5] w1[3]|[+8] ||
+C3[8 @T]      |[+1] w1[3] z[4]|T z[2] Bb2[5] w1|[+7] z |Bb2[8]    |[+1] w1[5] w1[2]|[+5] w1[3]|[+8] ||
 $ Remaining bass voices
-z[@T] sryE3[3], z zDb3[2] Eb3|[+7]
+z[4 @T] sryE3[3], z zDb3[2] Eb3|[+7]

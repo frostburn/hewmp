@@ -1,4 +1,5 @@
 # coding: utf-8
+from roman import fromRoman, InvalidRomanNumeralError
 from numpy import dot, zeros, sign, array
 from .util import Splitter
 from .pythagoras import parse_pitch, BASIC_PITCHES
@@ -163,7 +164,11 @@ def parse_interval(token):
     else:
         base = [0, 0]
         absolute = False
-        stepspan = int(token)
+        try:
+            stepspan = fromRoman(token)
+        except InvalidRomanNumeralError:
+            stepspan = int(token)
+
     stepspan -= sign(stepspan)
     result = monzo_from_parts(stepspan, magnitude, monzo) + wa_commas * array(WA_COMMA)
     result[0] += base[0]
@@ -265,6 +270,8 @@ def expand_chord(token):
                     chord.remove(t)
 
         for tone in added_tones:
+            if tone.isdigit():
+                tone = "w" + tone
             chord.append(tone)
 
         # TODO: sort

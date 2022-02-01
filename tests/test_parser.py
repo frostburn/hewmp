@@ -553,6 +553,24 @@ def test_color_pitches():
     expect_pitches(notes, pitches)
 
 
+def test_color_roman():
+    text = "I=y yIII=g V=y+7 I=y+8"
+    notes = get_notes(text)
+    chords = [
+        [[0], [-2, 0, 1], [-1, 1]],
+        [[-2, 0, 1], [-1, 1], [-3, 1, 1]],
+        [[-1, 1], [-3, 1, 1], [-2, 2], [3, -1]],
+        [[0], [-2, 0, 1], [-1, 1], [1]],
+    ]
+    for note in notes:
+        i = int(note.time)
+        for expected in chords[i]:
+            if (note.pitch[:len(expected)] == expected).all():
+                break
+        else:
+            assert False
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -598,3 +616,4 @@ if __name__ == '__main__':
     test_subharmonic_chord()
     test_color_chord()
     test_color_pitches()
+    test_color_roman()

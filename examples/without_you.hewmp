@@ -1,20 +1,23 @@
 $ Without You
 $ by: Kite Giedraitis
+Q:1/4=130  $ molto allegro
+G:1/4=2 3  $ quintuplet swing (inverted to account for pick-up)
 ---
 L:1/2
 I:String Ensemble 1
 MP:4
 
-p
+p _ z[1/4]  $ Leave room for pick-up
 
-z[1/4]
+$ Section A: Chords
 |:
- Bb3&yVI=g7_R5137[2] |[+2]        | yVI=g+r6_R5136[2] |[+2]               |
- V=hc7_R5357[2]      |[+2]        | Bb4=y_5R513[2]    |[+1] I=hc7_5R5713  |
+ Bb3&yVI=g7_R5137[2] |[+2]        | yVI=s6_R5136[2]   |[+2]              |
+ V=h7_R5357[2]       |[+2]        | Bb4=y_5R513[2]    |[+1] I=h7_5R5713  |
 :|
- IV=hc7[2]           |[+1] zVI=r6 | wVII=y wVII=z7    | wVII=y zVI=r6     |
- IV=hc7[2]           |[+1] zVI=r6 | V=hc7[2]          |[+2]               |
- yVI=g+r6\zg5[2]     | IV=hc7[2]  | I=y[2]            |[+2]|[+2]|[+2]||
+$ Section B: Chords
+ IV=h7[2]            |[+1] zVI=r6 | VII=y wVII=z7     | VII=y zVI=r6     |
+ IV=h7[2]            |[+1] zVI=r6 | V=h7[2]           |[+2]              |
+ yVI=s6\zg5[2]       | IV=h7[2]   | I=y[2]            |[+2]|[+2]|[+2]||
 
 ---
 L:1/8
@@ -23,42 +26,59 @@ MP:11
 
 ff
 
-$ Low bass voice
-yG2 T
+yG2  $ Low bass pick-up
+T  $ Section A: Low bass voice
 |:
-[+6] w1[2]|[+7] w1     |[+6] w1[2]|[+7] F2     |[+6] w1[2]|[+8]      | w1[6] w1[2]|[+7] yG2
-:|
-z[0 @T]  $ High bass voice
-|:
-yD3[8]    |[+1] w1[6] z|w1[8]     |[+1] w1[6] z|C3[8]     |[+1] w1[7]| Bb2[8]     |[+1] w1[6] z
+   [+6] yG2[ 2]|[+1]    [+6] yG2|   [+6] yG2[ 2]|[+1]    [+6] F2|  [+6] F2[ 2]|[+1]   [+7]|  F2[6] F2[ 2]|[+1]    [+6] yG2
+:| @T "Section A: High bass voice" |:
+yD3[6 ]    [+2]|[+1] yD3[ 6] z  |yD3[ 6]    [+2]|[+1] yD3[ 6] z |C3[ 6]   [+2]|[+1] C3[ 7]| Bb2[6]   [+2]|[+1] Bb2[ 6] z
 :|
 
-$ Treble voices
-z[0 @T]
+@T $ Section A: Treble voices
 |:
-z[2]   (yG3,Bb3,F4   )[2] (yG3,Bb3,F4   )[3] (yG3,Bb3,F4   )|[+2] (yG3,Bb3,F4   )[2] zDb4 C4 Bb3[2] |
-z[2]   (yG3,Bb3,sryE4)[2] (yG3,Bb3,sryE4)[3] (yG3,Bb3,sryE4)|[+2] (yG3,Bb3,sryE4)[2] zDb4 C4 Bb3[2] |
-z[2]   (yA3,C4 ,zEb4 )[2] (yA3,C4 ,zEb4 )[3] (yA3,C4 ,zEb4 )|[+2] (yA3,C4 ,zEb4 )[2] zDb4[2] C4[2]  |
-Bb3[2] (F3, Bb3,yD4  )[2] (F3, Bb3,yD4  )[3] (F3, Bb3,yD4  )|[+2] (F3, Bb3,yD4  )[2] zAb3 w1 w1[2]
+  z[2] (yG3,Bb3,F4  )[2] (yG3,Bb3,F4  )[3] (yG3,Bb3,F4  )|[+2] (yG3,Bb3,F4  )[2] zDb4 C4    Bb3[2] |
+  z[2] (yG3,Bb3,ryE4)[2] (yG3,Bb3,ryE4)[3] (yG3,Bb3,ryE4)|[+2] (yG3,Bb3,ryE4)[2] zDb4 C4    Bb3[2] |
+  z[2] (yA3,C4 ,zEb4)[2] (yA3,C4 ,zEb4)[3] (yA3,C4 ,zEb4)|[+2] (yA3,C4 ,zEb4)[2] zDb4[2]     C4[2] |
+Bb3[2] (F3 ,Bb3,yD4 )[2] (F3 ,Bb3,yD4 )[3] (F3 ,Bb3,yD4 )|[+2] (F3 ,Bb3,yD4 )[2] zAb3 zAb3 zAb3[2]
 :|
 
-T
-
-$ Bass voices
+T  $ Section B: Bass voices
 (Eb2,Bb2)[6] (Eb2,Bb2)[2]|[+3] (zGb2,zDb3)[5]|(Ab2,Eb3)[6] (Ab2,Eb3)[2]|[+3] (zGb2,zDb3)[5]|
 (Eb2,Bb2)[6] (Eb2,Bb2)[2]|[+3] (zGb2,zDb3)[5]|
 
-$ Treble voices
-yG3[2 @T] (yG3,Bb3,zDb4)[2] (yG3,Bb3,zDb4)[3] (yG3,Bb3,zDb4)|[+1] (yG3,Bb3,zDb4)[2] z Eb4 D4   Bb3[2] |
-Ab3[2]    (Ab3,yC4     )[2] (Ab3,yC4     )[3] (zGb3,Cb4    )|[+1] (Ab3,yC4     )[2] z Eb4 zDb4 Bb3[2] |
-yG3[2]    (yG3,Bb3,zDb4)[2] (yG3,Bb3,zDb4)[3] (yG3,Bb3,zDb4)|[+1] (yG3,Bb3,zDb4)[2] z Eb4 D4   Bb3[2] | T
-yA3[2]    (yA3,C4,zE4  )[2] (yA3,C4,zE4  )[3] (yA3,C4,zE4  )|[+2] (yA3,C4,zE4)[2] (yA3,C4,zE4)[2] (zAb3,sryB3,yD4)[2] |
-(yG3,Bb3,zDb4)[8]|[+8]|z[2] (F3,Bb3,yD4)[2] (F3,Bb3,yD4)[3] (F3,Bb3,yD4)|[+2] (F3,Bb3,yD4)[3] (F3,Bb3,yD4)[3] |
-(F3,Bb3,yD4)[4] (F3,Bb3,yD4)[3] (F3,Bb3,yD4)|[+8] ||
+@T $ Section B: Treble voices
+yG3[2] (yG3,Bb3,zDb4)[2] (yG3,Bb3,zDb4)[3] (yG3,Bb3,zDb4)|[+1] (yG3,Bb3,zDb4)[2] z Eb4 zDb4   Bb3[2] |
+Ab3[2] (Ab3,yC4     )[2] (Ab3,yC4     )[3] (zGb3,Cb4    )|[+1] (Ab3,yC4     )[2] z Eb4 zDb4   Bb3[2] |
+yG3[2] (yG3,Bb3,zDb4)[2] (yG3,Bb3,zDb4)[3] (yG3,Bb3,zDb4)|[+1] (yG3,Bb3,zDb4)[2] z Eb4 zDb4   Bb3[2] |
 
-$ Low bass voice
-F2[6 @T] w1[2]|[+4] z[4]      |yG2[7] Eb2      |[+7] F2|[+6] w1[2]|[+4]    w1[4]   |[+2] w1[6]|[+8] ||
-$ High bass voice
-C3[8 @T]      |[+1] w1[3] z[4]|T z[2] Bb2[5] w1|[+7] z |Bb2[8]    |[+1] w1[5] w1[2]|[+5] w1[3]|[+8] ||
-$ Remaining bass voices
-z[4 @T] sryE3[3], z zDb3[2] Eb3|[+7]
+T  $ Section B continued: Low bass voice
+F2[6] F2[ 2]|[+1]   [+3] z[4]|yG2[2]    [+2] [+1]  [+2] Eb2|[+7] F2|   [+6] F2[ 2]|[+1]    [+3] F2[ 2]    [+2]|[+2] F2[ 3]    [+3]|[+8] ||
+@T $ Section B continued: High bass voice
+C3[6]   [+2]|[+1] C3[ 3] z[4]|  z[2] Bb2[ 2] [+1]  [+2] Bb2|[+7] z |Bb2[ 6]   [+2]|[+1] Bb2[ 3]   [+2] Bb2[ 2]|[+2]   [+3] Bb2[ 3]|[+8] ||
+@T $ Section B continued: Remaining bass voices
+z[8]        |z[8]            |  z[2]   z[ 2] ryE3  [+2] Eb3|[+7]
+@T $ Section B continued: Remaining bass voices
+z[8]        |z[8]            |  z[2]   z[ 2] z zDb3[ 2] z  |
+
+@T $ Section B continued: Treble voices
+         yA3[2] (yA3,C4,zEb4)[ 2] (yA3,C4,zEb4)[3] (yA3,C4,zEb4)|[+2] (yA3,C4,zEb4)[2] (yA3,C4,zEb4)[2] (zAb3,ryB3,yD4)[2] |
+(yG3,Bb3,zDb4)[8]                                               |[+8]                                                      |
+           z[2] (F3,Bb3,yD4 )[ 2] (F3,Bb3,yD4 )[3] (F3,Bb3,yD4 )|[+2] (F3,Bb3,yD4 )[3]        (F3,Bb3,yD4)[3]              |
+(F3,Bb3,yD4)[2]              [+2] (F3,Bb3,yD4 )[3] (F3,Bb3,yD4 )|[+8]                                                      ||
+
+---
+N:percussion
+L:1/8
+
+z  $ Leave room for pick-up
+
+$ Section A first repeat
+z[8*7] | z[4] o[4] |
+$ Section A second repeat
+|: k,h[2]   h[2] ss,h[2] h[2],k k :|x7
+|  k,h[2]   h[2] t4 t3   t2     t1 |
+$ Section B
+|: k,r[3]    k   k,r[2]  t3     t3 :|x8
+z[8] | c[8]
+|: k,h[2]   h[2] ss,h[2] h[2],k k :|x3
+h[8] ||

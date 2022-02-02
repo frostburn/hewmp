@@ -488,7 +488,7 @@ def test_wa_comma():
 
 
 def test_harmonic_chord():
-    text = "=h31"
+    text = "=hw31"
     notes = get_notes(text)
     odds = [
         [0],
@@ -510,19 +510,19 @@ def test_harmonic_chord():
     ]
     expect_pitches(notes, odds)
 
-    text = "=hcf9+15no5\\4"
+    text = "=hf9+15no5\\4"
     notes = get_notes(text)
     pitches = [[0], [2, -1], [-2, 0, 0, 1], [1], [-2, 2], [-2, 1, 1]]
     expect_pitches(notes, pitches)
 
 
 def test_subharmonic_chord():
-    text = "=s9"
+    text = "=sw9"
     notes = get_notes(text)
     pitches = [[0], [0, 2, 0, -1], [0, 2, -1], [0, 1], [0, 2]]
     expect_pitches(notes, pitches)
 
-    text = "=scf10"
+    text = "=sf10"
     notes = get_notes(text)
     pitches = [[0], [1, -2, 1], [-2, 0, 1], [1, 0, 1, -1], [0, -1, 1], [1], [-1, 0, 1]]
     expect_pitches(notes, pitches)
@@ -546,9 +546,9 @@ def test_color_chord():
 
 
 def test_color_pitches():
-    text = "A4 gB4 yC#5 zgD5 1oE5 3uuF5 LGb5 A♮5"
+    text = "A4 gB4 yC#5 zgD5 1oE5 3uuF5 Gb5 A♮5"
     notes = get_notes(text)
-    pitches = [[0], [-7, 6, -1], [-2, 0, 1], [3, -2, -1, 1], [-6, 2, 0, 0, 1], [16, -5, 0, 0, 0, -2], [4, -2], [1]]
+    pitches = [[0], [-7, 6, -1], [-2, 0, 1], [-8, 5, -1, 1], [-6, 2, 0, 0, 1], [5, 2, 0, 0, 0, -2], [15, -9], [1]]
     expect_pitches(notes, pitches)
 
 

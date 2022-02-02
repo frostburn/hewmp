@@ -177,6 +177,18 @@ def monzo_from_parts(stepspan, magnitude, off_white_monzo):
     return result
 
 
+def decompose(monzo):
+    zero = monzo*0
+    remaining = monzo + 0
+    while remaining.any():
+        for i in range(len(monzo)):
+            if remaining[i]:
+                piece = zero + 0
+                piece[i] = sign(remaining[i])
+                remaining[i] -= piece[i]
+                yield piece
+
+
 def parse_interval(token):
     monzo = zeros(len(PSEUDO_EDO_MAPPING))
     magnitude = 0
@@ -213,22 +225,22 @@ def parse_interval(token):
         token = token[1:]
 
     if token[0] in BASIC_PITCHES:
-        absolute = True
-        stepspan = 1
+        if monzo[0] or monzo[1] or magnitude:
+            raise ColorParsingError("Only pythagorean absolute pitches supported")
         token, base = parse_pitch(token)
+        result = monzo * 0
+        result[:2] = base
+        for piece in decompose(monzo):
+            result += monzo_from_parts(0, 0, piece)
+        return result, True
     else:
-        base = [0, 0]
-        absolute = False
         try:
             stepspan = fromRoman(token)
         except InvalidRomanNumeralError:
             stepspan = int(token)
-
-    stepspan -= sign(stepspan)
-    result = monzo_from_parts(stepspan, magnitude, monzo) + wa_commas * array(WA_COMMA)
-    result[0] += base[0]
-    result[1] += base[1]
-    return result, absolute
+        stepspan -= sign(stepspan)
+        result = monzo_from_parts(stepspan, magnitude, monzo) + wa_commas * array(WA_COMMA)
+        return result, False
 
 
 def has_symbol(token, symbols):
@@ -328,15 +340,15 @@ def expand_chord(token):
         if num == 6:
             chord.append("{}6".format(prefix))
 
-    elif has_symbol(token, ["h", "hc", "hf", "hcf", "hfc"]):
+    elif has_symbol(token, ["h", "hw", "hf", "hwf", "hfw"]):
         token = token[1:]
         full = False
-        close_voicing = False
+        close_voicing = True
         if token[0] == "f":
             full = True
             token = token[1:]
-        if token[0] == "c":
-            close_voicing = True
+        if token[0] == "w":
+            close_voicing = False
             token = token[1:]
         if token[0] == "f":
             full = True
@@ -361,21 +373,24 @@ def expand_chord(token):
 
         chord = [fraction_to_color(tone) for tone in chord]
 
-    elif has_symbol(token, ["s", "sc", "sf", "scf", "sfc"]):
+    elif has_symbol(token, ["s", "sw", "sf", "swf", "sfw"]):
         token = token[1:]
         full = False
-        close_voicing = False
+        close_voicing = True
         if token[0] == "f":
             full = True
             token = token[1:]
-        if token[0] == "c":
-            close_voicing = True
+        if token[0] == "w":
+            close_voicing = False
             token = token[1:]
         if token[0] == "f":
             full = True
             token = token[1:]
-        chord = make_subharmonic_chord(int(token), full, close_voicing)
-        chord = [fraction_to_color(tone) for tone in chord]
+        if token == "6":
+            chord = ["w1", "g3", "w5", "r6"]
+        else:
+            chord = make_subharmonic_chord(int(token), full, close_voicing)
+            chord = [fraction_to_color(tone) for tone in chord]
 
     if chord is None:
         return None

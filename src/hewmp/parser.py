@@ -18,7 +18,7 @@ from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exp
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
-from .pythagoras import AUGMENTED_INFLECTION, parse_pitch as parse_pythagorean_pitch
+from .pythagoras import AUGMENTED_INFLECTION, INTERVAL_QUALITIES, BASIC_PITCHES, parse_pitch as parse_pythagorean_pitch, parse_interval as parse_pythagorean_interval
 from .monzo import fraction_to_monzo, PRIMES
 
 
@@ -37,7 +37,7 @@ DEFAULT_INFLECTIONS = {
     "A": [-9, 3, 0, 0, 0, 0, 0, 1],
     "V": [9, -3, 0, 0, 0, 0, 0, -1],
     "u": [5, -6, 0, 0, 0, 0, 0, 0, 1],
-    "d": [-5, 6, 0, 0, 0, 0, 0, 0, -1],
+    "n": [-5, 6, 0, 0, 0, 0, 0, 0, -1],
     "U": [-8, 2, 0, 0, 0, 0, 0, 0, 0, 1],
     "D": [8, -2, 0, 0, 0, 0, 0, 0, 0, -1],
     "M": [5, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1],
@@ -115,67 +115,10 @@ def parse_fraction(token):
     return result
 
 
-# TODO: Move to pythagoras
-BASIC_INTERVALS = {
-    "d2": (19, -12),
-    "d6": (18, -11),
-    "d3": (16, -10),
-    "d7": (15, -9),
-    "d4": (13, -8),
-    "d1": (11, -7),
-    "d5": (10, -6),
-    "m2": (8, -5),
-    "m6": (7, -4),
-    "m3": (5, -3),
-    "m7": (4, -2),
-    "P4": (2, -1),
-    "P1": (0, 0),
-    "P5": (-1, 1),
-    "M2": (-3, 2),
-    "M6": (-4, 3),
-    "M3": (-6, 4),
-    "M7": (-7, 5),
-    "a4": (-9, 6),
-    "a1": (-11, 7),
-    "a5": (-12, 8),
-    "a2": (-14, 9),
-    "a6": (-15, 10),
-    "a3": (-17, 11),
-    "a7": (-18, 12),
-
-    # Extra neutral intervals
-    "N2": (2.5, -1.5),
-    "N6": (1.5, -0.5),
-    "N3": (-0.5, 0.5),
-    "N7": (-1.5, 1.5),
-
-    # Bonus non-standard intervals
-    "m4": (7.5, -4.5),
-    "m1": (5.5, -3.5),
-    "m5": (4.5, -2.5),
-    "M4": (-3.5, 2.5),
-    "M1": (-5.5, 3.5),
-    "M5": (-6.5, 4.5),
-}
-
-
-INTERVAL_QUALITIES = "dmPNMa"
-
-
 def parse_arrows(token, inflections):
-    quality = token[0]
-    token = token[1:]
-    augmented = 0
-    while token[0] == "a":
-        augmented += 1
-        token = token[1:]
-    while token[0] == "d":
-        augmented -= 1
-        token = token[1:]
-
+    token, base = parse_pythagorean_interval(token)
     result = zero_pitch()
-    result[0] += AUGMENTED_INFLECTION[0] * augmented
-    result[1] += AUGMENTED_INFLECTION[1] * augmented
+    result[:2] = base
 
     separated = separate_by_arrows(token)
 
@@ -185,35 +128,13 @@ def parse_arrows(token, inflections):
             arrows = int(arrow_token[1:])
         result += inflections[arrow_token[0]]*arrows
 
-    interval_class = int(separated[0])
-    octave = (interval_class - 1)//7
-    basic_class = interval_class - octave*7
-    lookup = "{}{}".format(quality, basic_class)
-    basic_pitch = BASIC_INTERVALS[lookup]
-
-    result[0] += octave + basic_pitch[0]
-    result[1] += basic_pitch[1]
-
     return result
 
 
-BASIC_PITCHES = {
-    "F": (6, -4),
-    "C": (4, -3),
-    "G": (3, -2),
-    "D": (1, -1),
-    "A": (0, 0),
-    "E": (-2, 1),
-    "B": (-3, 2),
-}
-REFERENCE_OCTAVE = 4
-
-
 def parse_pitch(token, inflections):
-    result = zero_pitch()
     token, base = parse_pythagorean_pitch(token)
-    result[0] = base[0]
-    result[1] = base[1]
+    result = zero_pitch()
+    result[:2] = base
 
     separated = separate_by_arrows(token)
 

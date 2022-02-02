@@ -233,16 +233,16 @@ N2 N3 N6 N7
 ```
 Warning: Not all edos support dividing the fifth in half and this can result in half-edosteps.
 
-## Non-standard Intervals
-The perfect intervals have quarter-tone minor and major versions.
+## Half-diminished and Half-augmented Intervals
+The perfect intervals have quarter-tone diminished and augmented versions.
 ```
-M1 m4 M4 m5 M5 m8
+ha1 hd4 ha4 hd5 ha5 hd8
 ```
 
 ## Quarter-tones
-The accidentals `s` and `f` act as quarter-tone sharp and flat respectively.
+The accidentals `t` and `d` act as quarter-tone sharp and flat respectively.
 ```
-C4 E4f G4 B4f  $ Neutral 7th arpeggio
+C4 E4d G4 B4d  $ Neutral 7th arpeggio
 ```
 
 ## Inflections
@@ -252,7 +252,7 @@ To spell intervals beyond the 3-limit HEWMP uses small adjustements defined by p
 |:-----:|:-----:|:-----:| ---------------------------------- |:---------:|:--------:|
 | V     | A     | 19    | [-9 3 0 0 0 0 0 1 0 0 0>           | 513/512   | 3.37802  |
 | %     | *     | 17    | [-12 5 0 0 0 0 1 0 0 0 0>          | 4131/4096 | 14.73041 |
-| d     | u     | 23    | [5 -6 0 0 0 0 0 0 1 0 0>           | 736/729   | 16.54434 |
+| n     | u     | 23    | [5 -6 0 0 0 0 0 0 1 0 0>           | 736/729   | 16.54434 |
 | -     | +     | 5     | [-4 4 -1 0 0 0 0 0 0 0 0>          | 81/80     | 21.50629 |
 | !     | i     | 13    | [9 -8 0 0 0 1 0 0 0 0 0>           | 6656/6561 | 24.88765 |
 | <     | >     | 7     | [6 -2 0 -1 0 0 0 0 0 0 0>          | 64/63     | 27.26409 |
@@ -604,7 +604,7 @@ P1 P4/3 P4/3*2 P4
 | A     | high          | 19      | `A` looks like a big carret `^` with a line across |
 | V     | low           | 1/19    |       |
 | u     | hook          | 23      | think "up" |
-| d     | sinker        | 1/23    | think "down" |
+| n     | sinker        | 1/23    | looks like an upside down `u`|
 | U     | arc           | 29      | think "Up" |
 | D     | bow           | 1/29    | think "Down" |
 | M     | mighty        | 1/31    | `M` looks like two arrows pointing up |
@@ -714,7 +714,7 @@ J5  J5b
 |:-----:|:-----:|:-----:| ---------------------------------- |:---------:|:--------:|
 | <     | >     | 7     | [-8 0 0 -1 -1.5 0 0 1 0 0 0>       | 256/77/&radic;11 | 4.19718 |
 | %     | *     | 17    | [-11 0 0 0 2 0 1 0 0 0 0>          | 2057/2048 | 7.59129 |
-| d     | u     | 23    | [8 0 0 0 -1 0 0 0 -1 0 0>          | 256/253 | 20.40771 |
+| n     | u     | 23    | [8 0 0 0 -1 0 0 0 -1 0 0>          | 256/253 | 20.40771 |
 | V     | A     | 19    | [6 0 0 0 -0.5 0 0 -1 0 0 0>        | 64/19/&radic;11 | 26.82801 |
 | !     | i     | 13    | [2 0 0 0 0.5 -1 0 0 0 0 0>         | &radic;11&middot;4/13 | 35.13131 |
 | v     | ^     | 3     | [-5 1 0 0 1 0 0 0 0 0 0>           | 33/32             | 53.27294 |

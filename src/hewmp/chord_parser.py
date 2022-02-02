@@ -1,7 +1,7 @@
 from .util import Splitter
 
 
-ARROWS = "+-><^vudUDAVMWi!*%"
+ARROWS = "+-><^vunUDAVMWi!*%"
 OPPOSITE = {}
 for i in range(0, len(ARROWS), 2):
     OPPOSITE[ARROWS[i]] = ARROWS[i+1]

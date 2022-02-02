@@ -56,7 +56,7 @@ def test_neutral_intervals():
 
 
 def test_bonus_intervals():
-    text = "m9/2 m5 M7/2 M4 d15/2 m8 a1/2 M1"
+    text = "m9/2 hd5 M7/2 ha4 d15/2 hd8 a1/2 ha1"
     notes = get_notes(text)
     assert (notes[0].pitch == notes[1].pitch).all()
     assert (notes[2].pitch == notes[3].pitch).all()
@@ -65,7 +65,7 @@ def test_bonus_intervals():
 
 
 def test_half_sharps():
-    text = "A4&N3 C5#f C4&N3 E4f A4&N6 F5s"
+    text = "A4&N3 C5t C4&N3 E4d A4&N6 F5t"
     notes = get_notes(text)
     assert (notes[0].pitch == notes[1].pitch).all()
     assert (notes[2].pitch == notes[3].pitch).all()
@@ -119,7 +119,7 @@ def test_pitch_translation():
     for letter in "ABCDEFG":
         for octave in ("3", "4"):
             for accidental in ("" ,"b", "#", "x"):
-                for arrow in ("", "-", "<2", "+2^3"):
+                for arrow in ("", "-", "<2", "+2^3", "u4", "n"):
                     token = letter + octave + accidental + arrow
                     pitch = IntervalParser().parse(token)[0]
                     retoken = tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)

@@ -20,6 +20,7 @@ from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
 from .pythagoras import AUGMENTED_INFLECTION, INTERVAL_QUALITIES, BASIC_PITCHES, parse_pitch as parse_pythagorean_pitch, parse_interval as parse_pythagorean_interval
 from .monzo import fraction_to_monzo, PRIMES
+from . import ups_and_downs
 
 
 DEFAULT_INFLECTIONS = {
@@ -148,16 +149,28 @@ def parse_pitch(token, inflections):
 
 
 class IntervalParser:
-    def __init__(self, inflections=DEFAULT_INFLECTIONS, smitonic_inflections=SMITONIC_INFLECTIONS, edn_divisions=Fraction(12), edn_divided=Fraction(2)):
+    def __init__(self, inflections=DEFAULT_INFLECTIONS, smitonic_inflections=SMITONIC_INFLECTIONS, edn_divisions=Fraction(12), edn_divided=Fraction(2), warts=""):
         self.inflections = inflections
         self.smitonic_inflections = smitonic_inflections
         self.edn_divisions = edn_divisions
         self.edn_divided = edn_divided
+        self.warts = warts
         self.base_pitch = zero_pitch()
         self.smitonic_base_pitch = zero_pitch()
         self.comma_list = None
         self.comma_root_cache = None
         self.persistence = 5
+        self.up_down_inflection = zero_pitch()
+        self.up_down_inflection[0] = 0.5  # Default to half-octave
+
+    def calculate_up_down(self):
+        wart_str = "{}{}ED{}".format(self.edn_divisions, self.warts, self.edn_divided)
+        self.up_down_inflection = zero_pitch()
+        if wart_str in ups_and_downs.ARROW_INFLECTIONS:
+            base = ups_and_downs.ARROW_INFLECTIONS[wart_str]
+            self.up_down_inflection[:len(base)] = base
+        else:
+            self.up_down_inflection[E_INDEX] = log(self.edn_divided) / self.edn_divisions
 
     def set_base_pitch(self, token):
         if token[0] in BASIC_PITCHES:
@@ -192,6 +205,16 @@ class IntervalParser:
         while token[0] == "c":
             pitch[0] += 1
             token = token[1:]
+
+        has_up_down = (token[0] in "^v")
+        while token[0] == "^":
+            pitch += self.up_down_inflection
+            token = token[1:]
+        while token[0] == "v":
+            pitch -= self.up_down_inflection
+            token = token[1:]
+        if has_up_down and token[0].isdigit():
+            token = "P" + token
 
         exponent_degree = 1
         root_degree = 1
@@ -522,6 +545,8 @@ def parse_track(lexer, default_config):
                     config["tuning"].edn_divided = edn_divided
                     interval_parser.edn_divided = edn_divided
                     config["tuning"].warts = [0]*len(PRIMES)
+                    interval_parser.warts = ""
+                    interval_parser.calculate_up_down()
                     if "unmapEDN" in config["flags"]:
                         config["flags"].remove("unmapEDN")
                 else:
@@ -558,18 +583,23 @@ def parse_track(lexer, default_config):
             if config_key == "ED":
                 token = token.strip()
                 warts = Counter()
+                wart_str = ""
                 while token[-1].isalpha():
                     wart = token[-1].lower()
+                    wart_str += wart
                     warts[ord(wart) - ord("a")] += 1
                     token = token[:-1]
                 config["tuning"].warts = [warts[i] for i in range(len(PRIMES))]
                 edn_divisions = Fraction(token)
                 config["tuning"].edn_divisions = edn_divisions
                 interval_parser.edn_divisions = edn_divisions
+                interval_parser.warts = wart_str
+                interval_parser.calculate_up_down()
             if config_key == "EDN":
                 edn_divided = Fraction(token)
                 config["tuning"].edn_divided = edn_divided
                 interval_parser.edn_divided = edn_divided
+                interval_parser.calculate_up_down()
             if config_key == "N":
                 current_notation = token.strip()
                 if current_notation not in ["hewmp", "HEWMP", "percussion"]:

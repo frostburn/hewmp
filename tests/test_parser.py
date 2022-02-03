@@ -570,6 +570,29 @@ def test_color_roman():
             assert False
 
 
+def test_ups_and_downs_tritone():
+    text = "^1 v8"
+    notes = get_notes(text)
+    pitches = [[0.5], [0.5]]
+    expect_pitches(notes, pitches)
+
+
+def test_ups_and_downs_scale():
+    text = "ED:18b\nA4 ^A4 B4 ^B4 Bb4 vC5 C5 ^C5 @P4 @^P4 @P5 @^5 @M6 @N6 @m6 @hd6 ^1 M2"
+    notes = get_notes(text)
+    assert (notes[1].pitch[:2] == [-1.5, 1]).all()
+    assert len(notes) == 18
+    mapping = array([18, 28])
+    for i, note in enumerate(notes):
+        assert dot(mapping, note.pitch[:len(mapping)]) == i
+
+
+def test_ups_and_downs_wendy():
+    text = "T:alpha\n1\\ ^A4"
+    notes = get_notes(text)
+    assert isclose(notes[0].pitch, notes[1].pitch).all()
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -616,3 +639,6 @@ if __name__ == '__main__':
     test_color_chord()
     test_color_pitches()
     test_color_roman()
+    test_ups_and_downs_tritone()
+    test_ups_and_downs_scale()
+    test_ups_and_downs_wendy()

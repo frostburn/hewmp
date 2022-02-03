@@ -245,6 +245,13 @@ The accidentals `t` and `d` act as quarter-tone sharp and flat respectively.
 C4 E4d G4 B4d  $ Neutral 7th arpeggio
 ```
 
+## Half-octave (Tritone)
+When not in edo mode the ups-and-downs arrows shift by half of an octave (&radic;2).
+```
+^1 vP8  $ Two spellings for the half octave
+vhd5  $ Alternative meaning for "quartertone" as the half-diminished fifth reduced by a tritone
+```
+
 ## Inflections
 To spell intervals beyond the 3-limit HEWMP uses small adjustements defined by prime factors and their exponents. For example `5/4` is spelled `M3-` (a flat major third), `7/4` is spelled `m7<` (a flat minor seventh) and `11/8` is spelled `P4^` (a sharp perfect fourth). There's a pair of *arrows* corresponding to every prime up to 31 (ordered by size in cents bellow).
 

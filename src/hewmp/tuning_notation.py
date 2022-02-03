@@ -55,11 +55,9 @@ def hewmp_spellings(interval_parser, steps, edn_divided, preferred_arrows):
             index = int(dot(steps, pitch[:len(steps)]))
             spellings[index].append(token)
     for value in range(1, 9):
-        qualities = "da"
-        if value in (1, 4, 5, 8):
-            qualities += "mM"
-        else:
-            qualities += "N"
+        qualities = ["d", "a", "hd", "ha"]
+        if value in (2, 3, 6, 7):
+            qualities.append("N")
         for quality in qualities:
             token = "{}{}".format(quality, value)
             pitch = interval_parser.parse(token)[0]
@@ -101,11 +99,9 @@ def hewmp_spellings(interval_parser, steps, edn_divided, preferred_arrows):
                         index = int(dot(steps, pitch[:len(steps)]))
                         new_spellings[index].append(token)
             for value in range(1, 9):
-                qualities = "da"
-                if value in (1, 4, 5, 8):
-                    qualities += "mM"
-                else:
-                    qualities += "N"
+                qualities = ["d", "a", "hd", "ha"]
+                if value in (2, 3, 6, 7):
+                    qualities.append("N")
                 for quality in qualities:
                     for arrow in pair:
                         token = "{}{}{}".format(quality, value, arrow)
@@ -135,7 +131,7 @@ def hewmp_pitch_spellings(interval_parser, steps, edn_divided, preferred_arrows)
         index = int(dot(steps, pitch[:len(steps)]))
         spellings[index].append(token)
     for base in bases:
-        for accidental in "#bsf":
+        for accidental in "#btd":
             token = "{}{}".format(base, accidental)
             pitch = interval_parser.parse(token)[0]
             index = dot(steps, pitch[:len(steps)])
@@ -171,7 +167,7 @@ def hewmp_pitch_spellings(interval_parser, steps, edn_divided, preferred_arrows)
                     index = int(dot(steps, pitch[:len(steps)]))
                     new_spellings[index].append(token)
             for base in bases:
-                for accidental in "#bsf":
+                for accidental in "#btd":
                     for arrow in pair:
                         token = "{}{}{}".format(base, accidental, arrow)
                         pitch = interval_parser.parse(token)[0]

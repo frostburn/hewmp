@@ -41,14 +41,14 @@
 | O     | smitonic pitch |
 | P     | perfect interval |
 | Q     | smitonic pitch |
-| R     | smitonic pitch [repeat last pattern] |
+| R     | [repeat last pattern] |
 | S     | smitonic pitch |
 | T     | timestamp |
 | U     | 29 up inflection, smitonic pitch |
 | V     | 19 down inflection, interval degree (roman numerals) |
 | W     | 31 down inflection, smitonic wide interval |
 | X     | pattern repeat with expansion |
-| Y     | (unused)
+| Y     | smitonic pitch |
 | Z     | (unused) |
 | [     | open time |
 | \     | edo step |

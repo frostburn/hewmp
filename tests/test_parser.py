@@ -156,7 +156,7 @@ def test_chords():
 
 def test_smitonic_pitch_translation():
     inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
-    for letter in "JKOQRSU":
+    for letter in "JKOQSUY":
         for octave in ("3", "4"):
             for accidental in ("" ,"b", "#", "x"):
                 for arrow in ("", "-", "<2", "+2^3"):

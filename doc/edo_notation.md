@@ -7,7 +7,7 @@ Note: It's better to use a subset of 12ed2
 |:------:|:-----------------:|:--------------:|
 | 0      | p1                | J4             |
 | 1      | p3                | O4             |
-| 2      | p6                | R4             |
+| 2      | p6                | S4             |
 | 3      | p8                | J5             |
 ## 4ed2
 Note: It's better to use a subset of 12ed2
@@ -15,8 +15,8 @@ Note: It's better to use a subset of 12ed2
 |:------:|:-----------------:|:--------------:|
 | 0      | p1                | J4             |
 | 1      | p3                | O4             |
-| 2      | L4,s5             | Q4,R4          |
-| 3      | p6                | S4             |
+| 2      | L4,s5             | Q4,S4          |
+| 3      | p6                | U4             |
 | 4      | p8                | J5             |
 ## 5ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
@@ -34,9 +34,9 @@ Note: It's better to use a subset of 12ed2
 | 0      | p1                | J4             |
 | 1      | p3-               | O4-            |
 | 2      | p3+               | O4+            |
-| 3      | L4,s5             | Q4,R4          |
-| 4      | p6-               | S4-            |
-| 5      | p6+               | S4+            |
+| 3      | L4,s5             | Q4,S4          |
+| 4      | p6-               | U4-            |
+| 5      | p6+               | U4+            |
 | 6      | p8                | J5             |
 ## 7ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
@@ -57,10 +57,10 @@ Note: It's better to use a subset of 24ed2
 | 1      | p3-               | O4-            |
 | 2      | p3                | O4             |
 | 3      | p3+               | O4+            |
-| 4      | L4,s5             | Q4,R4          |
-| 5      | p6-               | S4-            |
-| 6      | p6                | S4             |
-| 7      | p6+               | S4+            |
+| 4      | L4,s5             | Q4,S4          |
+| 5      | p6-               | U4-            |
+| 6      | p6                | U4             |
+| 7      | p6+               | U4+            |
 | 8      | p8                | J5             |
 ## 9ed2
 | Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
@@ -70,10 +70,10 @@ Note: It's better to use a subset of 24ed2
 | 2      | n3                | K4#,O4b        | M3                   | E4                |
 | 3      | W3                | O4#            | m3,a4                | E4b,F4#           |
 | 4      | L4                | Q4             | P4                   | F4                |
-| 5      | s5                | R4             | P5                   | G4                |
-| 6      | n6                | S4b            | M6                   | A4                |
-| 7      | W6                | S4#,U4b        | M7                   | B4                |
-| 8      | L7                | U4#            | m7,a8                | Bb4,C5#           |
+| 5      | s5                | S4             | P5                   | G4                |
+| 6      | n6                | U4b            | M6                   | A4                |
+| 7      | W6                | U4#,Y4b        | M7                   | B4                |
+| 8      | L7                | Y4#            | m7,a8                | Bb4,C5#           |
 | 9      | p8                | J5             | P8                   | C5                |
 ## 10ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
@@ -98,11 +98,11 @@ Note: It's better to use a subset of 24ed2
 | 3      | p3                | O4             | a4                   | F4#               |
 | 4      | s4                | O4#,Q4b        | m3                   | E4b               |
 | 5      | L4                | Q4             | P4                   | F4                |
-| 6      | s5                | R4             | P5                   | G4                |
-| 7      | L5                | R4#,S4b        | M6                   | A4                |
-| 8      | p6                | S4             | M7                   | B4                |
-| 9      | s7                | U4             | a8                   | C5#               |
-| 10     | L7                | U4#,J5b        | m7                   | B4b               |
+| 6      | s5                | S4             | P5                   | G4                |
+| 7      | L5                | S4#,U4b        | M6                   | A4                |
+| 8      | p6                | U4             | M7                   | B4                |
+| 9      | s7                | Y4             | a8                   | C5#               |
+| 10     | L7                | Y4#,J5b        | m7                   | B4b               |
 | 11     | p8                | J5             | P8                   | C5                |
 ## 12ed2
 | Degree | Pythagorean Interval | Pythagorean Pitch |
@@ -130,12 +130,12 @@ Note: It's better to use a subset of 24ed2
 | 4      | N3                   | D4^,F4v           | n4^               | O4#v           |
 | 5      | P4                   | F4                | L4v               | O4#            |
 | 6      | P4^                  | F4^               | L4                | Q4             |
-| 7      | P5v                  | G4v               | s5                | R4             |
-| 8      | P5                   | G4                | n6                | S4b            |
-| 9      | N6                   | G4^               | n7                | U4b            |
-| 10     | m7                   | A4v               | n7^               | U4b^           |
-| 11     | m7^,N7v              | A4                | L7v               | U4#v           |
-| 12     | N7                   | A4^,C5v           | L7                | U4#            |
+| 7      | P5v                  | G4v               | s5                | S4             |
+| 8      | P5                   | G4                | n6                | U4b            |
+| 9      | N6                   | G4^               | n7                | Y4b            |
+| 10     | m7                   | A4v               | n7^               | Y4b^           |
+| 11     | m7^,N7v              | A4                | L7v               | Y4#v           |
+| 12     | N7                   | A4^,C5v           | L7                | Y4#            |
 | 13     | P8                   | C5                | p8                | J5             |
 ## 13bED2
 | Degree | Ups and Downs Interval | Ups and Downs Pitch |
@@ -202,13 +202,13 @@ Note: It's better to use a subset of 24ed2
 | 5      | W3                | O4#            | m3                   | E4b               |
 | 6      | n4                | Q4bb           | d3,a4                | F4#               |
 | 7      | L4                | Q4             | P4                   | F4                |
-| 8      | WW4,nn5           | Q4x,R4bb       | d4,a5                | F4b,G4#           |
-| 9      | s5                | R4             | P5                   | G4                |
-| 10     | W5                | R4x            | d5,a6                | G4b,A4#           |
-| 11     | n6                | S4b            | M6                   | A4                |
-| 12     | W6                | S4#            | m6                   | A4b,B4#           |
-| 13     | n7                | U4b            | M7                   | B4                |
-| 14     | L7                | U4#            | m7                   | B4b               |
+| 8      | WW4,nn5           | Q4x,S4bb       | d4,a5                | F4b,G4#           |
+| 9      | s5                | S4             | P5                   | G4                |
+| 10     | W5                | S4x            | d5,a6                | G4b,A4#           |
+| 11     | n6                | U4b            | M6                   | A4                |
+| 12     | W6                | U4#            | m6                   | A4b,B4#           |
+| 13     | n7                | Y4b            | M7                   | B4                |
+| 14     | L7                | Y4#            | m7                   | B4b               |
 | 15     | WW7,nn8           | J5bb           | d7,a8                | C5#               |
 | 16     | p8                | J5             | P8                   | C5                |
 ## 17ed2
@@ -244,14 +244,14 @@ Note: It's better to use a subset of 24ed2
 | 6      | W3,n4             | O4#            |
 | 7      | s4                | Q4b            |
 | 8      | L4                | Q4             |
-| 9      | W4,n5             | Q4#,R4b        |
-| 10     | s5                | R4             |
-| 11     | L5                | R4#            |
-| 12     | W5,n6             | S4b            |
-| 13     | p6                | S4             |
-| 14     | W6,n7             | S4#,U4b        |
-| 15     | s7                | U4             |
-| 16     | L7                | U4#            |
+| 9      | W4,n5             | Q4#,S4b        |
+| 10     | s5                | S4             |
+| 11     | L5                | S4#            |
+| 12     | W5,n6             | U4b            |
+| 13     | p6                | U4             |
+| 14     | W6,n7             | U4#,Y4b        |
+| 15     | s7                | Y4             |
+| 16     | L7                | Y4#            |
 | 17     | W7,n8             | J5b            |
 | 18     | p8                | J5             |
 ## 19ed2
@@ -267,15 +267,15 @@ Note: It's better to use a subset of 24ed2
 | 7      | s4^               | Q4b^           | a3,d4                | E4#,F4b           |
 | 8      | L4v               | Q4v            | P4                   | F4                |
 | 9      | L4                | Q4             | a4                   | F4#               |
-| 10     | s5                | R4             | d5                   | G4b               |
-| 11     | s5^               | R4^            | P5                   | G4                |
-| 12     | L5v               | R4#v           | a5,d6                | G4#               |
-| 13     | L5                | R4#            | m6                   | A4b               |
-| 14     | p6                | S4             | M6                   | A4                |
-| 15     | s7                | U4             | a6,d7                | A4#               |
-| 16     | s7^               | U4^            | m7                   | B4b               |
-| 17     | L7v               | U4#v           | M7                   | B4                |
-| 18     | L7                | U4#            | a7,d8                | B4#,C5b           |
+| 10     | s5                | S4             | d5                   | G4b               |
+| 11     | s5^               | S4^            | P5                   | G4                |
+| 12     | L5v               | S4#v           | a5,d6                | G4#               |
+| 13     | L5                | S4#            | m6                   | A4b               |
+| 14     | p6                | U4             | M6                   | A4                |
+| 15     | s7                | Y4             | a6,d7                | A4#               |
+| 16     | s7^               | Y4^            | m7                   | B4b               |
+| 17     | L7v               | Y4#v           | M7                   | B4                |
+| 18     | L7                | Y4#            | a7,d8                | B4#,C5b           |
 | 19     | p8                | J5             | P8                   | C5                |
 ## 20ed2
 | Degree | Smitonic Interval | Smitonic Pitch | Pythagorean Interval | Pythagorean Pitch |
@@ -290,15 +290,15 @@ Note: It's better to use a subset of 24ed2
 | 7      | n4^               | O4#            | N3^,P4v              | E4v               |
 | 8      | L4v               | Q4v            | P4                   | E4                |
 | 9      | L4                | Q4             | P4^                  | E4^               |
-| 10     | L4^,s5v           | Q4^,R4v        | ha4,hd5               | E4t,G4d           |
-| 11     | s5                | R4             | P5v                  | G4v               |
-| 12     | s5^,n6v           | R4^            | P5                   | G4                |
-| 13     | n6                | S4b            | P5^,N6v              | G4^               |
-| 14     | n6^,n7v           | S4b^,U4bv      | N6                   | G4t,A4d           |
-| 15     | n7                | U4b            | N6^,m7v              | A4v               |
-| 16     | n7^               | U4b^           | m7                   | A4                |
-| 17     | L7v               | U4#v           | m7^,N7v              | A4^               |
-| 18     | L7                | U4#            | N7                   | A4t,C5d           |
+| 10     | L4^,s5v           | Q4^,S4v        | ha4,hd5               | E4t,G4d           |
+| 11     | s5                | S4             | P5v                  | G4v               |
+| 12     | s5^,n6v           | S4^            | P5                   | G4                |
+| 13     | n6                | U4b            | P5^,N6v              | G4^               |
+| 14     | n6^,n7v           | U4b^,Y4bv      | N6                   | G4t,A4d           |
+| 15     | n7                | Y4b            | N6^,m7v              | A4v               |
+| 16     | n7^               | Y4b^           | m7                   | A4                |
+| 17     | L7v               | Y4#v           | m7^,N7v              | A4^               |
+| 18     | L7                | Y4#            | N7                   | A4t,C5d           |
 | 19     | L7^               | J5v            | N7^,P8v              | C5v               |
 | 20     | p8                | J5             | P8                   | C5                |
 ## 21ed2
@@ -340,16 +340,16 @@ Note: It's better to use a subset of 24ed2
 | 8      | s4                | O4#,Q4b        | M3                   | E4                |
 | 9      | s4+,L4-           | Q4-            | P4                   | F4                |
 | 10     | L4                | Q4             | P4+                  | F4+               |
-| 11     | L4+,s5-           | Q4+,R4-        | a4-,d5+              | F4#-,G4b+         |
-| 12     | s5                | R4             | P5-                  | G4-               |
-| 13     | s5+,L5-           | R4+            | P5                   | G4                |
-| 14     | L5                | R4#,S4b        | m6                   | A4b               |
-| 15     | L5+,p6-           | S4-            | m6+                  | A4b+              |
-| 16     | p6                | S4             | M6-                  | A4-               |
-| 17     | p6+,s7-           | S4+,U4-        | M6                   | A4                |
-| 18     | s7                | U4             | m7                   | B4b               |
-| 19     | s7+,L7-           | U4+            | m7+                  | B4b+              |
-| 20     | L7                | U4#,J5b        | M7-                  | B4-               |
+| 11     | L4+,s5-           | Q4+,S4-        | a4-,d5+              | F4#-,G4b+         |
+| 12     | s5                | S4             | P5-                  | G4-               |
+| 13     | s5+,L5-           | S4+            | P5                   | G4                |
+| 14     | L5                | S4#,U4b        | m6                   | A4b               |
+| 15     | L5+,p6-           | U4-            | m6+                  | A4b+              |
+| 16     | p6                | U4             | M6-                  | A4-               |
+| 17     | p6+,s7-           | U4+,Y4-        | M6                   | A4                |
+| 18     | s7                | Y4             | m7                   | B4b               |
+| 19     | s7+,L7-           | Y4+            | m7+                  | B4b+              |
+| 20     | L7                | Y4#,J5b        | M7-                  | B4-               |
 | 21     | L7+,p8-           | J5-            | M7                   | B4                |
 | 22     | p8                | J5             | P8                   | C5                |
 ## 23ed2
@@ -394,17 +394,17 @@ Note: It's better to use a subset of 24ed2
 | 9      | s4>               | Q4b>           | M3^,P4v              | E4t,F4d           |
 | 10     | L4v               | Q4v            | P4                   | F4                |
 | 11     | L4                | Q4             | P4^,a4v              | F4t               |
-| 12     | L4^,s5v           | Q4^,R4v        | a4,d5                | F4#,G4b           |
-| 13     | s5                | R4             | P5v,d5^              | G4d               |
-| 14     | s5^               | R4^            | P5                   | G4                |
-| 15     | L5<               | R4#<           | P5^,m6v              | G4t               |
-| 16     | L5>               | R4#>           | m6                   | G4#,A4b           |
-| 17     | p6<               | S4<            | N6                   | A4d               |
-| 18     | p6>               | S4>            | M6                   | A4                |
-| 19     | s7<               | U4<            | M6^,m7v              | A4t               |
-| 20     | s7>               | U4>            | m7                   | A4#,B4b           |
-| 21     | L7v               | U4#v           | N7                   | B4d               |
-| 22     | L7                | U4#            | M7                   | B4                |
+| 12     | L4^,s5v           | Q4^,S4v        | a4,d5                | F4#,G4b           |
+| 13     | s5                | S4             | P5v,d5^              | G4d               |
+| 14     | s5^               | S4^            | P5                   | G4                |
+| 15     | L5<               | S4#<           | P5^,m6v              | G4t               |
+| 16     | L5>               | S4#>           | m6                   | G4#,A4b           |
+| 17     | p6<               | U4<            | N6                   | A4d               |
+| 18     | p6>               | U4>            | M6                   | A4                |
+| 19     | s7<               | Y4<            | M6^,m7v              | A4t               |
+| 20     | s7>               | Y4>            | m7                   | A4#,B4b           |
+| 21     | L7v               | Y4#v           | N7                   | B4d               |
+| 22     | L7                | Y4#            | M7                   | B4                |
 | 23     | L7^,p8v           | J5v            | M7^,P8v              | B4t,C5d           |
 | 24     | p8                | J5             | P8                   | C5                |
 ## 25ed2
@@ -423,17 +423,17 @@ Note: It's better to use a subset of 24ed2
 | 10     | s4                | Q4b            |
 | 11     | L4                | Q4             |
 | 12     | W4                | Q4#            |
-| 13     | n5                | R4b            |
-| 14     | s5                | R4             |
-| 15     | L5                | R4#            |
-| 16     | W5                | R4x,S4bb       |
-| 17     | n6                | S4b            |
-| 18     | p6                | S4             |
-| 19     | W6                | S4#            |
-| 20     | n7                | U4b            |
-| 21     | s7                | U4             |
-| 22     | L7                | U4#            |
-| 23     | W7                | U4x,J5bb       |
+| 13     | n5                | S4b            |
+| 14     | s5                | S4             |
+| 15     | L5                | S4#            |
+| 16     | W5                | S4x,U4bb       |
+| 17     | n6                | U4b            |
+| 18     | p6                | U4             |
+| 19     | W6                | U4#            |
+| 20     | n7                | Y4b            |
+| 21     | s7                | Y4             |
+| 22     | L7                | Y4#            |
+| 23     | W7                | Y4x,J5bb       |
 | 24     | n8                | J5b            |
 | 25     | p8                | J5             |
 ## 26ed2
@@ -452,18 +452,18 @@ Note: It's better to use a subset of 24ed2
 | 10     | s4^               | Q4b^           | d4                   | F4b               |
 | 11     | L4v               | Q4v            | P4                   | F4                |
 | 12     | L4                | Q4             | a4                   | F4#               |
-| 13     | L4^,s5v           | Q4^,R4v        | aa4,dd5              | F4x,G4bb          |
-| 14     | s5                | R4             | d5                   | G4b               |
-| 15     | s5^               | R4^            | P5                   | G4                |
-| 16     | L5v               | R4#v           | a5                   | G4#               |
-| 17     | L5                | R4#            | d6                   | G4x,A4bb          |
-| 18     | L5^,p6v           | S4v            | m6                   | A4b               |
-| 19     | p6                | S4             | M6                   | A4                |
-| 20     | p6^,s7v           | S4^,U4v        | a6                   | A4#               |
-| 21     | s7                | U4             | d7                   | A4x,B4bb          |
-| 22     | s7^               | U4^            | m7                   | B4b               |
-| 23     | L7v               | U4#v           | M7                   | B4                |
-| 24     | L7                | U4#            | a7                   | B4#               |
+| 13     | L4^,s5v           | Q4^,S4v        | aa4,dd5              | F4x,G4bb          |
+| 14     | s5                | S4             | d5                   | G4b               |
+| 15     | s5^               | S4^            | P5                   | G4                |
+| 16     | L5v               | S4#v           | a5                   | G4#               |
+| 17     | L5                | S4#            | d6                   | G4x,A4bb          |
+| 18     | L5^,p6v           | U4v            | m6                   | A4b               |
+| 19     | p6                | U4             | M6                   | A4                |
+| 20     | p6^,s7v           | U4^,Y4v        | a6                   | A4#               |
+| 21     | s7                | Y4             | d7                   | A4x,B4bb          |
+| 22     | s7^               | Y4^            | m7                   | B4b               |
+| 23     | L7v               | Y4#v           | M7                   | B4                |
+| 24     | L7                | Y4#            | a7                   | B4#               |
 | 25     | L7^,p8v           | J5v            | d8                   | C5b               |
 | 26     | p8                | J5             | P8                   | C5                |
 ## 31ed2
@@ -485,19 +485,19 @@ Note: It's better to use a subset of 24ed2
 | 13     | L4v               | Q4v            | P4                   | F4                |
 | 14     | L4                | Q4             | ha4                   | F4t               |
 | 15     | L4^               | Q4^            | a4                   | F4#               |
-| 16     | s5v               | R4v            | d5                   | G4b               |
-| 17     | s5                | R4             | hd5                  | G4d               |
-| 18     | s5^               | R4^            | P5                   | G4                |
-| 19     | n6v               | S4bv           | ha5,d6                | G4t               |
-| 20     | n6                | S4b            | a5                   | G4#               |
-| 21     | n6^               | S4b^           | m6                   | A4b               |
-| 22     | n7v               | S4<            | N6                   | A4d               |
-| 23     | n7                | S4>            | M6                   | A4                |
-| 24     | n7^               | S4#v,U4b^      | M6^                  | A4t               |
-| 25     | s7<               | U4<            | m7v                  | A4#               |
-| 26     | s7>               | U4>            | m7                   | B4b               |
-| 27     | L7v               | U4#v           | N7                   | B4d               |
-| 28     | L7                | U4#            | M7                   | B4                |
-| 29     | L7^               | U4#^           | d8                   | B4t,C5b           |
+| 16     | s5v               | S4v            | d5                   | G4b               |
+| 17     | s5                | S4             | hd5                  | G4d               |
+| 18     | s5^               | S4^            | P5                   | G4                |
+| 19     | n6v               | U4bv           | ha5,d6                | G4t               |
+| 20     | n6                | U4b            | a5                   | G4#               |
+| 21     | n6^               | U4b^           | m6                   | A4b               |
+| 22     | n7v               | U4<            | N6                   | A4d               |
+| 23     | n7                | U4>            | M6                   | A4                |
+| 24     | n7^               | U4#v,Y4b^      | M6^                  | A4t               |
+| 25     | s7<               | Y4<            | m7v                  | A4#               |
+| 26     | s7>               | Y4>            | m7                   | B4b               |
+| 27     | L7v               | Y4#v           | N7                   | B4d               |
+| 28     | L7                | Y4#            | M7                   | B4                |
+| 29     | L7^               | Y4#^           | d8                   | B4t,C5b           |
 | 30     | p8v               | J5v            | a7,hd8                | B4#,C5d           |
 | 31     | p8                | J5             | P8                   | C5                |

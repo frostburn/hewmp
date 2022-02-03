@@ -103,13 +103,14 @@ def smitonic_parse_arrows(token, inflections):
 # N - neutral
 # P - perfect
 # T - timestamp
-# So we use JKOQRSU
+# R - repeat last pattern
+# So we use JKOQSUY
 SMITONIC_BASIC_PITCHES = {
-    "U": (6, -1.5),
-    "R": (4, -1),
+    "Y": (6, -1.5),
+    "S": (4, -1),
     "O": (2, -0.5),
     "J": (0, 0),
-    "S": (-1, 0.5),
+    "U": (-1, 0.5),
     "Q": (-3, 1),
     "K": (-5, 1.5),
 }
@@ -195,14 +196,14 @@ def smitonic_tokenize_interval(pitch, inflections, *extra_indices):
     return "{}{}{}{}{}".format(sign, quality, value, arrow_str, tokenize_extras(pitch, *extra_indices))
 
 
-NEREVARINE = ("U", "R", "O", "J", "S", "Q", "K")
+NEREVARINE = ("Y", "S", "O", "J", "U", "Q", "K")
 NEREVARINE_INDEX_J = 3
 SMITONIC_LETTER_OCTAVES = {
-    "U": -6,
-    "R": -4,
+    "Y": -6,
+    "S": -4,
     "O": -2,
     "J": 0,
-    "S": 1,
+    "U": 1,
     "Q": 3,
     "K": 5,
 }

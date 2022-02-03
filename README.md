@@ -141,9 +141,13 @@ $ I arpeggio
 ```
 
 ## Composite intervals
-You can add an octave to an interval by prefixing it with `c`
+You can add an octave to an interval by prefixing it with `c`.
 ```
 1 3/2 c5/4
+```
+You can subtract an octave from an interval by prefixing it with `` ` ``.
+```
+1 3/2 `5/4
 ```
 
 ## Pythagorean basis

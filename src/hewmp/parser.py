@@ -18,7 +18,8 @@ from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exp
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
-from .pythagoras import AUGMENTED_INFLECTION, INTERVAL_QUALITIES, BASIC_PITCHES, parse_pitch as parse_pythagorean_pitch, parse_interval as parse_pythagorean_interval
+from .pythagoras import AUGMENTED_INFLECTION, INTERVAL_QUALITIES, BASIC_PITCHES
+from .pythagoras import parse_pitch as parse_pythagorean_pitch, parse_interval as parse_pythagorean_interval
 from .monzo import fraction_to_monzo, PRIMES
 from . import ups_and_downs
 
@@ -204,6 +205,10 @@ class IntervalParser:
 
         while token[0] == "c":
             pitch[0] += 1
+            token = token[1:]
+
+        while token[0] == "`":
+            pitch[0] -= 1
             token = token[1:]
 
         has_up_down = (token[0] in "^v")

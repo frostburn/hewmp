@@ -152,3 +152,6 @@ def parse_pitch(token):
     result[1] += basic_pitch[1]
 
     return token, result
+
+
+ACCIDENTALS = "#xbtd" + "♮♯𝄪♭𝄫𝄲𝄳"

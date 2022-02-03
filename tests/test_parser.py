@@ -228,6 +228,8 @@ def test_compound():
     assert (pitch[:2] == array([-4, 3])).all()
     pitch = interval_parser.parse("-cM6")[0]
     assert (pitch[:2] == array([3, -3])).all()
+    pitch = interval_parser.parse("`M6")[0]
+    assert (pitch[:2] == array([-5, 3])).all()
 
 
 def test_pitch_equality():

@@ -15,8 +15,7 @@
 | -     | 5 down inflection, interval inversion |
 | .     | rest |
 | /     | fractions, interval root |
-| 0     | time, duration, interval degree, pitch octave |
-| 1-9   | same as 0 |
+| 0-9   | time, duration, interval degree, pitch octave, complex chord voicings |
 | :     | otonal chords |
 | ;     | utonal chords |
 | <     | 7 down inflection, time rotation |
@@ -41,7 +40,7 @@
 | O     | smitonic pitch |
 | P     | perfect interval |
 | Q     | smitonic pitch |
-| R     | repeat last pattern |
+| R     | repeat last pattern, indicate root in a complex voicing |
 | S     | smitonic pitch |
 | T     | timestamp |
 | U     | 29 up inflection, smitonic pitch |
@@ -55,7 +54,7 @@
 | ]     | close time |
 | ^     | up-and-down arrow, 11 up inflection, 3 up inflection (smitonic), Color exponent |
 | _     | tenuto |
-| \`    | (unused) |
+| \`    | interval octaver |
 | a     | augmented interval |
 | b     | flat sign |
 | c     | compound interval |
@@ -79,7 +78,7 @@
 | u     | Color under, 23 up inflection |
 | v     | up-and-down arrow, 11 down inflection, 3 down inflection (smitonic) |
 | w     | Color wa = pythagorean |
-| x     | section repeat count, pattern repeat without expansion |
+| x     | double sharp sign, section repeat count, pattern repeat without expansion |
 | y     | Color yo = 5 over |
 | z     | Color zo = 7 over |
 | {     | (open properties) |

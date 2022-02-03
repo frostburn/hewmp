@@ -41,7 +41,7 @@
 | O     | smitonic pitch |
 | P     | perfect interval |
 | Q     | smitonic pitch |
-| R     | [repeat last pattern] |
+| R     | repeat last pattern |
 | S     | smitonic pitch |
 | T     | timestamp |
 | U     | 29 up inflection, smitonic pitch |
@@ -61,25 +61,25 @@
 | c     | compound interval |
 | d     | half-flat sign |
 | e     | exponential rhythm |
-| f     | (unused) |
+| f     | forte |
 | g     | Color gu = 5 under |
-| h     | (unused) [natural sign] |
+| h     | half diminished/augmented [natural sign] |
 | i     | 13 up inflection |
 | j     | (unused) |
 | k     | (unused) |
 | l     | (unused) |
-| m     | minor interval |
+| m     | minor interval, mezzo forte/piano |
 | n     | 23 down inflection, smitonic narrow interval |
 | o     | Color over |
-| p     | Color po = wa comma up |
+| p     | Color po = wa comma up, piano |
 | q     | Color ku = wa comma down |
 | r     | Color ru = 7 under |
 | s     | Color small interval, smitonic small interval |
 | t     | half-sharp sign |
 | u     | Color under, 23 up inflection |
 | v     | up-and-down arrow, 11 down inflection, 3 down inflection (smitonic) |
-| w     | (unused) |
-| x     | macro repeat count, pattern repeat |
+| w     | Color wa = pythagorean |
+| x     | section repeat count, pattern repeat without expansion |
 | y     | Color yo = 5 over |
 | z     | Color zo = 7 over |
 | {     | (open properties) |

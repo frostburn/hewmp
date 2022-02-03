@@ -72,6 +72,14 @@ To extend the duration of the last played note by one use the pedal symbol `!`. 
 ```
 Pedals chain so `!!` extends duration by two.
 
+## Repeats
+To repeat the last note or pattern (useful with chords) use `R`. The pitch(es) will be the same but duration is reset to one.
+```
+$ Repeats are not literal so these are the same note
+~3/2[2] R
+```
+Repeats chain with `!` so `R!` is the last pattern but of duration 2.
+
 ## Comments
 Anything after a `$` sign is ignored until a newline is reached.
 ```
@@ -85,10 +93,10 @@ Barlines `|` can be used to visually organize your music. They have no effect on
 1[4] | 5/4[2] 3/2[2] | 15/8 2/1[3] ||
 ```
 
-### Repeats
+### Repeated Sections
 A section can be repeated by placing it between `|:` and `:|`. An optional `x` can be attached onto `:|` to specify the number of repeats other than the default two. This means that `x1` has no effect and `x0` effectively removes the section.
 ```
-$ Repeats are literal so the following is an ascending sequence of seven notes
+$ Section repeats are literal so the following is an ascending sequence of seven notes
 |: ~9/8 :|x7
 ```
 

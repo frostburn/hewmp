@@ -615,6 +615,18 @@ def test_pedal():
     assert times == [0, 1, 3, 6, 10]
 
 
+def test_repeat():
+    text = "(A4,C5)[3] R R!"
+    notes = get_notes(text)
+    durations = []
+    times = []
+    for note in notes:
+        durations.append(note.duration)
+        times.append(note.time)
+    assert durations == [3, 3, 1, 1, 2, 2]
+    assert times == [0, 0, 3, 3, 4, 4]
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -666,3 +678,4 @@ if __name__ == '__main__':
     test_ups_and_downs_wendy()
     test_rest()
     test_pedal()
+    test_repeat()

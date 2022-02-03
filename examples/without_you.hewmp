@@ -18,35 +18,35 @@ yD3 !!!!! !   ! | ! yD3 !!!!! .  |yD3 !!!!! !   ! | ! yD3 !!!!! .  | C3 !!!!! ! 
 
 @T $ Section A: Treble voices
 |:
-  ..   (yG3,Bb3,F4  )[2] (yG3,Bb3,F4  )[3] (yG3,Bb3,F4  )|[+2] (yG3,Bb3,F4  )[2] zDb4 C4    Bb3[2] |
-  ..   (yG3,Bb3,ryE4)[2] (yG3,Bb3,ryE4)[3] (yG3,Bb3,ryE4)|[+2] (yG3,Bb3,ryE4)[2] zDb4 C4    Bb3[2] |
-  ..   (yA3,C4 ,zEb4)[2] (yA3,C4 ,zEb4)[3] (yA3,C4 ,zEb4)|[+2] (yA3,C4 ,zEb4)[2] zDb4[2]     C4[2] |
-Bb3[2] (F3 ,Bb3,yD4 )[2] (F3 ,Bb3,yD4 )[3] (F3 ,Bb3,yD4 )|[+2] (F3 ,Bb3,yD4 )[2] zAb3 zAb3 zAb3[2]
+.   .  (yG3,Bb3,F4  )! R!! R|!! R! zDb4 C4   Bb3  ! |
+.   .  (yG3,Bb3,ryE4)! R!! R|!! R! zDb4 C4   Bb3  ! |
+.   .  (yA3,C4 ,zEb4)! R!! R|!! R! zDb4 !    C4   ! |
+Bb3 !  (F3 ,Bb3,yD4 )! R!! R|!! R! zAb3 zAb3 zAb3 !
 :|
 
+
 T  $ Section B: Bass voices
-(Eb2,Bb2)[6] (Eb2,Bb2)[2]|[+3] (zGb2,zDb3)[5]|(Ab2,Eb3)[6] (Ab2,Eb3)[2]|[+3] (zGb2,zDb3)[5]|
-(Eb2,Bb2)[6] (Eb2,Bb2)[2]|[+3] (zGb2,zDb3)[5]|
+(Eb2,Bb2)!!!!! R!|!!! (zGb2,zDb3)!!!!|(Ab2,Eb3)!!!!! R!|!!! (zGb2,zDb3)!!!!|
+(Eb2,Bb2)!!!!! R!|!!! (zGb2,zDb3)!!!!|
 
 @T $ Section B: Treble voices
-yG3[2] (yG3,Bb3,zDb4)[2] (yG3,Bb3,zDb4)[3] (yG3,Bb3,zDb4)|[+1] (yG3,Bb3,zDb4)[2] . Eb4 zDb4   Bb3[2] |
-Ab3[2] (Ab3,yC4     )[2] (Ab3,yC4     )[3] (zGb3,Cb4    )|[+1] (Ab3,yC4     )[2] . Eb4 zDb4   Bb3[2] |
-yG3[2] (yG3,Bb3,zDb4)[2] (yG3,Bb3,zDb4)[3] (yG3,Bb3,zDb4)|[+1] (yG3,Bb3,zDb4)[2] . Eb4 zDb4   Bb3[2] |
+yG3 ! (yG3,Bb3,zDb4)! R!! R         |! R         ! . Eb4 zDb4 Bb3 ! |
+Ab3 ! (Ab3,yC4     )! R!! (zGb3,Cb4)|! (Ab3,yC4) ! . Eb4 zDb4 Bb3 ! |
+yG3 ! (yG3,Bb3,zDb4)! R!! R         |! R         ! . Eb4 zDb4 Bb3 ! |
+
 
 T  $ Section B continued: Low bass voice
-F2[6] F2[ 2]|[+1]   [+3] .[4]|yG2[2]  [+2] [+1]  [+2] Eb2|[+7] F2|   [+6] F2[ 2]|[+1]    [+3] F2[ 2]    [+2]|[+2] F2[ 3]    [+3]|[+8] ||
+F2 !!!!! F2 !|! !  !! ....|yG2 ! !   ! !    !    ! Eb2|!!!!!!! F2|!   !!!!! F2 !|! !   !! F2 ! !   !|!! F2 !! !   !!|!!!!!!!!||
 @T $ Section B continued: High bass voice
-C3[6]   [+2]|[+1] C3[ 3] .[4]|  .. Bb2[ 2] [+1]  [+2] Bb2|[+7] . |Bb2[ 6]   [+2]|[+1] Bb2[ 3]   [+2] Bb2[ 2]|[+2]   [+3] Bb2[ 3]|[+8] ||
+C3 !!!!! !  !|! C3 !! ....|.   . Bb2 ! !    !    ! Bb2|!!!!!!! . |Bb2 !!!!! !  !|! Bb2 !! !  ! Bb2 !|!! !  !! Bb2 !!|!!!!!!!!||
 @T $ Section B continued: Remaining bass voices
-.[8]        |.[8]            |  ..   ..    ryE3  [+2] Eb3|[+7]
+.  ..... .  .|. .  .. ....|.   . .   . ryE3 !    ! Eb3|!!!!!!! . |
 @T $ Section B continued: Remaining bass voices
-.[8]        |.[8]            |  ..   ..    . zDb3[ 2] .  |
+.  ..... .  .|. .  .. ....|.   . .   . .    zDb3 ! .  |
 
 @T $ Section B continued: Treble voices
-         yA3[2] (yA3,C4,zEb4)[ 2] (yA3,C4,zEb4)[3] (yA3,C4,zEb4)|[+2] (yA3,C4,zEb4)[2] (yA3,C4,zEb4)[2] (zAb3,ryB3,yD4)[2] |
-(yG3,Bb3,zDb4)[8]                                               |[+8]                                                      |
-           .. (F3,Bb3,yD4 )[ 2] (F3,Bb3,yD4 )[3] (F3,Bb3,yD4 )|[+2] (F3,Bb3,yD4 )[3]        (F3,Bb3,yD4)[3]              |
-(F3,Bb3,yD4)[2]              [+2] (F3,Bb3,yD4 )[3] (F3,Bb3,yD4 )|[+8]                                                      ||
+yA3 ! (yA3,C4,zEb4)! R!! R|!! R! R ! (zAb3,ryB3,yD4)! | (yG3,Bb3,zDb4)!!! !!! !|!!!!!!!!|
+.   . (F3,Bb3,yD4 )! R!! R|!! R! ! R !              ! | (F3 ,Bb3,yD4 )!!! R!! R|!!!!!!!!||
 
 ---
 N:percussion

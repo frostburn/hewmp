@@ -727,6 +727,11 @@ def parse_track(lexer, default_config):
             raise ParsingError('Unmatched "]"')
         elif token == "&":
             transposed_pattern = pattern.pop()
+        elif token[0] == "R":
+            duration = token.count("R") + token.count("!")
+            repeated_pattern = pattern.last.retime(time, duration)
+            pattern.append(repeated_pattern)
+            time += pattern.last.duration
         elif token == ",":
             time -= pattern.last.duration
         elif token in ARTICULATIONS:

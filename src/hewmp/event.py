@@ -711,7 +711,10 @@ class Pattern(MusicBase, Transposable):
         return Pattern(events, start_time, duration, real_time, real_duration)
 
     def retime(self, time, duration):
-        raise NotImplementedError("Pattern retiming not implemented")
+        result = self.__class__([], time, duration)
+        for subpattern in self.subpatterns:
+            result.append(subpattern.copy())
+        return result
 
     def __repr__(self):
         return "{}({!r}, {!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.subpatterns, self.time, self.duration, self.real_time, self.real_duration)

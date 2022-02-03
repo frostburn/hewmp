@@ -59,10 +59,18 @@ Note duration is specified using square brackets `[`, `]` after a note. The defa
 ```
 
 ## Rests
-To advance time without playing a note use the rest symbol `z`. If you want to include the rest in the output use a capital letter `Z` (only applies if the output format supports explicit rests).
+To advance time without playing a note use the rest symbol `.`.
 ```
-1 z 5/4 3/2
+1 . 5/4 3/2
 ```
+Rests chain so `..` lasts twice as long as a single rest.
+
+## Pedal
+To extend the duration of the last played note by one use the pedal symbol `!`. You can think of it as a loud rest that doesn't cut of the sound.
+```
+1 ! 6/5 3/2
+```
+Pedals chain so `!!` extends duration by two.
 
 ## Comments
 Anything after a `$` sign is ignored until a newline is reached.
@@ -136,7 +144,7 @@ While the main system is based on relative intervals there is an underlying set 
 ```
 $ A chain of fifths (3/2) around the base note A4
 F2 C3 G3 D4 A4 E5 B5
-z z z
+...
 $ The same spelled using fractions
 @16/81 @8/27 @4/9 @2/3 @1 @3/2 @9/4
 ```
@@ -405,7 +413,7 @@ $ Drums
 N:percussion  $ Use percussion notation and MIDI channel 10
 MP:0          $ Don't reserve pitched channels
 L:1/4         $ Play quarter notes
-k h s k,h | k h s k,o | k,h h s k,h | k,c h s z ||
+k h s k,h | k h s k,o | k,h h s k,h | k,c h s . ||
 ```
 ## Configuration
 Configuration is usually placed near the top of the score and consists of various shorthands in capital letters followed by a colon.
@@ -536,7 +544,7 @@ CRD:6
 ## Dynamics
 To change the velocity of notes played use dynamics `ppp`, `pp`, `p`, `mp`, `mf`, `f`, `ff` or `fff`.
 ## Articulation
-To change the gate length of notes played use articulations `.` (staccato), `;` (normale) or `_` (tenuto).
+To change the gate length of notes played use articulations `'` (staccato), `;` (normale) or `_` (tenuto).
 ## User Messages
 You can add custom messages to the JSON output by using double quotes `"`.
 ```
@@ -559,7 +567,7 @@ Warning: This can cause some surprises when tempering.
 ## Hz Offset
 Beating of similarly tuned notes is a musical phenomenon that is often perceived as a rhythm instead of a pitch difference. Use `Hz` to specify a frequency offset. See also [Phase Offset](#phase).
 ```
-1,1 z 1,1Hz z 1,2Hz
+1,1 . 1,1Hz . 1,2Hz
 ```
 
 ## Transposing
@@ -680,7 +688,7 @@ Because it is only an extension and we're running out of letters, the absolute p
 ```
 $ A chain of smi3rds around the base note J5
 K4 Q4 S4 J5 O5 R5 U5
-z z z
+...
 $ The same spelled using semi-fractions
 @1331/4096/2   @11/16   @11/16/2   @1   @16/11/2   @16/11   @4096/1331/2
 ```

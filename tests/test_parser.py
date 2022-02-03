@@ -593,6 +593,28 @@ def test_ups_and_downs_wendy():
     assert isclose(notes[0].pitch, notes[1].pitch).all()
 
 
+def test_rest():
+    text = "1 1 . 1 .. 1 ... 1"
+    notes = get_notes(text)
+    times = []
+    for note in notes:
+        assert note.duration == 1
+        times.append(note.time)
+    assert times == [0, 1, 3, 6, 10]
+
+
+def test_pedal():
+    text = "1 1 ! 1 !! 1 !!! 1"
+    notes = get_notes(text)
+    durations = []
+    times = []
+    for note in notes:
+        durations.append(note.duration)
+        times.append(note.time)
+    assert durations == [1, 2, 3, 4, 1]
+    assert times == [0, 1, 3, 6, 10]
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -642,3 +664,5 @@ if __name__ == '__main__':
     test_ups_and_downs_tritone()
     test_ups_and_downs_scale()
     test_ups_and_downs_wendy()
+    test_rest()
+    test_pedal()

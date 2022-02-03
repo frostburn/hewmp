@@ -471,7 +471,7 @@ class RepeatExpander:
 
 
 ARTICULATIONS = {
-    ".": Fraction(1, 2),  # Staccato
+    "'": Fraction(1, 2),  # Staccato
     "_": Fraction(1),  # Tenuto
     ";": Fraction(9, 10),  # Normal
 }
@@ -735,10 +735,20 @@ def parse_track(lexer, default_config):
         elif token in DYNAMICS:
             dynamic = Dynamic(DYNAMICS[token], time)
             pattern.append(dynamic)
-        elif token in ("z", "Z"):
-            rest = Rest((token=="Z"), time)
+        elif token[0] == ".":
+            duration = token.count(".")
+            rest = Rest(time, duration)
             pattern.append(rest)
             time += rest.duration
+        elif token[0] == "!":
+            time -= pattern.last.duration
+            extension = token.count("!")
+            if isinstance(pattern.last, Pattern):
+                logical_extension = pattern.last.logical_duration * extension / pattern.last.duration
+                for subpattern in pattern.last:
+                    subpattern.end_time += logical_extension
+            pattern.last.duration += extension
+            time += pattern.last.duration
         elif token == "T":
             timestamp = time
         elif token == "@T":
@@ -967,9 +977,7 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
     if isinstance(pattern, Note):
         return _tokenize_pitch(pattern.pitch) + suffix
     if isinstance(pattern, Rest):
-        if pattern.emit:
-            return "Z{}".format(suffix)
-        return "z{}".format(suffix)
+        return ".{}".format(suffix)
     if isinstance(pattern, Percussion):
         for short, (index, name) in PERCUSSION_SHORTHANDS.items():
             if index == pattern.index:

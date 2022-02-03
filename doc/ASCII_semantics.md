@@ -1,19 +1,19 @@
 | Glyph | Usages |
 |:-----:|:------:|
-| !     | 13 down inflection, (shorthand for [+1])|
+| !     | 13 down inflection, shorthand for [+1]|
 | "     | user message |
 | #     | sharp sign |
 | $     | comment |
 | %     | 17 down inflection |
 | &     | transposition |
-| '     | (unused) [staccato] |
+| '     | staccato |
 | (     | open tuplet |
 | )     | close tuplet |
 | *     | 17 up inflection, interval exponent |
 | +     | 5 up inflection, time accumulation |
 | ,     | simultaneuous notes |
 | -     | 5 down inflection, interval inversion |
-| .     | staccato [rest] |
+| .     | rest |
 | /     | fractions, interval root |
 | 0     | time, duration, interval degree, pitch octave |
 | 1-9   | same as 0 |
@@ -49,7 +49,7 @@
 | W     | 31 down inflection, smitonic wide interval |
 | X     | pattern repeat with expansion |
 | Y     | (unused)
-| Z     | rest [unused] |
+| Z     | (unused) |
 | [     | open time |
 | \     | edo step |
 | ]     | close time |
@@ -81,7 +81,7 @@
 | w     | (unused) |
 | x     | macro repeat count, pattern repeat |
 | y     | Color yo = 5 over |
-| z     | rest [obsolete], Color zo = 7 over |
+| z     | Color zo = 7 over |
 | {     | (open properties) |
 | \|    | barline |
 | }     | (close properties) |

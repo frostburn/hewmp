@@ -261,24 +261,16 @@ class Tempo(Event):
 
 
 class Rest(Event):
-    def __init__(self, emit=False, time=0, duration=1, real_time=None, real_duration=None):
+    def __init__(self, time=0, duration=1, real_time=None, real_duration=None):
         super().__init__(time, duration, real_time, real_duration)
-        self.emit = emit
-
-    def flatten(self):
-        if self.emit:
-            return super().flatten()
-        return []
 
     def to_json(self):
-        if self.emit:
-            result = super().to_json()
-            result["type"] = "rest"
-            return result
-        return None
+        result = super().to_json()
+        result["type"] = "rest"
+        return result
 
     def retime(self, time, duration):
-        return self.__class__(self.emit, time, duration)
+        return self.__class__(time, duration)
 
 
 class Spacer(Event):

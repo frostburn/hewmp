@@ -1,0 +1,36 @@
+$ Minuet
+$ from Notebook for Anna Magdalena
+$ by: Johann Sebastian Bach
+Q:1/4=120  $ Allegretto
+ED:12  $ Twelve-tone equal temperament
+L:1/4
+
+G4[0]  $ G major
+
+|: p
+ T _   P5          (P1 M2) (M3 P4) | ' P5 P1 P1 | _ M6 (P4 P5) (M6 M7) | ' P8 P1 P1 |
+@T _ (`P1,`M3,`P5)  !      `M2     |  `M3 !  !  |  `P4  !       !      |  `M3 !  !  |
+
+ T _  P4 (P5 P4) (M3 M2) |  M3 (P4 M3) (M2 P1) | `M7 (P1 M2) (M3 P1) | (M3 M2 !!!!!!!!!!!!!)[3]|
+@T _ `M2  !       !      | `P1  !       !      | `P5 `M3     `P1     | `P5 (``P5 `P4) (`M3 `M2)|
+
+ T _  P5 (P1 M2) (M3 P4) | ' P5    P1  P1 | _  M6 (P4 P5) (M6 M7) | ' P8   P1        P1      |
+@T _ `M3  !      `M2     |  `P1 ' `M3 `P1 | _ `P4  !       !      |  `M3 (`P4 `M3) (`M2 `P1) |
+
+ T _  P4 (P5 P4) (M3 M2) |  M3 (P4 M3) (M2 P1) |  M2 (M3 M2) (P1 `M7) |  P1 !   !
+@T _ `M2  !     ``M7     | `P1  !      `M3     | `P4 `P5    ``P5      | `P1 ! ``P1
+:|
+
+|:
+ T _ mf cM3 (cP1 cM2) (cM3 cP1) |  cM2 (P5 M6) (M7 P5) |   P8 (M6 M7) (P8 P5) |  a4 (M3 a4) M2 |
+@T _ mf `P1  !         !        | ``M7  !       !      | ``M6 `P1    ``M6     | `M2  !    ``M2 |
+
+ T _ mf (M2 M3) f (a4 P5) f (M6 M7) | '  P8  M7  M6 |  M7 f   M2 mf  a4 | _ mp  P5   !   !  |
+@T _ mf `M2     f  !      f  !      | ' `M3 `P5 `a4 | `P5 f ``M7 mf `M2 | _ mp `P5 ``P5 `P4 |
+
+ T _ p  P5 (P1 `M7) P1          |  M6 (P1 `M7) P1          |  P5  P4  M3 | (M2 P1) (`M7 P1) M2 |
+@T _ p `M3  !      `M3 ,, `P5 ! | `P4  !      `P4 ,, `M6 ! | `M3 `M2 `P1 | `P5       !      .  |
+
+ T _ p (`P5 `M6) mp (`M7 P1) mf  (M2 M3) | '   P4  M3   M2 | _ (M3 P5) ' mp   P1 p  `M7 | _ (P1,`P5,`M3) !    !
+@T _ p ``P5           !! ,.. mf ``M7     | ' ``M6 `P1 ``M7 | _ `P1     ' mp ``M3 p ``P5 |   `P1        ``P5 ``P1
+ :|

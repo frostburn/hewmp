@@ -1,3 +1,4 @@
+from fractions import Fraction
 from numpy import diff
 
 
@@ -81,6 +82,9 @@ def mos_rhythm(num_onsets, generator, period=1):
 
 
 def exponential_rhythm(num_onsets, factor):
+    """
+    Cumulated geometric progression
+    """
     time = 0
     duration = 1
     result = []
@@ -88,6 +92,37 @@ def exponential_rhythm(num_onsets, factor):
         result.append((time, duration))
         time += duration
         duration *= factor
+    return result
+
+
+def quadratic_rhythm(num_onsets, initial, delta):
+    """
+    Cumulated arithmetic progression
+    """
+    time = 0
+    duration = initial
+    result = []
+    for _ in range(num_onsets):
+        result.append((time, duration))
+        time += duration
+        duration += delta
+        if duration < 0:
+            raise ValueError("Negative durations produced with delta = {}".format(delta))
+    return result
+
+
+def logarithmic_rhythm(num_onsets, initial, delta):
+    """
+    Cumulated harmonic progression
+    """
+    time = Fraction(0)
+    result = []
+    for n in range(num_onsets):
+        duration = Fraction(1, initial + n*delta)
+        if duration < 0:
+            raise ValueError("Negative durations produced with delta = {}".format(delta))
+        result.append((time, duration))
+        time += duration
     return result
 
 

@@ -14,7 +14,7 @@ from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch,
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
 from .smitonic import SMITONIC_INTERVAL_QUALITIES, SMITONIC_BASIC_PITCHES, smitonic_parse_arrows, smitonic_parse_pitch, SMITONIC_INFLECTIONS,  SMITONIC_EXTRA_CHORDS
-from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exponential_rhythm, rotate_sequence
+from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exponential_rhythm, rotate_sequence, quadratic_rhythm, logarithmic_rhythm
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
@@ -660,17 +660,6 @@ def parse_track(lexer, default_config):
                 time -= pattern.last.duration
                 pattern.last.repeat(int(token[1:]), affect_duration=(token.startswith("X")))
                 time += pattern.last.duration
-            elif "E" in token:
-                pattern.last = patternify(pattern.last)
-                rotation_token = token[:token.index("E")]
-                num_onsets = len(pattern.last)
-                num_beats = int(token[token.index("E")+1:])
-                rhythm = euclidean_rhythm(num_onsets, num_beats)
-                if rotation_token:
-                    rhythm = rotate_sequence(rhythm, int(rotation_token))
-                times_durations = sequence_to_time_duration(rhythm)
-                for subpattern, td in zip(pattern.last, times_durations):
-                    subpattern.time, subpattern.duration = td
             elif isinstance(pattern.last, Pattern):
                 if token == "R":
                     pattern.last.reverse_time()
@@ -686,26 +675,51 @@ def parse_track(lexer, default_config):
                     pattern.last.rotate_rhythm(-token.count("^"))
                 elif token == "!":
                     pattern.last.stretch_subpatterns()
-                elif "e" in token:
+                elif token == "a" or "e" in token or "q" in token or "l" in token or "E" in token or "MOS" in token:
                     num_onsets = len(pattern.last)
-                    root_token = token[:token.index("e")]
-                    if root_token:
-                        root = Fraction(root_token)
-                    else:
-                        root = Fraction(1)
-                    factor = Fraction(token[token.index("e")+1:]) ** (1 / root)
-                    times_durations = exponential_rhythm(num_onsets, factor)
-                    for subpattern, td in zip(pattern.last, times_durations):
-                        subpattern.time, subpattern.duration = td
-                elif "MOS" in token:
-                    num_onsets = len(pattern.last)
-                    generator = Fraction(token[:token.index("M")])  # TODO: search for a balanced generator if missing
-                    period_token = token[token.index("S")+1:]
-                    if period_token:
-                        period = Fraction(period_token)
-                    else:
-                        period = Fraction(1)
-                    times_durations = mos_rhythm(num_onsets, generator, period)
+
+                    if token == "a":
+                        times_durations = [(i, 1) for i in range(num_onsets)]
+                    elif "e" in token:
+                        root_token = token[:token.index("e")]
+                        if root_token:
+                            root = Fraction(root_token)
+                        else:
+                            root = Fraction(1)
+                        factor = Fraction(token[token.index("e")+1:]) ** (1 / root)
+                        times_durations = exponential_rhythm(num_onsets, factor)
+                    elif "q" in token:
+                        initial_token = token[:token.index("q")]
+                        if initial_token:
+                            initial = Fraction(initial_token)
+                        else:
+                            initial = Fraction(1)
+                        delta = Fraction(token[token.index("q")+1:])
+                        times_durations = quadratic_rhythm(num_onsets, initial, delta)
+                    elif "l" in token:
+                        initial_token = token[:token.index("l")]
+                        if initial_token:
+                            initial = Fraction(initial_token)
+                        else:
+                            initial = Fraction(1)
+                        delta = Fraction(token[token.index("l")+1:])
+                        times_durations = logarithmic_rhythm(num_onsets, initial, delta)
+                    elif "E" in token:
+                        rotation_token = token[:token.index("E")]
+                        num_beats = int(token[token.index("E")+1:])
+                        rhythm = euclidean_rhythm(num_onsets, num_beats)
+                        if rotation_token:
+                            rhythm = rotate_sequence(rhythm, int(rotation_token))
+                        times_durations = sequence_to_time_duration(rhythm)
+                    elif "MOS" in token:
+                        generator = Fraction(token[:token.index("M")])  # TODO: search for a balanced generator if missing
+                        period_token = token[token.index("S")+1:]
+                        if period_token:
+                            period = Fraction(period_token)
+                        else:
+                            period = Fraction(1)
+                        times_durations = mos_rhythm(num_onsets, generator, period)
+
                     for subpattern, td in zip(pattern.last, times_durations):
                         subpattern.time, subpattern.duration = td
                 else:

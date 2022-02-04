@@ -55,7 +55,7 @@
 | ^     | up-and-down arrow, 11 up inflection, 3 up inflection (smitonic), Color exponent, rhythm rotation |
 | _     | tenuto |
 | \`    | interval octaver |
-| a     | augmented interval |
+| a     | augmented interval, arpeggiate chord |
 | b     | flat sign |
 | c     | compound interval |
 | d     | half-flat sign |
@@ -66,12 +66,12 @@
 | i     | 13 up inflection |
 | j     | (unused) |
 | k     | (unused) |
-| l     | (unused) |
+| l     | logarithmic rhythm |
 | m     | minor interval, mezzo forte/piano |
 | n     | 23 down inflection, smitonic narrow interval |
 | o     | Color over |
 | p     | Color po = wa comma up, piano |
-| q     | Color ku = wa comma down |
+| q     | Color ku = wa comma down, quadratic rhythm |
 | r     | Color ru = 7 under |
 | s     | Color small interval, smitonic small interval |
 | t     | half-sharp sign |

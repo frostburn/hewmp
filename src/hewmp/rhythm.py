@@ -26,6 +26,20 @@ def euclidean_rhythm(num_onsets, num_beats):
     return sum(_bjorklund([[b] for b in sequence]), [])
 
 
+def _rotate_sequence(sequence):
+    return sequence[1:] + sequence[:1]
+
+
+def rotate_sequence(sequence, num_iter):
+    if not any(sequence):
+        return sequence
+    for _ in range(num_iter):
+        sequence = _rotate_sequence(sequence)
+        while not sequence[0]:
+            sequence = _rotate_sequence(sequence)
+    return sequence
+
+
 def sequence_to_time_duration(sequence):
     result = []
     time = None
@@ -95,5 +109,12 @@ if __name__ == "__main__":
     print("Euclidean rhythms")
     for i in range(2, 17):
         for j in range(1, i+1):
-            string = sequence_to_string(euclidean_rhythm(j, i))
+            sequence = euclidean_rhythm(j, i)
+            string = sequence_to_string(sequence)
             print("E({:2d},{:2d}) =".format(j, i), string, "! "[string in seen])
+            variations = set([string])
+            for k in range(1, sum(sequence)):
+                variation = sequence_to_string(rotate_sequence(sequence, k))
+                if variation not in variations:
+                    print(" {}: {}".format(k, variation))
+                    variations.add(variation)

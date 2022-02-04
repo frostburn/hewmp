@@ -374,6 +374,16 @@ def test_euclidean_rhythm():
         times_durations.append((notes[i].time, notes[i].duration))
     assert times_durations == [(0, 2), (2, 1), (3, 2), (5, 1)]
 
+    text = "(P1 P8)[E5 ?]"
+    notes = get_notes(text)
+    assert notes[0].time == 0
+    assert notes[1].time == 2
+
+    text = "(P1 P8)[1E5 ?]"
+    notes = get_notes(text)
+    assert notes[0].time == 0
+    assert notes[1].time == 3
+
 
 def test_mos_rhythm():
     text = "(P1 ~P8 ~P8 ~P8)[5MOS7 ?]"

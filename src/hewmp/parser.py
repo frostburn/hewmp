@@ -14,7 +14,7 @@ from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch,
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
 from .smitonic import SMITONIC_INTERVAL_QUALITIES, SMITONIC_BASIC_PITCHES, smitonic_parse_arrows, smitonic_parse_pitch, SMITONIC_INFLECTIONS,  SMITONIC_EXTRA_CHORDS
-from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exponential_rhythm
+from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exponential_rhythm, rotate_sequence
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
@@ -662,12 +662,13 @@ def parse_track(lexer, default_config):
                 time += pattern.last.duration
             elif "E" in token:
                 pattern.last = patternify(pattern.last)
-                onset_token = token[:token.index("E")]
-                if onset_token:
-                    pattern.last.fill(int(onset_token))
+                rotation_token = token[:token.index("E")]
                 num_onsets = len(pattern.last)
                 num_beats = int(token[token.index("E")+1:])
-                times_durations = sequence_to_time_duration(euclidean_rhythm(num_onsets, num_beats))
+                rhythm = euclidean_rhythm(num_onsets, num_beats)
+                if rotation_token:
+                    rhythm = rotate_sequence(rhythm, int(rotation_token))
+                times_durations = sequence_to_time_duration(rhythm)
                 for subpattern, td in zip(pattern.last, times_durations):
                     subpattern.time, subpattern.duration = td
             elif isinstance(pattern.last, Pattern):

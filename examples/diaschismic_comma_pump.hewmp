@@ -1,0 +1,21 @@
+T:diaschismic
+I:String Ensemble 1
+L:1/1
+
+$ Treating diaschismic like a micro-temperament.
+$ Wouldn't shift in pitch even without tempering,
+$ but the voice-leading has micro-wolf intervals.
+|:
+~-P8/2[0]  $ This half-octave isn't pure JI and helps to hide the wolves.
+ yVII=g_5R3 yIII=g     cI=y_35R
+~P8/2[0]   $ Diaschismic a.k.a. srutal has a half-octave period.
+`yVII=g     yIII=g_5R35 I=y_R351
+:|
+
+$ Spelling out the comma pump as a product of simpler rations.
+$ This sounds exactly the same as the lines above in diaschismic,
+$ but shifts in pitch by 2048/2025 on every repeat if left untempered.
+|:
+~4/3=6;8;5 ~2/3=6;5;4   ~8/5=8:6:5
+~2/3=6;5;4 ~4/3=6;8;5;4 ~4/5=4:5:6:8
+:|

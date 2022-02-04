@@ -52,7 +52,7 @@
 | [     | open time |
 | \     | edo step |
 | ]     | close time |
-| ^     | up-and-down arrow, 11 up inflection, 3 up inflection (smitonic), Color exponent |
+| ^     | up-and-down arrow, 11 up inflection, 3 up inflection (smitonic), Color exponent, rhythm rotation |
 | _     | tenuto |
 | \`    | interval octaver |
 | a     | augmented interval |
@@ -76,7 +76,7 @@
 | s     | Color small interval, smitonic small interval |
 | t     | half-sharp sign |
 | u     | Color under, 23 up inflection |
-| v     | up-and-down arrow, 11 down inflection, 3 down inflection (smitonic) |
+| v     | up-and-down arrow, 11 down inflection, 3 down inflection (smitonic), rhythm rotation |
 | w     | Color wa = pythagorean |
 | x     | double sharp sign, section repeat count, pattern repeat without expansion |
 | y     | Color yo = 5 over |

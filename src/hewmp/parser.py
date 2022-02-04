@@ -338,6 +338,7 @@ def parse_chord(token, transposition, interval_parser):
         elif "R" in voicing_token:
             root_index = voicing_token.index("R")
             voicing = defaultdict(list)
+            voicing[1].append(0)
 
             octave = 0
             last = 1

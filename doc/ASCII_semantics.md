@@ -70,8 +70,8 @@
 | m     | minor interval, mezzo forte/piano |
 | n     | 23 down inflection, smitonic narrow interval |
 | o     | Color over |
-| p     | Color po = wa comma up, piano |
-| q     | Color ku = wa comma down, quadratic rhythm |
+| p     | Color po = degree down, piano |
+| q     | Color qu = degree up, quadratic rhythm |
 | r     | Color ru = 7 under |
 | s     | Color small interval, smitonic small interval |
 | t     | half-sharp sign |

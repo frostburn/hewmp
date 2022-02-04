@@ -491,12 +491,22 @@ def test_large_small_color_notation():
 
 
 def test_wa_comma():
-    text = "-ssw2 LLw-2 -wq1 wp1"
+    text = "-ssw2 LLw-2"
     notes = get_notes(text)
     for note in notes:
         assert note.pitch[0] == -19
         assert note.pitch[1] == 12
         assert (note.pitch[2:] == 0).all()
+
+
+def test_po_qu():
+    text = "ry1 ryp2"
+    notes = get_notes(text)
+    assert (notes[0].pitch == notes[1].pitch).all()
+
+    text = "zz2 zzq1"
+    notes = get_notes(text)
+    assert (notes[0].pitch == notes[1].pitch).all()
 
 
 def test_harmonic_chord():
@@ -586,9 +596,25 @@ def test_color_chord():
     pitches = [[0], [-1, 1]]
     expect_pitches(notes, pitches)
 
-    text = "=zg5"
+    text = "=zg5"  # TODO: Document how the logic differs from C(zg5)
     notes = get_notes(text)
     pitches = [[0], [0, 0, -1, 1]]
+    expect_pitches(notes, pitches)
+
+    text = "=zg5+z7"
+    notes = get_notes(text)
+    pitches = [[0], [0, 0, -1, 1], [-2, 0, 0, 1]]
+    expect_pitches(notes, pitches)
+
+
+def test_color_chord_po():
+    text = "=y7+ry8"  # TODO: Document why y7ry8 is not supported
+    notes = get_notes(text)
+    pitches = [[0], [-2, 0, 1], [-1, 1], [-3, 1, 1], [0, 1, 1, -1]]
+    expect_pitches(notes, pitches)
+
+    text = "=y7+ryp9"
+    notes = get_notes(text)
     expect_pitches(notes, pitches)
 
 
@@ -715,9 +741,11 @@ if __name__ == '__main__':
     test_higher_prime_color_repeats()
     test_large_small_color_notation()
     test_wa_comma()
+    test_po_qu()
     test_harmonic_chord()
     test_subharmonic_chord()
     test_color_chord()
+    test_color_chord_po()
     test_color_pitches()
     test_color_roman()
     test_ups_and_downs_tritone()

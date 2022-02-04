@@ -8,7 +8,6 @@ from .monzo import PRIMES, fraction_to_monzo
 
 
 PSEUDO_EDO_MAPPING = (7, 11, 16, 20, 24, 26, 29, 30, 32, 34, 37)
-WA_COMMA = (-19, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 
 LONG_FORMS = {
@@ -216,12 +215,12 @@ def parse_interval(token):
             break
     if token[0] == "w":
         token = token[1:]
-    wa_commas = 0
+    po_qu = 0
     while token[0] == "p":
-        wa_commas += 1
+        po_qu += 1
         token = token[1:]
     while token[0] == "q":
-        wa_commas -= 1
+        po_qu -= 1
         token = token[1:]
 
     if token[0] in BASIC_PITCHES:
@@ -239,7 +238,7 @@ def parse_interval(token):
         except InvalidRomanNumeralError:
             stepspan = int(token)
         stepspan -= sign(stepspan)
-        result = monzo_from_parts(stepspan, magnitude, monzo) + wa_commas * array(WA_COMMA)
+        result = monzo_from_parts(stepspan - po_qu, magnitude, monzo)
         return result, False
 
 

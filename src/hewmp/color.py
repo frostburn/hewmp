@@ -324,24 +324,31 @@ def expand_chord(token):
 
     chord = None
 
-    if token.lstrip("Ls").startswith(CHORD_PREFIXES):
+    if token == "5":
+        chord = ["w1", "w5"]
+
+    elif token.lstrip("Ls").startswith(CHORD_PREFIXES):
         if token[-1].isdigit():
             num = ""
             while token[-1].isdigit():
                 num = token[-1] + num
                 token = token[:-1]
             num = int(num)
+            if num == 5:
+                chord = ["w1", "{}5".format(token)]
+                num = False
         else:
             num = 5
         prefix = token
-        chord = []
-        for i in range(1, num+1, 2):
-            if i % 4 == 1:
-                chord.append("w{}".format(i))
-            else:
-                chord.append("{}{}".format(prefix, i))
-        if num == 6:
-            chord.append("{}6".format(prefix))
+        if num:
+            chord = []
+            for i in range(1, num+1, 2):
+                if i % 4 == 1:
+                    chord.append("w{}".format(i))
+                else:
+                    chord.append("{}{}".format(prefix, i))
+            if num == 6:
+                chord.append("{}6".format(prefix))
 
     elif has_symbol(token, ["h", "ht", "hf", "htf", "hft"]):
         token = token[1:]

@@ -500,7 +500,7 @@ def test_wa_comma():
 
 
 def test_harmonic_chord():
-    text = "=hw31"
+    text = "=ht31"
     notes = get_notes(text)
     odds = [
         [0],
@@ -529,7 +529,7 @@ def test_harmonic_chord():
 
 
 def test_subharmonic_chord():
-    text = "=sw9"
+    text = "=st9"
     notes = get_notes(text)
     pitches = [[0], [0, 2, 0, -1], [0, 2, -1], [0, 1], [0, 2]]
     expect_pitches(notes, pitches)
@@ -544,6 +544,16 @@ def test_color_chord():
     text = "=y"
     notes = get_notes(text)
     pitches = [[0], [-2, 0, 1], [-1, 1]]
+    expect_pitches(notes, pitches)
+
+    text = "=z"
+    notes = get_notes(text)
+    pitches = [[0], [-1, -1, 0, 1], [-1, 1]]
+    expect_pitches(notes, pitches)
+
+    text = "=Lw"
+    notes = get_notes(text)
+    pitches = [[0], [-6, 4], [-1, 1]]
     expect_pitches(notes, pitches)
 
     text = "=L3oo1u11+w4\\g5no7"

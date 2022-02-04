@@ -304,6 +304,9 @@ def degree_key(token):
     return int(degree_token)
 
 
+CHORD_PREFIXES = COLOR_PREFIXES + ('w',)
+
+
 def expand_chord(token):
     token, tones = TONE_SPLITTER(token)
     added_tones = tones["+"]
@@ -321,7 +324,7 @@ def expand_chord(token):
 
     chord = None
 
-    if token.lstrip("Ls").startswith(COLOR_PREFIXES):
+    if token.lstrip("Ls").startswith(CHORD_PREFIXES):
         if token[-1].isdigit():
             num = ""
             while token[-1].isdigit():
@@ -340,14 +343,14 @@ def expand_chord(token):
         if num == 6:
             chord.append("{}6".format(prefix))
 
-    elif has_symbol(token, ["h", "hw", "hf", "hwf", "hfw"]):
+    elif has_symbol(token, ["h", "ht", "hf", "htf", "hft"]):
         token = token[1:]
         full = False
         close_voicing = True
         if token[0] == "f":
             full = True
             token = token[1:]
-        if token[0] == "w":
+        if token[0] == "t":
             close_voicing = False
             token = token[1:]
         if token[0] == "f":
@@ -373,14 +376,14 @@ def expand_chord(token):
 
         chord = [fraction_to_color(tone) for tone in chord]
 
-    elif has_symbol(token, ["s", "sw", "sf", "swf", "sfw"]):
+    elif has_symbol(token, ["s", "st", "sf", "stf", "sft"]):
         token = token[1:]
         full = False
         close_voicing = True
         if token[0] == "f":
             full = True
             token = token[1:]
-        if token[0] == "w":
+        if token[0] == "t":
             close_voicing = False
             token = token[1:]
         if token[0] == "f":

@@ -68,19 +68,26 @@ FLAVOR_CHORDS = {
 }
 
 
-def make_flavor_chord(base, arrow_tokens):
+def make_flavor_chord(base, arrow_tokens, ups_and_downs):
     positive_inflection = "".join(arrow_tokens)
     negative_inflection = ""
 
     for arrow_token in arrow_tokens:
         negative_inflection += OPPOSITE[arrow_token[0]] + arrow_token[1:]
 
+    downs_and_ups = ""
+    for arrow in ups_and_downs:
+        if arrow == "^":
+            downs_and_ups += "v"
+        else:
+            downs_and_ups += "^"
+
     chord = []
     for interval, flavor in FLAVOR_CHORDS[base]:
         if flavor > 0:
-            interval += positive_inflection
+            interval = ups_and_downs + interval + positive_inflection
         if flavor < 0:
-            interval += negative_inflection
+            interval = downs_and_ups + interval + negative_inflection
         chord.append(interval)
 
     return chord

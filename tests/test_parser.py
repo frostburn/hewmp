@@ -724,6 +724,13 @@ def test_complex_voicing():
     expect_pitches(notes, pitches)
 
 
+def test_flavor_chord_ups_and_downs():
+    text = "ED:12\n=^7-"
+    notes = get_notes(text)
+    pitches = [[0], [6, -5, 1], [-1, 1], [-8, 7, -1]]
+    expect_pitches(notes, pitches)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -780,3 +787,4 @@ if __name__ == '__main__':
     test_repeat()
     test_up_down_chords()
     test_complex_voicing()
+    test_flavor_chord_ups_and_downs()

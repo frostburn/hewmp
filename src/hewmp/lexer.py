@@ -16,6 +16,7 @@ CONFIGS = [
     "BF:",  # Frequency of base note and @P1
     "BN:",  # Base note, default a4 and J4
     "T:",  # Temperament
+    "ET:",  # Equal temperament
     "CL:",  # Comma-list
     "SG:",  # Subgroup
     "C:",  # Constraints
@@ -24,8 +25,6 @@ CONFIGS = [
     "Q:",  # Tempo
     "G:",  # Groove
     "V:",  # Volume
-    "ED:",  # Equal divisions of a harmonic
-    "EDN:",  # Harmonic to divide
     "N:",  # Notation
     "I:",  # Instrument (Program Change)
     "MP:",  # Max polyphony

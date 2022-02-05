@@ -660,7 +660,7 @@ def test_ups_and_downs_tritone():
 
 
 def test_ups_and_downs_scale():
-    text = "ED:18b\nA4 ^A4 B4 ^B4 Bb4 vC5 C5 ^C5 @P4 @^P4 @P5 @^5 @M6 @N6 @m6 @hd6 ^1 M2"
+    text = "ET:18b\nA4 ^A4 B4 ^B4 Bb4 vC5 C5 ^C5 @P4 @^P4 @P5 @^5 @M6 @N6 @m6 @hd6 ^1 M2"
     notes = get_notes(text)
     assert (notes[1].pitch[:2] == [-1.5, 1]).all()
     assert len(notes) == 18
@@ -670,7 +670,7 @@ def test_ups_and_downs_scale():
 
 
 def test_ups_and_downs_wendy():
-    text = "T:alpha\n1\\ ^A4"
+    text = "ET:alpha\n1\\ ^A4"
     notes = get_notes(text)
     assert isclose(notes[0].pitch, notes[1].pitch).all()
 
@@ -710,12 +710,12 @@ def test_repeat():
 
 
 def test_up_down_chords():
-    text = "ED:19\n=vM"
+    text = "ET:19\n=vM"
     notes = get_notes(text)
     pitches = [[0], [5, -3], [-1, 1]]
     expect_pitches(notes, pitches)
 
-    text = "ED:19\n=^m7"
+    text = "ET:19\n=^m7"
     notes = get_notes(text)
     pitches = [[0], [-6, 4], [-1, 1], [-7, 5]]
     expect_pitches(notes, pitches)
@@ -734,7 +734,7 @@ def test_complex_voicing():
 
 
 def test_flavor_chord_ups_and_downs():
-    text = "ED:12\n=^7-"
+    text = "ET:12\n=^7-"
     notes = get_notes(text)
     pitches = [[0], [6, -5, 1], [-1, 1], [-8, 7, -1]]
     expect_pitches(notes, pitches)

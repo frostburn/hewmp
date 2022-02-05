@@ -52,6 +52,35 @@ for key, value in list(DEFAULT_INFLECTIONS.items()):
     DEFAULT_INFLECTIONS[key] = array(value + [0] * (PITCH_LENGTH - len(value)))
 
 
+def parse_warts(token, index=0):
+    token = token.lower()
+    if "d" in token:
+        token, divided_token = token.rsplit("d", 1)
+        if divided_token == "o":
+            edn_divided = 2
+        elif divided_token == "t":
+            edn_divided = 3
+        elif divided_token == "p":
+            edn_divided = 5
+        elif not divided_token:
+            edn_divided = 2
+            token = "de"
+        else:
+            edn_divided = int(divided_token)
+        token = token[:-1]
+    else:
+        edn_divided = 2
+    warts = Counter()
+    wart_str = ""
+    while token[-1].isalpha():
+        wart = token[-1].lower()
+        wart_str += wart
+        warts[ord(wart) - ord("a")] += 1
+        token = token[:-1]
+    edn_divisions = int(token)
+    return edn_divisions, edn_divided, warts, wart_str
+
+
 def sync_playheads(patterns):
     start_universal_time = None
     end_universal_time = None
@@ -549,17 +578,6 @@ def parse_track(lexer, default_config):
                     subgroup = subgroup.split(".")
                     config["tuning"].subgroup = [interval_parser.parse(basis_vector)[0] for basis_vector in subgroup]
                     config["tuning"].comma_list = [interval_parser.parse(comma)[0] for comma in comma_list]
-                elif tuning_name in EQUAL_TEMPERAMENTS:
-                    edn_divisions, edn_divided = EQUAL_TEMPERAMENTS[tuning_name]
-                    config["tuning"].edn_divisions = edn_divisions
-                    interval_parser.edn_divisions = edn_divisions
-                    config["tuning"].edn_divided = edn_divided
-                    interval_parser.edn_divided = edn_divided
-                    config["tuning"].warts = [0]*len(PRIMES)
-                    interval_parser.warts = ""
-                    interval_parser.calculate_up_down()
-                    if "unmapEDN" in config["flags"]:
-                        config["flags"].remove("unmapEDN")
                 else:
                     raise ParsingError("Unrecognized tuning '{}'".format(tuning_name))
             if config_key == "CL":
@@ -588,28 +606,22 @@ def parse_track(lexer, default_config):
                 track_volume = TrackVolume(Fraction(token), time)
                 pattern.append(track_volume)
                 config[config_key] = track_volume.volume
-            if config_key in ("ED", "EDN"):
+            if config_key == "ET":
                 if "unmapEDN" in config["flags"]:
                     config["flags"].remove("unmapEDN")
-            if config_key == "ED":
                 token = token.strip()
-                warts = Counter()
-                wart_str = ""
-                while token[-1].isalpha():
-                    wart = token[-1].lower()
-                    wart_str += wart
-                    warts[ord(wart) - ord("a")] += 1
-                    token = token[:-1]
+                if token in EQUAL_TEMPERAMENTS:
+                    edn_divisions, edn_divided = EQUAL_TEMPERAMENTS[token]
+                    warts = Counter()
+                    wart_str = ""
+                else:
+                    edn_divisions, edn_divided, warts, wart_str = parse_warts(token)
                 config["tuning"].warts = [warts[i] for i in range(len(PRIMES))]
-                edn_divisions = Fraction(token)
                 config["tuning"].edn_divisions = edn_divisions
-                interval_parser.edn_divisions = edn_divisions
-                interval_parser.warts = wart_str
-                interval_parser.calculate_up_down()
-            if config_key == "EDN":
-                edn_divided = Fraction(token)
                 config["tuning"].edn_divided = edn_divided
+                interval_parser.edn_divisions = edn_divisions
                 interval_parser.edn_divided = edn_divided
+                interval_parser.warts = wart_str
                 interval_parser.calculate_up_down()
             if config_key == "N":
                 current_notation = token.strip()

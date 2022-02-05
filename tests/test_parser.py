@@ -712,6 +712,18 @@ def test_up_down_chords():
     expect_pitches(notes, pitches)
 
 
+def test_complex_voicing():
+    text = "=y7_5R7351"
+    notes = get_notes(text)
+    pitches = [[0], [-1, 0, 1], [0, 1], [-3, 1, 1], [2], [-2, 1]]
+    expect_pitches(notes, pitches)
+
+    text = "=m+_315R5"
+    notes = get_notes(text)
+    pitches = [[0], [-1, 1, -1], [-1, 1], [-1], [-2, 1]]
+    expect_pitches(notes, pitches)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -767,3 +779,4 @@ if __name__ == '__main__':
     test_pedal()
     test_repeat()
     test_up_down_chords()
+    test_complex_voicing()

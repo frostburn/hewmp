@@ -231,15 +231,16 @@ def parse_interval(token):
         result[:2] = base
         for piece in decompose(monzo):
             result += monzo_from_parts(0, 0, piece)
-        return result, True
+        return result, True, None
     else:
         try:
             stepspan = fromRoman(token)
         except InvalidRomanNumeralError:
             stepspan = int(token)
+        interval_class = stepspan
         stepspan -= sign(stepspan)
         result = monzo_from_parts(stepspan - po_qu, magnitude, monzo)
-        return result, False
+        return result, False, interval_class
 
 
 def has_symbol(token, symbols):

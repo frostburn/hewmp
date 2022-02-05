@@ -97,7 +97,7 @@ def parse_interval(token):
     result[0] += octave + basic_interval[0]
     result[1] += basic_interval[1]
 
-    return token, result
+    return token, result, interval_class
 
 
 BASIC_PITCHES = {

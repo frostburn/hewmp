@@ -118,7 +118,7 @@ def parse_fraction(token):
 
 
 def parse_arrows(token, inflections):
-    token, base = parse_pythagorean_interval(token)
+    token, base, interval_class = parse_pythagorean_interval(token)
     result = zero_pitch()
     result[:2] = base
 
@@ -130,7 +130,7 @@ def parse_arrows(token, inflections):
             arrows = int(arrow_token[1:])
         result += inflections[arrow_token[0]]*arrows
 
-    return result
+    return result, interval_class
 
 
 def parse_pitch(token, inflections):
@@ -187,7 +187,7 @@ class IntervalParser:
             else:
                 raise ParsingError("Unrecognized absolute pitch {}".format(token))
 
-    def parse(self, token, return_root_degree=False):
+    def parse(self, token, return_root_degree=False, return_interval_class=False):
         absolute = False
         if token.startswith("@"):
             absolute = True
@@ -241,6 +241,8 @@ class IntervalParser:
             )
         )
 
+        interval_class = None
+
         if token[0].isdigit() and not is_colored:
             if token.endswith("c"):
                 cents_in_nats = float(token[:-1])/1200*log(2)
@@ -264,7 +266,8 @@ class IntervalParser:
             else:
                 pitch += parse_fraction(token)
         elif token[0] in INTERVAL_QUALITIES:
-            pitch += parse_arrows(token, self.inflections)
+            interval, interval_class = parse_arrows(token, self.inflections)
+            pitch += interval
         elif token[0] in BASIC_PITCHES:
             if direction is not None:
                 raise ParsingError("Signed absolute pitch")
@@ -278,7 +281,7 @@ class IntervalParser:
             pitch += smitonic_parse_pitch(token, self.smitonic_inflections) - self.smitonic_base_pitch
             absolute = True
         else:
-            color_monzo, color_absolute = parse_color_interval(token)
+            color_monzo, color_absolute, interval_class = parse_color_interval(token)
             color_offset = zero_pitch()
             color_offset[:len(color_monzo)] = color_monzo
             pitch += color_offset
@@ -297,6 +300,8 @@ class IntervalParser:
                 return maybe_pitch, absolute
         if return_root_degree:
             return pitch, absolute, exponent_degree, root_degree
+        if return_interval_class:
+            return pitch / root_degree * exponent_degree, absolute, interval_class
         return pitch / root_degree * exponent_degree, absolute
 
 
@@ -331,9 +336,10 @@ def parse_utonal(token, interval_parser):
 def parse_chord(token, transposition, interval_parser):
     inversion = 0
     voicing = None
+    interval_classes = []
     if "_" in token:
         token, voicing_token = token.split("_")
-        if len(voicing_token) == 1:
+        if voicing_token.isdigit():
             inversion = int(voicing_token)
         elif "R" in voicing_token:
             root_index = voicing_token.index("R")
@@ -375,15 +381,14 @@ def parse_chord(token, transposition, interval_parser):
             subtokens = expand_color_chord(token)
             if subtokens is None:
                 subtokens = expand_chord(token)
-            else:
-                degrees = [int(subtoken[-1]) for subtoken in subtokens]
         result = Pattern()
         for subtoken in subtokens:
-            pitch, absolute = interval_parser.parse(subtoken)
+            pitch, absolute, interval_class = interval_parser.parse(subtoken, return_interval_class=True)
             if absolute:
                 result.append(Note(pitch))
             else:
                 result.append(Note(pitch + transposition))
+            interval_classes.append(interval_class)
     for i in range(inversion):
         result[i].pitch[0] += 1
     if inversion:
@@ -391,10 +396,10 @@ def parse_chord(token, transposition, interval_parser):
             result[i].pitch[0] -= 1
     if voicing is not None:
         for tone, octaves in voicing.items():
-            pitch = result[degrees.index(tone)].pitch + 0
+            pitch = result[interval_classes.index(tone)].pitch + 0
             for i, octave in enumerate(octaves):
                 if i == 0:
-                    result[degrees.index(tone)].pitch[0] += octave
+                    result[interval_classes.index(tone)].pitch[0] += octave
                 else:
                     result.append(Note(pitch))
                     result[-1].pitch[0] += octave

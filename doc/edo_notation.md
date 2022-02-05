@@ -1,5 +1,6 @@
 # HEWMP Notation for EDOs
-Bellow are listed slightly opinionated tables for the simplest ways to notate each equal division of the octave up to 26ed2.
+Bellow are listed highly opinionated tables for the simplest ways to notate each equal division of the octave up to 26ed2 plus 31ed2.
+Note: Now that Ups and Downs notation is implemented, these tables will eventually be replaced with something more standard.
 
 ## 3ed2
 Note: It's better to use a subset of 12ed2

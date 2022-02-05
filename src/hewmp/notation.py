@@ -4,6 +4,8 @@ In other words in combination with parsing translate relative intervals like M3-
 """
 from collections import Counter
 from numpy import array, log, pi, maximum, isclose, around
+from .color import monzo_to_color
+from .monzo import PRIMES
 
 
 # TODO: Notate neutral intervals
@@ -196,6 +198,11 @@ def tokenize_interval(pitch, inflections, *extra_indices):
     return "{}{}{}{}{}{}".format(sign, quality, value, arrow_str, root_str, tokenize_extras(pitch, *extra_indices))
 
 
+def tokenize_color_interval(pitch, *extra_indices):
+    token = monzo_to_color(pitch[:len(PRIMES)])
+    return "{}{}".format(token, tokenize_extras(pitch, *extra_indices))
+
+
 LYDIAN = ("F", "C", "G", "D", "A", "E", "B")
 LYDIAN_INDEX_A = 4
 REFERENCE_OCTAVE = 4
@@ -275,6 +282,7 @@ if __name__ == "__main__":
     parser.add_argument('input', type=str)
     parser.add_argument('--absolute', action="store_true")
     parser.add_argument('--smitonic', action="store_true")
+    parser.add_argument('--color', action="store_true")
     args = parser.parse_args()
 
     inflections = get_inflections()
@@ -283,10 +291,14 @@ if __name__ == "__main__":
     if args.absolute:
         if args.smitonic:
             print(smitonic_tokenize_pitch(pitch, smitonic_inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+        elif args.color:
+            raise NotImplementedError("Absolute color notation not implemented yet")
         else:
             print(tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
     else:
         if args.smitonic:
             print(smitonic_tokenize_interval(pitch, smitonic_inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+        elif args.color:
+            print(tokenize_color_interval(pitch, E_INDEX, HZ_INDEX, RAD_INDEX))
         else:
             print(tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))

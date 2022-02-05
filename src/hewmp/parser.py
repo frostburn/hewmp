@@ -670,6 +670,7 @@ def parse_track(lexer, default_config):
                 pattern.last.extend_duration(extension)
             elif token.startswith("@"):
                 pattern.last.time = parse_time(token[1:])
+                time = pattern.last.time
                 time += pattern.last.duration
             elif token.lower().startswith("x"):
                 pattern.last = patternify(pattern.last)

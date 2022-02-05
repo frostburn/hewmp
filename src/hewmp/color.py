@@ -108,10 +108,7 @@ def int_to_unicode_exponent(n):
     return result
 
 
-def fraction_to_color(token):
-    monzo, unrepresentable = fraction_to_monzo(token)
-    if unrepresentable != 1:
-        raise ColorParsingError("Too high primes for color conversion")
+def monzo_to_color(monzo):
     result = ""
     for index in range(2, len(PRIMES)):
         value = monzo[index]
@@ -142,7 +139,14 @@ def fraction_to_color(token):
         prefix = "L"
     if abs(magnitude) > 1:
         prefix += int_to_unicode_exponent(abs(magnitude))
-    return prefix + result + str(degree)
+    return prefix + result + str(int(degree))
+
+
+def fraction_to_color(token):
+    monzo, unrepresentable = fraction_to_monzo(token)
+    if unrepresentable != 1:
+        raise ColorParsingError("Too high primes for color conversion")
+    return monzo_to_color(monzo)
 
 
 def parse_exponent(token):

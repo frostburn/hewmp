@@ -1,11 +1,12 @@
-# HEWMP
-HEWMP is a machine-readable notation system for writing music in (tempered) just intonation.
+# Text2Music
+Text2Music is a machine-readable notation system for writing music in (tempered) just intonation.
 
-The acronym stands for Helmholtz / Ellis / Wolf / Monzo / Pakkanen notation.
+It supports bare ratios, edo steps, Color Notation, Ups-and-Downs Notation and HEWMP.
+(The last acronym stands for Helmholtz / Ellis / Wolf / Monzo / Pakkanen notation).
 
 ## Writing Music Using Ratios
 
-You can use HEWMP with minimal knowledge of music theory by writing melodies using fractional numbers
+You can use Text2Music with minimal knowledge of music theory by writing melodies using fractional numbers.
 ```
 1/1 5/4 3/2 2/1
 ```
@@ -18,20 +19,23 @@ Or as *moving* ratios that multiply together as we go along.
 ```
 ~1/1 ~5/4 ~6/5 ~4/3
 ```
-Plain ratios use the last moved ratio as the base so use *absolute* ratios if you want to use the initial base frequency (denominators of one can be dropped).
+Plain ratios use the last moved ratio as the base so use *absolute* ratios if you want to use the initial base frequency. (Denominators of one can be dropped `2` simply means `2/1`).
 ```
 @1 @5/4 @3/2 @2
 ```
 
 ## Installation
-The project is still in alpha so you will have to clone this repository and install manually. The dependencies are not tracked yet, but it's basically just `scipy` and `mido`.
-
+The project is still in beta so you will have to clone this repository and install manually.
+I recommend setting up a virtualenv and installing the package as editable.
+```
+pip install -e .
+```
 ## MIDI Output
 ```
 python -m hewmp.parser examples/giant_steps.hewmp /tmp/giant_steps.mid
 ```
 ## Translation for Inspection
-The example is mostly written in relative intervals. If you wish to read it in absolute pitches use the `--absolute` command line argument.
+The Giant Steps example is mostly written in relative intervals. If you wish to read it in absolute pitches use the `--absolute` command line argument.
 ```
 python -m hewmp.parser examples/giant_steps.hewmp --absolute
 ```
@@ -43,11 +47,11 @@ python -m hewmp.parser examples/giant_steps.hewmp --fractional
 By default the HEWMP parser outputs JSON to the standard output. The format is still under development for easy integration with custom software synths.
 
 ## Descending Intervals
-To cause the pitch to fall use fractions smaller than one
+To cause the pitch to fall use fractions smaller than one.
 ```
 1 ~3/4 ~4/5 ~5/6
 ```
-or place a minus sign before the interval (this makes more sense if you think in terms of cents)
+or place a minus sign before the interval (this makes more sense if you think in terms of cents).
 ```
 1 ~-4/3 ~-5/4 ~-6/5
 ```
@@ -58,6 +62,13 @@ Note duration is specified using square brackets `[`, `]` after a note. The defa
 1/1[2] 6/5 3/2 9/5 2/1[2]
 ```
 
+## Comments
+Anything after a `$` sign is ignored until a newline is reached.
+```
+$ This is a comment
+1 3/2 $ This another comment after two notes that play
+```
+
 ## Rests
 To advance time without playing a note use the rest symbol `.`.
 ```
@@ -66,13 +77,14 @@ To advance time without playing a note use the rest symbol `.`.
 Rests chain so `..` lasts twice as long as a single rest.
 
 ## Pedal
-To extend the duration of the last played note by one use the pedal symbol `!`. You can think of it as a loud rest that doesn't cut of the sound.
+To extend the duration of the last played note by one use the pedal symbol `!`. You can think of it as a loud rest that doesn't cut off the sound.
 ```
-1 ! 6/5 3/2
+1 !   6/5 3/2  $ The root note lasts twice as long as the other two
+1[+1] 6/5 3/2  $ The same
 ```
 Pedals chain so `!!` extends duration by two.
 
-## Soft-pedal
+## Soft pedal
 To only extend the playing duration of the last played note use the soft pedal symbol `-`. The corresponding symbol within square brackets is `~`.
 ```
 1 --  5/4 3/2  $ The root note rings throughout the whole arpeggio
@@ -86,13 +98,6 @@ $ Repeats are not literal so these are the same note
 ~3/2[2] R
 ```
 Repeats chain with `!` so `R!` is the last pattern but of duration 2.
-
-## Comments
-Anything after a `$` sign is ignored until a newline is reached.
-```
-$ This is a comment
-1 3/2 $ This another comment after two notes that play
-```
 
 ## Barlines
 Barlines `|` can be used to visually organize your music. They have no effect on the sound.
@@ -111,11 +116,11 @@ $ Section repeats are literal so the following is an ascending sequence of seven
 You can place a playhead symbol `|>` to skip all music written before it. Use a playstop symbol `>|` to ignore everything after it.
 ```
 $ This is skipped but the effect of going up an octave is preserved
-1 2
+1 ~2
 $ This section is played
 |> 2/3 3/4 >|
 $ This section is ignored
-2 1
+~2 1
 ```
 
 ### Ties
@@ -158,8 +163,8 @@ You can subtract an octave from an interval by prefixing it with `` ` ``.
 ```
 
 ## Pythagorean basis
-The base notation system of HEWMP is Pythagorean i.e. 3-limit just intonation i.e. fractions built from powers of 2 and 3.
-While the main system is based on relative intervals there is an underlying set of absolute pitches forming a chain of fifths.
+The base notation system of HEWMP and Ups-and-Downs is Pythagorean i.e. 3-limit just intonation i.e. fractions built from powers of 2 and 3.
+The absolute pitches form a chain of fifths.
 ```
 $ A chain of fifths (3/2) around the base note A4
 F2 C3 G3 D4 A4 E5 B5
@@ -222,17 +227,17 @@ B3 d5
 Remember that in just intonation the augmented fourth `729/512` is different from the diminished fifth `1024/729`.
 
 ## Sharps and Flats
-An absolute pitch can be raised by a fraction of `2187/2048` (approximately `113.685c`) by appending a sharp sign `#` to it (spelled as a hash to remain within ASCII). Unicode `♯` is also supported.
+An absolute pitch can be raised by a fraction of `2187/2048` (approximately `113.685c`) by appending a sharp sign `#` to either side of the octave (spelled as a hash to remain within ASCII). Unicode `♯` is also supported.
 ```
-A4 A4#
+A4 A4# A♯4
 ```
 To raise the pitch by double the amount use a double sharp sign `x` (spelled as a lowercase 'ex' to remain within ASCII). Unicode `𝄪` is also supported.
 ```
-A4 A4x
+A4 A4x A𝄪4
 ```
-To lower the pitch by `2187/2048` append a flat sign `b` (spelled as a lowercase 'bee'). Unicode `♭` and `𝄫` also supported.
+To lower the pitch by `2187/2048` append a flat sign `b` (spelled as a lowercase 'bee'). Unicode `♭` is also supported. The double-flat `𝄫` works too.
 ```
-A4 A4b
+A4 A4b A♭4 A𝄫4
 ```
 You can stack any number of `#`, `x` or `b` (in that order) to modify the pitch further.
 ```
@@ -261,7 +266,7 @@ N2 N3 N6 N7
 Warning: Not all edos support dividing the fifth in half and this can result in half-edosteps.
 
 ## Half-diminished and Half-augmented Intervals
-The perfect intervals have quarter-tone diminished and augmented versions.
+Stacking neutral intervals eventually produces half-diminished and half-augmented intervals.
 ```
 ha1 hd4 ha4 hd5 ha5 hd8
 ```
@@ -272,8 +277,17 @@ The accidentals `t` and `d` act as quarter-tone sharp and flat respectively.
 C4 E4d G4 B4d  $ Neutral 7th arpeggio
 ```
 
+## Ups and Downs
+Equal temperament mode is activated by specifying the number of divisions of the octave with `ET:`. Using the arrows `^` and `v` before intervals or absolute pitches raises or lowers the pitch by one edo step.
+```
+ET:31
+D4 vF4 G4 B4
+C4 M3 P5 ^m7 P8
+```
+See [equal temperaments](#equaltemperaments) for more information.
+
 ## Half-octave (Tritone)
-When not in edo mode the ups-and-downs arrows shift by half of an octave (&radic;2).
+When not in equal temperament mode the ups-and-downs arrows shift by half of an octave (&radic;2).
 ```
 ^1 vP8  $ Two spellings for the half octave
 vhd5  $ Alternative meaning for "quartertone" as the half-diminished fifth reduced by a tritone
@@ -298,11 +312,15 @@ Currently these inflections are fixed but an option to configure them will be ad
 
 The vectors associated with the primes 5, 7 and 11 follow Joe Monzo's original proposition.
 The monzo for `i` and `!` was particularly chosen so that the barbados third `13/10` is spelled `M3i+`. This in turn makes it possible to write the barbados terrad `10:13:15` as `=Mi+` using the chord system (pronounced "major island" see [Pronunciation](#pronunciation) for details).
-The inflections are supposed to resemble arrows pointing in opposite directions while the u and d pairs bring to mind the words *up* and *down*.
+The inflections are supposed to resemble arrows pointing in opposite directions while the U and D pair bring to mind the words *up* and *down*.
 
 ## Color Notation
-Color intervals such as `y3` for `5/4` are supported.
-
+Color intervals such as `y3` for `5/4` are supported. Absolute intervals are made using color commas.
+```
+A4 ryC5  $ Jump from wa A4 to ruyo C5
+A4 C5&r1&y1  $ The same, but with explicit commas using transpositions.
+```
+For more details see [Color Notation](https://en.xen.wiki/w/Color_notation) in the Xenharmonic Wiki.
 ## Figuring Out Spellings
 If you want to see how a certain fraction is spelled use the notation module.
 ```
@@ -310,12 +328,14 @@ $ python -m hewmp.notation 5/3
 M6-
 $ python -m hewmp.notation 5/3 --absolute
 F5#-
+$ python -m hewmp.notation 5/3 --color
+y6
 $ python -m hewmp.notation 11/7 --smitonic
 L5>
 ```
 For more details on the last command see the [Smitonic Extension](#smitonic).
 ## Chords
-HEWMP has multiple ways of specifying groups of notes that sound together.
+Text2Music has multiple ways of specifying groups of notes that sound together.
 ### Otonal Chords
 Use `:` to spell out chords as extended ratios. The first number is always at the current pitch.
 ```
@@ -333,7 +353,7 @@ $ The same but using fractions and otonal syntax
 1/6:1/5:1/4
 ```
 ### Chord Symbols
-HEWMP comes with a chord system that applies inflections to chord tones
+HEWMP comes with a chord system that applies inflections and ups-and-downs to chord tones
 ```
 $ Major seventh chord with syntonic inflections on the major third and the major seventh
 =M7-
@@ -369,6 +389,13 @@ D4=m7+     $ ii
 G4=7-_2    $ V7 in second inversion
 C4=M-add8  $ I with an octave on top
 ```
+### Complex Voicings
+More complex voicings are created by specifying the order of the chord tones `1` through `7` come in relation to the root `R`.
+```
+D4=m7+_5R573  $ ii with a fifth bellow the root, another fifth above the root, a seventh above that and a third on the next octave.
+G4=dom-_57R3  $ V7 with a pythagorean m7 in second inversion
+C4=M-_R351    $ I with an octave on top
+```
 ### Chord duration
 Duration can be attached to otonal, utonal and symbolic chords. Comma-separated pitches need to be wrapped in parenthesis.
 ```
@@ -387,34 +414,35 @@ To rewind time to a specific beat use the `@` symbol followed by a number inside
 Parenthesis `(`, `)` are actually used to define tuplets. Anything placed inside parenthesis will have total duration of one.
 ```
 $ Steady pedal tone
-1        1    1  1     |  1  1      1 1 ||
+1         1    1  1    |  1  1      1 1 ||
 $ Funky second voice
-~3/2[@0] (z 1) 1 (z 1) | (1 1 1)[2] 1 1 ||
+~3/2[@0] (. 1) 1 (. 1) | (1 1 1)[2] 1 1 ||
 ```
 ## Timestamp
-To specify a timestamp use `T`. To jump to the timestamp use `@T` inside square brackets. TODO: Check if this still works
+To specify a timestamp use `T`. To jump to the timestamp use `@T`.
 ```
-$ First section alto voice
-C4         D4 E4     E4 |
 $ First section soprano voice
-(z C5)[@0] B4 (z A4) G4 |
+(. C5) B4 (. A4) G4 |
+$ First section alto voice
+C4[@0] D4  E4    E4 |
 
-T  $ Mark the begining of second section
-$$$$ Second section alto voice
-F4         C4     A4[2]     |
+T  $ Mark the beginning of the second section
 $$$$ Second section soprano voice
-(z E5)[@T] (z C5) (z F4) C5 |
+(. E5) (. C5) (. F4) C5 |
+@T $ Jump to the beginning of the second section
+$$$$ Second section alto voice
+F4      C4     A4    !  |
 
-$ Final section alto
-T E4[2]           C4[2] ||
 $ Final section soprano
-(z G4)[@T] (z B4) C5[2] ||
+ T (. G4) (. B4) C5 ! ||
+$ Final section alto
+@T  E4     !     C4 ! ||
 ```
 ## Tracks
 You can have multiple tracks in your HEWMP score by separating them with `---` (three dashes). The first track is used to define the global config and it should be left without any music when using multiple tracks.
 ```
 $ Global config
-ED:19         $ Use 19ed2 as the global tuning
+ET:19         $ Use 19ed2 as the global tuning
 Q:1/4=200     $ Use 200bpm as the global tempo
 ---
 $ Chords
@@ -799,3 +827,6 @@ While not the most accurate edo for the Orgone temperament, 18ed2 does greatly b
 | 18     | P8                   | p8                |
 
 See more [edo notation](doc/edo_notation.md) in the docs.
+
+## Table of ASCII glyphs
+See [ASCII semantics](doc/ASCII_semantics.md) in the docs.

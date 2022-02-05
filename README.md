@@ -72,6 +72,13 @@ To extend the duration of the last played note by one use the pedal symbol `!`. 
 ```
 Pedals chain so `!!` extends duration by two.
 
+## Soft-pedal
+To only extend the playing duration of the last played note use the soft pedal symbol `-`. The corresponding symbol within square brackets is `~`.
+```
+1 --  5/4 3/2  $ The root note rings throughout the whole arpeggio
+1[~2] 5/4 3/2  $ The same
+```
+
 ## Repeats
 To repeat the last note or pattern (useful with chords) use `R`. The pitch(es) will be the same but duration is reset to one.
 ```

@@ -290,6 +290,15 @@ def test_extended_duration():
         assert notes[i].time == 2
 
 
+def test_extend_duration_without_advancing_time():
+    text = "P1[~1] P8"
+    notes = get_notes(text)
+    assert notes[0].duration == 2
+    assert notes[0].time == 0
+    assert notes[1].duration == 1
+    assert notes[1].time == 1
+
+
 def test_stretch_to_logical_duration():
     text = "(P1 M2 M2)[?] P1"
     notes = get_notes(text)
@@ -755,6 +764,7 @@ if __name__ == '__main__':
     test_added_tone_inversion()
     test_removed_tone()
     test_extended_duration()
+    test_extend_duration_without_advancing_time()
     test_stretch_to_logical_duration()
     test_tuplet_hold()
     test_reverse_time()

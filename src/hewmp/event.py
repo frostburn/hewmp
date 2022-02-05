@@ -72,6 +72,9 @@ class MusicBase:
     def copy(self):
         return self.retime(self.time, self.duration)
 
+    def extend_duration(self, extension):
+        self.duration += extension
+
 
 class Event(MusicBase):
     def flatten(self):
@@ -620,6 +623,12 @@ class Pattern(MusicBase, Transposable):
         logical_duration = self.logical_duration
         for subpattern in self:
             subpattern.end_time = logical_duration
+
+    def extend_duration(self, extension):
+        logical_extension = extension * self.logical_duration / self.duration
+        for subpattern in self.subpatterns:
+            subpattern.extend_duration(logical_extension)
+        super().extend_duration(extension)
 
     def flatten(self):
         logical_duration = self.logical_duration

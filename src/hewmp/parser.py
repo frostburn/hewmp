@@ -651,12 +651,11 @@ def parse_track(lexer, default_config):
             elif token.startswith("+") or token.startswith("-"):
                 time -= pattern.last.duration
                 extension = parse_time(token)
-                if isinstance(pattern.last, Pattern):
-                    logical_extension = pattern.last.logical_duration * extension / pattern.last.duration
-                    for subpattern in pattern.last:
-                        subpattern.end_time += logical_extension
-                pattern.last.duration += extension
+                pattern.last.extend_duration(extension)
                 time += pattern.last.duration
+            elif token.startswith("~"):
+                extension = parse_time(token[1:])
+                pattern.last.extend_duration(extension)
             elif token.startswith("@"):
                 pattern.last.time = parse_time(token[1:])
                 time += pattern.last.duration
@@ -774,12 +773,11 @@ def parse_track(lexer, default_config):
         elif token[0] == "!":
             time -= pattern.last.duration
             extension = token.count("!")
-            if isinstance(pattern.last, Pattern):
-                logical_extension = pattern.last.logical_duration * extension / pattern.last.duration
-                for subpattern in pattern.last:
-                    subpattern.end_time += logical_extension
-            pattern.last.duration += extension
+            pattern.last.extend_duration(extension)
             time += pattern.last.duration
+        elif all(c == "-" for c in token):
+            extension = len(token)
+            pattern.last.extend_duration(extension)
         elif token == "T":
             timestamp = time
         elif token == "@T":

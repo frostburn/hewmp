@@ -12,7 +12,7 @@
 | *     | 17 up inflection, interval exponent |
 | +     | 5 up inflection, time accumulation |
 | ,     | simultaneuous notes |
-| -     | 5 down inflection, interval inversion |
+| -     | 5 down inflection, interval inversion, shorthand for [~1] |
 | .     | rest |
 | /     | fractions, interval root |
 | 0-9   | time, duration, interval degree, pitch octave, complex chord voicings |
@@ -84,4 +84,4 @@
 | {     | (open properties) |
 | \|    | barline |
 | }     | (close properties) |
-| ~     | move root note |
+| ~     | move root note, extend duration only |

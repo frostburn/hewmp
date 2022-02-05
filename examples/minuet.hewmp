@@ -28,9 +28,9 @@ G4[0]  $ G major
  T _ mf (M2 M3) f (a4 P5) f (M6 M7) | '  P8  M7  M6 |  M7 f   M2 mf  a4 | _ mp  P5   !   !  |
 @T _ mf `M2     f  !      f  !      | ' `M3 `P5 `a4 | `P5 f ``M7 mf `M2 | _ mp `P5 ``P5 `P4 |
 
- T _ p  P5 (P1 `M7) P1          |  M6 (P1 `M7) P1          |  P5  P4  M3 | (M2 P1) (`M7 P1) M2 |
-@T _ p `M3  !      `M3 ,, `P5 ! | `P4  !      `P4 ,, `M6 ! | `M3 `M2 `P1 | `P5       !      .  |
+ T _ p  P5   (P1 `M7) P1 |  M6   (P1 `M7) P1 |  P5  P4  M3 | (M2 P1) (`M7 P1) M2 |
+@T _ p `M3 - `P5 -   `M3 | `P4 - `M6 -   `P4 | `M3 `M2 `P1 | `P5       !      .  |
 
  T _ p (`P5 `M6) mp (`M7 P1) mf  (M2 M3) | '   P4  M3   M2 | _ (M3 P5) ' mp   P1 p  `M7 | _ (P1,`P5,`M3) !    !
-@T _ p ``P5           !! ,.. mf ``M7     | ' ``M6 `P1 ``M7 | _ `P1     ' mp ``M3 p ``P5 |   `P1        ``P5 ``P1
+@T _ p ``P5  ! -             mf ``M7     | ' ``M6 `P1 ``M7 | _ `P1     ' mp ``M3 p ``P5 |   `P1        ``P5 ``P1
  :|

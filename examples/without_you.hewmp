@@ -5,6 +5,7 @@ G:1/4=2 3  $ quintuplet swing (inverted to account for pick-up)
 ---
 L:1/8
 I:Acoustic Grand Piano
+MP:14
 
 ff
 
@@ -14,7 +15,7 @@ T  $ Section A: Low bass voice
 !   !!!!! yG2 ! | ! !   !!!!! yG2|!   !!!!! yG2 ! | ! !   !!!!! F2 | !  !!!!! F2 ! | ! !  !!!!!! | F2  !!!!! F2 ! | ! !   !!!!! yG2
 :| @T "Section A: High bass voice"  |:
 yD3 !!!!! !   ! | ! yD3 !!!!! .  |yD3 !!!!! !   ! | ! yD3 !!!!! .  | C3 !!!!! !  ! | ! C3 !!!!!! | Bb2 !!!!! !  ! | ! Bb2 !!!!! .
-:|
+:|x3
 
 @T $ Section A: Treble voices
 |:
@@ -22,7 +23,7 @@ yD3 !!!!! !   ! | ! yD3 !!!!! .  |yD3 !!!!! !   ! | ! yD3 !!!!! .  | C3 !!!!! ! 
 .   .  (yG3,Bb3,ryE4)! R!! R|!! R! zDb4 C4   Bb3  ! |
 .   .  (yA3,C4 ,zEb4)! R!! R|!! R! zDb4 !    C4   ! |
 Bb3 !  (F3 ,Bb3,yD4 )! R!! R|!! R! zAb3 zAb3 zAb3 !
-:|
+:|x3
 
 
 T  $ Section B: Bass voices
@@ -49,6 +50,36 @@ yA3 ! (yA3,C4,zEb4)! R!! R|!! R! R ! (zAb3,ryB3,yD4)! | (yG3,Bb3,zDb4)!!! !!! !|
 .   . (F3,Bb3,yD4 )! R!! R|!! R! ! R !              ! | (F3 ,Bb3,yD4 )!!! R!! R|!!!!!!!!||
 
 ---
+I:Acoustic Bass
+BF:220  $ Play an octave bellow what's written
+L:1/4
+MP:1
+
+.[1/2]  $ Leave room for pick-up
+
+$ Section A first repeat
+.[4*7]            | zAb3 F3 (yD3 yD3) Bb2 |
+$ Section A second repeat
+yG2   F3 yD3  Bb2 | yG2   F3     Bb2  (C3 yD3) |
+yG2 ryE3 yD3  Bb2 | yG2 ryE3     Bb2  (C3 yD3) |
+ F2 zEb3  C3  yA2 |  F2 zEb3      F3  (C3 yD3) |
+Bb2   F3  F2  Ab2 | Bb2 (yD3 C3) Bb2 zAb2      |
+$ Section A third repeat
+yG2   F3 yD3  Bb2 | yG2   F3  Bb2 (C3 yD3) |
+yG2 ryE3 yD3  Bb2 | yG2 ryE3  Bb2 (C3 yD3) |
+ F2 zEb3  C3  yA2 |  F2 zEb3   F3 (C3 yD3) |
+Bb2  Bb3 Ab3   F3 | yD3  Bb2 zAb2  F2      |
+
+$ Section B
+Eb2  Bb2 zDb3   Bb2               | Eb2  Bb2 zGb2 zDb3      |
+Ab2  Eb3 yGb3   Eb3               | Ab2  Eb3 zGb2 zDb3      |
+Eb2  Bb2 zDb3   Bb2               | Eb3  Bb2 zGb2 zDb3      |
+ F2 zEb3   C3   yA2               |  F2 zEb3   C3  yA2      |
+yG2  yG3  Bb2  zDb3[1/2] Eb3[1/2] |   !    !    !    !      |
+Bb2   F3  yD3    C3               | Bb2   F3   F2 (Ab2 yD3) |
+Bb2  Bb3  Ab3    F3               | yD3   C3  Bb2    !      ||
+
+---
 N:percussion
 L:1/8
 
@@ -57,6 +88,9 @@ L:1/8
 $ Section A first repeat
 .[8*7] | .[4] o[4] |
 $ Section A second repeat
+|: k,h .   h . ss,h .  h,k k  :|x7
+|  k,h .   h . t4   t3 t2  t1  |
+$ Section A third repeat
 |: k,h .   h . ss,h .  h,k k  :|x7
 |  k,h .   h . t4   t3 t2  t1  |
 $ Section B

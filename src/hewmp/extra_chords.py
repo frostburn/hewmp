@@ -1,18 +1,8 @@
 # coding: utf-8
 
-# Wa = 3-limit = 2.3 subgroup
-WA_CHORDS = {
-    "6": ["P1", "M3", "P5", "M6"],  # Same as Madd6
-    "6no3": ["P1", "P5", "M6"],
-    "b6no3": ["P1", "P5", "m6"],
-}
 
 # Ya = 5-limit = 2.3.5 subgroup
 YA_CHORDS = {
-    "6-no3": ["P1", "P5", "M6-"],
-
-    "b6+no3": ["P1", "P5", "m6+"],
-
     "o": ["P1", "m3+", "d5+2"],
     "dim": ["P1", "m3+", "d5+2"],
     "dim7": ["P1", "m3+", "d5+2", "d7+3"],
@@ -46,13 +36,6 @@ YA_CHORDS = {
     "M7-aug6add2#4-": ["P1", "M2", "M3-", "a4-", "P5", "a5-2", "M6", "M7-"],
 
     "m7b5": ["P1", "m3+", "d5+2", "m7+"],
-
-    "6-": ["P1", "M3-", "P5", "M6"],  # Same as M-add6
-    "6--": ["P1", "M3-", "P5", "M6-"],  # Same as M-add6-
-    "6-/9": ["P1", "M3-", "P5", "M6", "M9"],  # Same as M-add6add9
-    "6--/9": ["P1", "M3-", "P5", "M6-", "M9"],  # Same as M-add6-add9
-    "6-/9-": ["P1", "M3-", "P5", "M6", "M9-"], # Same as M-add6add9-
-    "6--/9-": ["P1", "M3-", "P5", "M6-", "M9-"], # Same as M-add6-add9-
 
     "m+6": ["P1", "m3+", "P5", "M6"],  # Same as m+add6
     "m+6-": ["P1", "m3+", "P5", "M6-"],  # Same as m+add6-
@@ -192,7 +175,6 @@ EXTRA_CHORDS = {
     "semi3ve": ["P1", "P4/2", "P5", "3/1/2"],
 }
 
-EXTRA_CHORDS.update(WA_CHORDS)
 EXTRA_CHORDS.update(YA_CHORDS)
 EXTRA_CHORDS.update(OTONAL_CHORDS)
 EXTRA_CHORDS.update(UTONAL_CHORDS)

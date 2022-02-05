@@ -700,6 +700,18 @@ def test_repeat():
     assert times == [0, 0, 3, 3, 4, 4]
 
 
+def test_up_down_chords():
+    text = "ED:19\n=vM"
+    notes = get_notes(text)
+    pitches = [[0], [5, -3], [-1, 1]]
+    expect_pitches(notes, pitches)
+
+    text = "ED:19\n=^m7"
+    notes = get_notes(text)
+    pitches = [[0], [-6, 4], [-1, 1], [-7, 5]]
+    expect_pitches(notes, pitches)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -754,3 +766,4 @@ if __name__ == '__main__':
     test_rest()
     test_pedal()
     test_repeat()
+    test_up_down_chords()

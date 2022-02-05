@@ -133,19 +133,26 @@ BASIC_CHORDS_.update(BASIC_CHORDS)
 BASIC_CHORDS_.update(SUS_CHORDS)
 
 
-def make_basic_chord(base, arrow_tokens, chords=BASIC_CHORDS_):
+def make_basic_chord(base, arrow_tokens, ups_and_downs, chords=BASIC_CHORDS_):
     inflection = "".join(arrow_tokens)
     intervals, inflection_indices = chords[base]
     chord = []
     for i, interval in enumerate(intervals):
         if i in inflection_indices:
-            chord.append(interval + inflection)
+            chord.append(ups_and_downs + interval + inflection)
         else:
             chord.append(interval)
     return chord
 
 
 def split_interval(token):
+    ups_and_downs = 0
+    while token[0] in "^v":
+        if token[0] == "^":
+            ups_and_downs += 1
+        else:
+            ups_and_downs -= 1
+        token = token[1:]
     quality = ""
     while not token[0].isdigit():
         quality += token[0]
@@ -155,13 +162,13 @@ def split_interval(token):
         value += token[0]
         token = token[1:]
     value = int(value)
-    return quality, value, token
+    return quality, value, ups_and_downs, token
 
 
 QUALITY_RANKING = ["nn", "dd", "n", "d", "s", "m", "P", "M", "L", "a", "W", "aa", "WW"]
 def interval_key(token):
-    quality, value, token = split_interval(token)
-    return (value, QUALITY_RANKING.index(quality), token)
+    quality, value, ups_and_downs, token = split_interval(token)
+    return (value, QUALITY_RANKING.index(quality), ups_and_downs, token)
 
 
 TONE_SPLITTER = Splitter(("add", "no", "sus"))
@@ -169,6 +176,11 @@ TONE_SPLITTER = Splitter(("add", "no", "sus"))
 
 def expand_chord(token):
     from .smitonic import SMITONIC_BASIC_CHORDS
+
+    ups_and_downs = ""
+    while token[0] in "^v":
+        ups_and_downs += token[0]
+        token = token[1:]
 
     token, tones = TONE_SPLITTER(token)
     added_intervals = list(map(accidental_to_quality, tones["add"]))
@@ -196,17 +208,17 @@ def expand_chord(token):
     chord = None
 
     if base in FLAVOR_CHORDS:
-        chord = make_flavor_chord(base, separated)
+        chord = make_flavor_chord(base, separated, ups_and_downs)
     if base in BASIC_CHORDS:
-        chord = make_basic_chord(base, separated)
+        chord = make_basic_chord(base, separated, ups_and_downs)
     if base in SMITONIC_BASIC_CHORDS:
-        chord = make_basic_chord(base, separated, chords=SMITONIC_BASIC_CHORDS)
+        chord = make_basic_chord(base, separated, ups_and_downs, chords=SMITONIC_BASIC_CHORDS)
     if sus_replacement is not None:
         if chord is None:
             raise ValueError("Sus replacement on an incompatible chord")
         chord[1] = sus_replacement
     if base in SUS_CHORDS:
-        chord = make_basic_chord(base, separated)
+        chord = make_basic_chord(base, separated, ups_and_downs)
 
     if chord is None:
         raise ValueError("Unrecognized chord {}".format(base))
@@ -214,7 +226,7 @@ def expand_chord(token):
     result = sorted(chord + added_intervals, key=interval_key)
     for tone in removed_tones:
         for chord_tone in result[:]:
-            _, value, _ = split_interval(chord_tone)
+            _, value, _, _ = split_interval(chord_tone)
             if value == tone:
                 result.remove(chord_tone)
     return result

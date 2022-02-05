@@ -57,19 +57,19 @@ def parse_warts(token, index=0):
     if "d" in token:
         token, divided_token = token.rsplit("d", 1)
         if divided_token == "o":
-            edn_divided = 2
+            et_divided = 2
         elif divided_token == "t":
-            edn_divided = 3
+            et_divided = 3
         elif divided_token == "p":
-            edn_divided = 5
+            et_divided = 5
         elif not divided_token:
-            edn_divided = 2
+            et_divided = 2
             token = "de"
         else:
-            edn_divided = int(divided_token)
+            et_divided = int(divided_token)
         token = token[:-1]
     else:
-        edn_divided = 2
+        et_divided = 2
     warts = Counter()
     wart_str = ""
     while token[-1].isalpha():
@@ -77,8 +77,8 @@ def parse_warts(token, index=0):
         wart_str += wart
         warts[ord(wart) - ord("a")] += 1
         token = token[:-1]
-    edn_divisions = int(token)
-    return edn_divisions, edn_divided, warts, wart_str
+    et_divisions = int(token)
+    return et_divisions, et_divided, warts, wart_str
 
 
 def sync_playheads(patterns):
@@ -128,7 +128,7 @@ DEFAULT_CONFIG = {
     "program_change": None,
     "CRD": 5,
     "N": "hewmp",
-    "flags": ("unmapEDN",),  # default to just intonation
+    "flags": ("unmapET",),  # default to just intonation
 }
 
 DEFAULT_CONFIG["tuning"].suggest_mapping()
@@ -179,11 +179,11 @@ def parse_pitch(token, inflections):
 
 
 class IntervalParser:
-    def __init__(self, inflections=DEFAULT_INFLECTIONS, smitonic_inflections=SMITONIC_INFLECTIONS, edn_divisions=Fraction(12), edn_divided=Fraction(2), warts=""):
+    def __init__(self, inflections=DEFAULT_INFLECTIONS, smitonic_inflections=SMITONIC_INFLECTIONS, et_divisions=Fraction(12), et_divided=Fraction(2), warts=""):
         self.inflections = inflections
         self.smitonic_inflections = smitonic_inflections
-        self.edn_divisions = edn_divisions
-        self.edn_divided = edn_divided
+        self.et_divisions = et_divisions
+        self.et_divided = et_divided
         self.warts = warts
         self.base_pitch = zero_pitch()
         self.smitonic_base_pitch = zero_pitch()
@@ -194,13 +194,13 @@ class IntervalParser:
         self.up_down_inflection[0] = 0.5  # Default to half-octave
 
     def calculate_up_down(self):
-        wart_str = "{}{}ED{}".format(self.edn_divisions, self.warts, self.edn_divided)
+        wart_str = "{}{}ED{}".format(self.et_divisions, self.warts, self.et_divided)
         self.up_down_inflection = zero_pitch()
         if wart_str in ups_and_downs.ARROW_INFLECTIONS:
             base = ups_and_downs.ARROW_INFLECTIONS[wart_str]
             self.up_down_inflection[:len(base)] = base
         else:
-            self.up_down_inflection[E_INDEX] = log(self.edn_divided) / self.edn_divisions
+            self.up_down_inflection[E_INDEX] = log(self.et_divided) / self.et_divisions
 
     def set_base_pitch(self, token):
         if token[0] in BASIC_PITCHES:
@@ -283,8 +283,8 @@ class IntervalParser:
                 rad = float(token[:-3]) / 180 * pi
                 pitch[RAD_INDEX] = rad
             elif "\\" in token:
-                divisions = self.edn_divisions
-                divided = self.edn_divided
+                divisions = self.et_divisions
+                divided = self.et_divided
                 step_spec = token.split("\\")
                 steps = Fraction(step_spec[0])
                 if len(step_spec) >= 2 and step_spec[1]:
@@ -607,20 +607,20 @@ def parse_track(lexer, default_config):
                 pattern.append(track_volume)
                 config[config_key] = track_volume.volume
             if config_key == "ET":
-                if "unmapEDN" in config["flags"]:
-                    config["flags"].remove("unmapEDN")
+                if "unmapET" in config["flags"]:
+                    config["flags"].remove("unmapET")
                 token = token.strip()
                 if token in EQUAL_TEMPERAMENTS:
-                    edn_divisions, edn_divided = EQUAL_TEMPERAMENTS[token]
+                    et_divisions, et_divided = EQUAL_TEMPERAMENTS[token]
                     warts = Counter()
                     wart_str = ""
                 else:
-                    edn_divisions, edn_divided, warts, wart_str = parse_warts(token)
+                    et_divisions, et_divided, warts, wart_str = parse_warts(token)
                 config["tuning"].warts = [warts[i] for i in range(len(PRIMES))]
-                config["tuning"].edn_divisions = edn_divisions
-                config["tuning"].edn_divided = edn_divided
-                interval_parser.edn_divisions = edn_divisions
-                interval_parser.edn_divided = edn_divided
+                config["tuning"].et_divisions = et_divisions
+                config["tuning"].et_divided = et_divided
+                interval_parser.et_divisions = et_divisions
+                interval_parser.et_divided = et_divided
                 interval_parser.warts = wart_str
                 interval_parser.calculate_up_down()
             if config_key == "N":
@@ -863,7 +863,7 @@ def parse_track(lexer, default_config):
 
     pattern.insert(0, config["tempo"])
 
-    if "unmapEDN" in config["flags"]:
+    if "unmapET" in config["flags"]:
         config["tuning"].warts = None
     config["tuning"].suggest_mapping()
     pattern.insert(0, config["tuning"])
@@ -1047,9 +1047,9 @@ def freq_to_midi_12(frequency, pitch_bend_depth):
 FREQ_C3 = FREQ_A4 / MIDI_STEP**21
 INDEX_C3 = INDEX_A4 - 21
 
-def freq_to_midi_edn(frequency, edn_divisions, edn_divided=2):
+def freq_to_midi_et(frequency, et_divisions, et_divided=2):
     ratio = frequency / FREQ_C3
-    steps = log(ratio) / log(float(edn_divided)) * float(edn_divisions)
+    steps = log(ratio) / log(float(et_divided)) * float(et_divisions)
     steps += INDEX_C3
     index = int(round(steps))
     bend = steps - index
@@ -1196,7 +1196,7 @@ if __name__ == "__main__":
     parser.add_argument('--fractional', action='store_true')
     parser.add_argument('--absolute', action='store_true')
     parser.add_argument('--midi', action='store_true')
-    parser.add_argument('--midi-edn', action='store_true')
+    parser.add_argument('--midi-et', action='store_true')
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--pitch-bend-depth', type=int, default=2)
     parser.add_argument('--override-channel-10', action='store_true')
@@ -1215,7 +1215,7 @@ if __name__ == "__main__":
         args.infile.close()
 
     file_extension = os.path.splitext(args.outfile.name)[-1].lower()
-    export_midi = (args.midi or args.midi_edn or file_extension == ".mid")
+    export_midi = (args.midi or args.midi_et or file_extension == ".mid")
     if args.json:
         export_midi = False
 
@@ -1248,10 +1248,10 @@ if __name__ == "__main__":
             filename = args.outfile.name
             args.outfile.close()
             outfile = open(filename, "wb")
-        if args.midi_edn:
-            edn_divisions = config["tuning"].edn_divisions
-            edn_divided = config["tuning"].edn_divided
-            freq_to_midi = lambda freq: freq_to_midi_edn(freq, edn_divisions, edn_divided)
+        if args.midi_et:
+            et_divisions = config["tuning"].et_divisions
+            et_divided = config["tuning"].et_divided
+            freq_to_midi = lambda freq: freq_to_midi_et(freq, et_divisions, et_divided)
         else:
             freq_to_midi = lambda freq: freq_to_midi_12(freq, args.pitch_bend_depth)
         midi = tracks_to_midi(patterns, freq_to_midi, not args.override_channel_10, args.midi_transpose)

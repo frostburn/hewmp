@@ -82,14 +82,14 @@ class Event(MusicBase):
 
 
 class Tuning(Event):
-    def __init__(self, base_frequency, comma_list, constraints, subgroup, edn_divisions=None, edn_divided=None, warts=None, suggested_mapping=None, semantic=None, time=0, duration=0, real_time=None, real_duration=None):
+    def __init__(self, base_frequency, comma_list, constraints, subgroup, et_divisions=None, et_divided=None, warts=None, suggested_mapping=None, semantic=None, time=0, duration=0, real_time=None, real_duration=None):
         super().__init__(time, duration, real_time, real_duration)
         self.base_frequency = base_frequency
         self.comma_list = comma_list
         self.constraints = constraints
         self.subgroup = subgroup
-        self.edn_divisions = edn_divisions
-        self.edn_divided = edn_divided
+        self.et_divisions = et_divisions
+        self.et_divided = et_divided
         self.warts = warts
         self.suggested_mapping = suggested_mapping
         self.semantic = semantic
@@ -97,7 +97,7 @@ class Tuning(Event):
 
     def suggest_mapping(self):
         JI = log(array(PRIMES))
-        if self.edn_divisions is None or self.edn_divided is None or self.warts is None:
+        if self.et_divisions is None or self.et_divided is None or self.warts is None:
             mapping = temper_subgroup(
                 JI,
                 [comma[:len(JI)] for comma in self.comma_list],
@@ -106,7 +106,7 @@ class Tuning(Event):
                 metric=DEFAULT_METRIC,
             )
         else:
-            generator = log(float(self.edn_divided)) / float(self.edn_divisions)
+            generator = log(float(self.et_divided)) / float(self.et_divisions)
             if generator == 0:
                 mapping = JI*0
             else:
@@ -134,7 +134,7 @@ class Tuning(Event):
             "commaList": comma_list,
             "constraints": constraints,
             "subgroup": subgroup,
-            "edn": [None if self.edn_divisions is None else str(self.edn_divisions), None if self.edn_divided is None else str(self.edn_divided)],
+            "equalTemperament": [None if self.et_divisions is None else str(self.et_divisions), None if self.et_divided is None else str(self.et_divided)],
             "warts": None if self.warts is None else list(self.warts),
             "suggestedMapping": list(self.suggested_mapping),
             "semantic": self.semantic,
@@ -151,8 +151,8 @@ class Tuning(Event):
             comma_list,
             constraints,
             subgroup,
-            self.edn_divisions,
-            self.edn_divided,
+            self.et_divisions,
+            self.et_divided,
             warts,
             array(self.suggested_mapping),
             self.semantic,
@@ -167,8 +167,8 @@ class Tuning(Event):
             self.comma_list,
             self.constraints,
             self.subgroup,
-            self.edn_divisions,
-            self.edn_divided,
+            self.et_divisions,
+            self.et_divided,
             self.warts,
             self.suggested_mapping,
             self.semantic,

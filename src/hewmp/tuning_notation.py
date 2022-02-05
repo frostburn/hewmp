@@ -11,21 +11,21 @@ JI = log(array(PRIMES))
 def warts_to_val(wart_str, index=0):
     token, divided_token = wart_str.lower().rsplit("d", 1)
     if divided_token == "o":
-        edn_divided = 2
+        et_divided = 2
     elif divided_token == "t":
-        edn_divided = 3
+        et_divided = 3
     elif divided_token == "p":
-        edn_divided = 5
+        et_divided = 5
     else:
-        edn_divided = int(divided_token)
+        et_divided = int(divided_token)
     token = token[:-1]
     warts = Counter()
     while token[-1].isalpha():
         wart = token[-1].lower()
         warts[ord(wart) - ord("a")] += 1
         token = token[:-1]
-    edn_divisions = int(token)
-    generator = log(edn_divided) / edn_divisions
+    et_divisions = int(token)
+    generator = log(et_divided) / et_divisions
     steps = around(JI/generator)
     mapping = steps*generator
     for index, count in warts.items():
@@ -34,7 +34,7 @@ def warts_to_val(wart_str, index=0):
             steps[index] -= modification
         else:
             steps[index] += modification
-    return steps.astype(int), edn_divided
+    return steps.astype(int), et_divided
 
 
 def update_list_dict(target, source):
@@ -42,7 +42,7 @@ def update_list_dict(target, source):
         target[key].extend(value)
 
 
-def hewmp_spellings(interval_parser, steps, edn_divided, preferred_arrows):
+def hewmp_spellings(interval_parser, steps, et_divided, preferred_arrows):
     spellings = defaultdict(list)
     for value in range(1, 9):
         if value in (1, 4, 5, 8):
@@ -65,7 +65,7 @@ def hewmp_spellings(interval_parser, steps, edn_divided, preferred_arrows):
             if index == int(index):
                 spellings[int(index)].append(token)
 
-    required = set(range(steps[PRIMES.index(edn_divided)]))
+    required = set(range(steps[PRIMES.index(et_divided)]))
     spelled = set(spellings.keys())
     missing = required - spelled
     if missing:
@@ -117,7 +117,7 @@ def hewmp_spellings(interval_parser, steps, edn_divided, preferred_arrows):
     return spellings, missing
 
 
-def hewmp_pitch_spellings(interval_parser, steps, edn_divided, preferred_arrows):
+def hewmp_pitch_spellings(interval_parser, steps, et_divided, preferred_arrows):
     spellings = defaultdict(list)
     bases = []
     for letter in "CDEFGABc":
@@ -138,7 +138,7 @@ def hewmp_pitch_spellings(interval_parser, steps, edn_divided, preferred_arrows)
             if index == int(index):
                 spellings[int(index)].append(token)
 
-    required = set(range(steps[PRIMES.index(edn_divided)]))
+    required = set(range(steps[PRIMES.index(et_divided)]))
     spelled = set(spellings.keys())
     missing = required - spelled
     if missing:
@@ -182,7 +182,7 @@ def hewmp_pitch_spellings(interval_parser, steps, edn_divided, preferred_arrows)
     return spellings, missing
 
 
-def smitonic_spellings(interval_parser, steps, edn_divided, preferred_arrows):
+def smitonic_spellings(interval_parser, steps, et_divided, preferred_arrows):
     spellings = defaultdict(list)
     for value in range(1, 9):
         if value in (1, 3, 6, 8):
@@ -203,7 +203,7 @@ def smitonic_spellings(interval_parser, steps, edn_divided, preferred_arrows):
             if index == int(index):
                 spellings[int(index)].append(token)
 
-    required = set(range(steps[PRIMES.index(edn_divided)]))
+    required = set(range(steps[PRIMES.index(et_divided)]))
     spelled = set(spellings.keys())
     missing = required - spelled
     if missing:
@@ -254,7 +254,7 @@ def smitonic_spellings(interval_parser, steps, edn_divided, preferred_arrows):
     return spellings, missing
 
 
-def smitonic_pitch_spellings(interval_parser, steps, edn_divided, preferred_arrows):
+def smitonic_pitch_spellings(interval_parser, steps, et_divided, preferred_arrows):
     spellings = defaultdict(list)
     bases = []
     for letter in "JKOQRSUj":
@@ -276,7 +276,7 @@ def smitonic_pitch_spellings(interval_parser, steps, edn_divided, preferred_arro
             if index == int(index):
                 spellings[int(index)].append(token)
 
-    required = set(range(steps[PRIMES.index(edn_divided)]))
+    required = set(range(steps[PRIMES.index(et_divided)]))
     spelled = set(spellings.keys())
     missing = required - spelled
     if missing:
@@ -333,7 +333,7 @@ if __name__ == '__main__':
     interval_parser.set_base_pitch("C4")
     interval_parser.set_base_pitch("J4")
 
-    steps, edn_divided = warts_to_val(args.tuning)
+    steps, et_divided = warts_to_val(args.tuning)
     print("Val", steps)
 
     print("Inflections:")
@@ -344,14 +344,14 @@ if __name__ == '__main__':
             if width == int(width):
                 width = int(width)
             print(unison, "=", width)
-        spellings, missing = smitonic_spellings(interval_parser, steps, edn_divided, args.arrows)
-        pitch_spellings, _ = smitonic_pitch_spellings(interval_parser, steps, edn_divided, args.arrows)
+        spellings, missing = smitonic_spellings(interval_parser, steps, et_divided, args.arrows)
+        pitch_spellings, _ = smitonic_pitch_spellings(interval_parser, steps, et_divided, args.arrows)
     else:
         for unison in ["d1", "P1W", "P1v", "P1D", "P1<", "P1!", "P1-", "P1d", "P1%", "P1V", "P1A", "P1*", "P1u", "P1+", "P1i", "P1>", "P1U", "P1^", "P1M", "a1"]:
             pitch = interval_parser.parse(unison)[0]
             print(unison, "=", int(dot(steps, pitch[:len(steps)])))
-        spellings, missing = hewmp_spellings(interval_parser, steps, edn_divided, args.arrows)
-        pitch_spellings, _ = hewmp_pitch_spellings(interval_parser, steps, edn_divided, args.arrows)
+        spellings, missing = hewmp_spellings(interval_parser, steps, et_divided, args.arrows)
+        pitch_spellings, _ = hewmp_pitch_spellings(interval_parser, steps, et_divided, args.arrows)
 
     print()
     print("Spellings:")
@@ -359,7 +359,7 @@ if __name__ == '__main__':
         if num == 0:
             print("-" * 30)
         print("{}:{}".format(num, ",".join(spellings[num])))
-        if num == steps[PRIMES.index(edn_divided)]:
+        if num == steps[PRIMES.index(et_divided)]:
             print("-" * 30)
     print()
     print("Pitch spellings:")
@@ -367,7 +367,7 @@ if __name__ == '__main__':
         if num == 0:
             print("-" * 30)
         print("{}:{}".format(num, ",".join(pitch_spellings[num])))
-        if num == steps[PRIMES.index(edn_divided)]:
+        if num == steps[PRIMES.index(et_divided)]:
             print("-" * 30)
     if missing:
         print("Failed to cover everything with the available arrows")

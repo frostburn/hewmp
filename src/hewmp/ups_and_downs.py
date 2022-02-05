@@ -51,7 +51,7 @@ if __name__ == "__main__":
     from .tuning_notation import warts_to_val
 
     for wart_str, arrow in ARROW_INFLECTIONS.items():
-        val, edn_divided = warts_to_val(wart_str)
+        val, et_divided = warts_to_val(wart_str)
         steps = dot(val[:len(arrow)], arrow)
         F = dot(val[:2], [0, 0])
         D = dot(val[:2], [-5, 3])

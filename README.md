@@ -724,7 +724,15 @@ N:percussion
 (k h s h)[x8 3CH2 6]  $ A drum pattern gettin progressively faster over 6 beats.
 ```
 ### Euclidean
-TODO
+The Euclidean rhythms are produced in a way analoguous to Euclid's algorithm for finding the greatest common divisor of two numbers and are common in traditional world music. For example two notes in `E5` produce a Persian rhythm called *Khafif-e-ramal* `x.x..` while three notes in `E8` creates the Cuban *tresillo* `x..x..x.`. You can rotate the pattern to the left using numbers on the left side of `E`. Three notes in `1E8` is `x..x.x..` and in `2E8` it is `x.x..x..`.
+```
+$ Rhythm section composed of claves, hand claps and wood blocks.
+N:percussion
+   cs[x5 E8 4 X4]
+@T hc[x7 E16 4 X4]
+@T (w1 w1 w0 w0 w1)[E16 4 X4]
+```
+See the first few patterns [here](/doc/euclidean_rhythms.md).
 ### Moment of Symmetry
 TODO
 

@@ -657,9 +657,10 @@ def parse_track(lexer, default_config):
             default = False
             if token == "]":
                 time_mode = False
-            elif token == ".":
+            elif token.startswith("*"):
+                duration_token = token[1:]
                 time -= pattern.last.duration
-                pattern.last.duration = 1
+                pattern.last.duration *= parse_time(duration_token)
                 time += pattern.last.duration
             elif token == "?":
                 time -= pattern.last.duration
@@ -743,7 +744,7 @@ def parse_track(lexer, default_config):
             if default:
                 duration_token = token
                 time -= pattern.last.duration
-                pattern.last.duration *= parse_time(duration_token)
+                pattern.last.duration = parse_time(duration_token)
                 time += pattern.last.duration
             continue
 

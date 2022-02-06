@@ -365,7 +365,7 @@ def test_rotate_rhythm():
     assert times_durations == [(0, 4), (4, 1), (5, 2), (7, 3)]
 
 def test_exponential_rhythm():
-    text = "(P1 ~P8 ~P8 ~P8)[e2]"
+    text = "(P1 ~P8 ~P8 ~P8)[CG2]"
     notes = get_notes(text)
     denominator = sum(2**i for i in range(4))
     for i in range(4):

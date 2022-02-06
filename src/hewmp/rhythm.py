@@ -127,9 +127,11 @@ def concatenated_harmonic_rhythm(num_onsets, initial, delta):
 
 
 if __name__ == "__main__":
+    limit = 8
+    show_variations = True
     seen = set()
     print("MOS rhythms")
-    for period in range(2, 17):
+    for period in range(2, limit+1):
         for generator in range(1, period+1):
             for num_onsets in range(1, period+1):
                 td = mos_rhythm(num_onsets, generator, period)
@@ -142,14 +144,15 @@ if __name__ == "__main__":
                 print("MOS({:2d},{:2d},{:2d}) =".format(num_onsets, generator, period), string)
 
     print("Euclidean rhythms")
-    for i in range(2, 17):
+    for i in range(2, limit+1):
         for j in range(1, i+1):
             sequence = euclidean_rhythm(j, i)
             string = sequence_to_string(sequence)
             print("E({:2d},{:2d}) =".format(j, i), string, "! "[string in seen])
-            variations = set([string])
-            for k in range(1, sum(sequence)):
-                variation = sequence_to_string(rotate_sequence(sequence, k))
-                if variation not in variations:
-                    print(" {}: {}".format(k, variation))
-                    variations.add(variation)
+            if show_variations:
+                variations = set([string])
+                for k in range(1, sum(sequence)):
+                    variation = sequence_to_string(rotate_sequence(sequence, k))
+                    if variation not in variations:
+                        print(" {}: {}".format(k, variation))
+                        variations.add(variation)

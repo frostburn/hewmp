@@ -1,8 +1,8 @@
 # Text2Music
 Text2Music is a machine-readable notation system for writing music in (tempered) just intonation.
 
-It supports bare ratios, edo steps, Color Notation, Ups-and-Downs Notation and HEWMP.
-(The last acronym stands for Helmholtz / Ellis / Wolf / Monzo / Pakkanen notation).
+It supports bare ratios, edo steps, Color notation, Ups-and-Downs notation and HEWMP notation.
+(The last acronym stands for Helmholtz / Ellis / Wolf / Monzo / Pakkanen).
 
 ## Writing Music Using Ratios
 
@@ -273,7 +273,7 @@ ha1 hd4 ha4 hd5 ha5 hd8
 ```
 
 ## Quarter-tones
-The accidentals `t` and `d` act as quarter-tone sharp and flat respectively.
+The accidentals `t` and `d` act as quarter-tone sharp and flat respectively. The associated semi-fraction is 27/32&middot;&radic;1½ the square root of a sharp.
 ```
 C4 E4d G4 B4d  $ Neutral 7th arpeggio
 ```
@@ -285,7 +285,7 @@ ET:31
 D4 vF4 G4 B4
 C4 M3 P5 ^m7 P8
 ```
-See [equal temperaments](#equaltemperaments) for more information.
+See [equal temperaments](#equal_temperament) for more information.
 
 ## Half-octave (Tritone)
 When not in equal temperament mode the ups-and-downs arrows shift by half of an octave (&radic;2).
@@ -531,25 +531,25 @@ Use `I:` to select an instrument. If the name corresponds to General MIDI the ma
 ```
 I:Marimba
 ```
-TODO: Document all available instruments
+See [instruments](doc/instruments.md) for the full list.
 ### Maximum Track Polyphony
-HEWMP uses per-channel pitch-bends to achieve microtones. Use `MP:` to reserve some of the available 15 channels for the current track.
+Text2Music uses per-channel pitch-bends to achieve microtones. Use `MP:` to reserve some of the available 15 channels for the current track.
 ```
 MP:2
 ```
 ### Subgroup
-To use HEWMP's tuning capabilities you need to tell it which mappings of primes should be affected. You can also use fractions like `2.3.13/5` or multiples of primes like `2.15.7`.
+To use Text2Music's tuning capabilities you need to tell it which mappings of primes should be affected. You can also use fractions like `2.3.13/5` or multiples of primes like `2.15.7`.
 ```
 SG:2.3.5
 ```
 ### Comma List
-The main reason HEWMP is based on relative intervals is to be able to write comma pumps of arbitrary length in just intonation with a finite number of symbols.
+The main reason HEWMP notation is based on relative intervals is to be able to write comma pumps of arbitrary length in just intonation with a finite number of symbols.
 ```
 $ I-vi-ii-V chord progression that pumps the syntonic comma downwards.
 $ (The product of the fractions is 80/81)
 |: ~2/3=M- ~5/6=m+ ~4/3=m+ ~4/3=M-_2 :|x12
 ```
-Using a comma-list `CL:` you can *temper out* a set of commas so that the pitch doesn't change when pumping the commas. HEWMP accomplishes this by slightly altering the pitch mapping of the primes in the subgroup given by `SG:`.
+Using a comma-list `CL:` you can *temper out* a set of commas so that the pitch doesn't change when pumping said commas. Text2Music accomplishes this by slightly altering the pitch mapping of the primes in the subgroup given by `SG:`.
 ```
 SG:2.3.5
 CL:81/80,128/125
@@ -559,15 +559,15 @@ $ but the overall pitch doesn't change.
 $ Chord progression that pumps the diesis without changing the overall pitch.
 |: ~1/2=M- ~5/4=M- ~5/4=M-_2 ~5/4=7-_3 :|x4
 ```
-### Temperament/Tuning
-HEWMP comes with a few named presets so that you don't have to type out specific subgroups and comma lists.
+### Temperament
+Text2Music comes with a few named presets so that you don't have to type out specific subgroups and comma lists.
 ```
 $ Same as SG:2.3.5 and CL:250/243
 T:porcupine
 $ Chord progression that pumps the porcupine comma
 |: ~5/3=6:4:5 ~2/3=3:4:5 ~5/3=6:4:5 ~2/3=6:5:4 ~5/6=3:4:5 :|
 ```
-TODO: Document all available temperaments
+(Documentation coming soon)
 ### Constraints
 The tuning algorithm tries to do the least amount of damage to just intonation when tempering out commas, but sometimes you may wish to preserve certain intervals while allowing others to take more of the damage.
 ```
@@ -576,16 +576,17 @@ $ Specify quarter-comma meantone by constraining
 $ octaves to be pure and major thirds to be just
 C:P8,M3-
 ```
-### Equal Divisions of an Interval
-While it is possible to produce an equal temperament without affecting every prime (e.g. `T:compton` is 12edo that only affects `2` and `3`) there's the option to round every prime to the closest number of steps of an equal temperement with `ED:`. You can use [Wart Notation](https://en.xen.wiki/w/Val#Shorthand_notation) to specify non-standard rounding. The default number of divisions is 12.
+### <a name="equal_temperament"></a> Equal Temperament and Warts
+While it is possible to produce an equal temperament without affecting every prime (e.g. `T:compton` is 12edo that only affects `2` and `3`) there's the option to round every prime to the closest number of steps of an equal temperement with `ET:`. You can use [Wart Notation](https://en.xen.wiki/w/Val#Shorthand_notation) to specify non-standard rounding. To specify another interval to divide besides the default `2` use `ED{N}` after the number of divisions and the warts.
 ```
-ED:20c
+ET:13b  $ 13edo with a flat fifth to make it compatible with Ups and Downs notation
 ```
-### Interval to Equally Divide
-Use `EDN:` to change which interval is divided equally. The default interval to divide is `2`.
 ```
-EDN:3
+ET:13ED3  $ Bohlen-Pierce scale
 ```
+Some equal temperaments have special names. Wendy Carlos' `alpha`, `beta`, `gamma`, `delta` and Bohlen-Pierce (`BP`).
+It can be fun to spell melodies and harmonies in just intonation even when using `ET:` as it allows you to untemper the music afterwards
+Warning: Large errors in the ET mapping for the prime numbers tend to compound and produce big surprises in how the music sounds compared to its spelling.
 ### Flags
 Various configs that don't take parameters go under flags `F:`.
 ```
@@ -613,7 +614,7 @@ If you want to specify intervals not affected by tuning use cents.
 $ 12ed2 A major scale
 0c 200c 400c 500c 700c 900c 1100c 1200c
 ```
-Warning: Not even `ED:` will affect something specified in raw cents.
+Warning: Not even `ET:` will affect something specified in raw cents.
 ## Primes beyond 31
 If a fraction contains primes larger than the supported `31` those will be converted to cents in the output.
 ```
@@ -623,7 +624,7 @@ Warning: This can cause some surprises when tempering.
 ## Hz Offset
 Beating of similarly tuned notes is a musical phenomenon that is often perceived as a rhythm instead of a pitch difference. Use `Hz` to specify a frequency offset. See also [Phase Offset](#phase).
 ```
-1,1 . 1,1Hz . 1,2Hz
+1,1 . 1,1Hz . 1,2Hz  $ Three unisons with different amounts of beating
 ```
 
 ## Transposing
@@ -633,28 +634,31 @@ To combine two intervals use the `&` symbol. This is mainly useful for specifyin
 ```
 
 ## EDN Steps
-The shorthand to enter cents equal to the current `ED:` step size is `1\`. To specify the number of divisions of `2` add a second number after `\`. To specify another interval to divide besides `2` append it after a second backslash.
+The shorthand to enter cents equal to the current `ET:` step size is `1\`. To specify the number of divisions of `2` add a second number after `\`. To specify another interval to divide besides `2` append it after a second backslash.
 ```
-0\ 2\ 7\ 12\
+0\ 2\ 7\ 12\  $ Steps 0, 2, 7 and 12 in the current ET
 
-0\19 5\19 10\19 19\19
+0\19 5\19 10\19 19\19  $ Steps 0, 5, 10 and 19 in 19ed2
 
-0\10\3 5\10\3
+0\10\3 5\10\3  $ Steps 0 and 5 in 10ed3
 ```
 
 ## Interval Roots
 To specify fractional pitch monzos append a slash `/` and the desired root degree.
 ```
 $ Arpeggiated neutral chord
-P1 P5/2 P5
+P1 P5/2 P5  $ Same as P1 N3 P5
 ```
-Warning: Interval roots may produce fractional steps if the relevant components of the `ED:` mapping are not divisible by the root degree.
+Warning: Interval roots may produce fractional steps if the relevant components of the `ET:` mapping are not divisible by the root degree.
 ### Interval Exponents
 To further multiply the fractional pitch monzo append an asterisk `*` and the desired exponent.
 ```
 $ Step through equal divisions of the pure fourth
 P1 P4/3 P4/3*2 P4
 ```
+
+## Advanced Rhythms
+TODO
 
 ## <a name="pronunciation"></a> Pronunciation
 ### Inflections
@@ -680,6 +684,8 @@ P1 P4/3 P4/3*2 P4
 | D     | bow           | 1/29    | think "Down" |
 | M     | mighty        | 1/31    | `M` looks like two arrows pointing up |
 | W     | weak          | 31      | `W` looks like two arrows pointing down |
+
+Example `cM7-<3A2` "Compound major seventh minus less three high 2" or `987069284145/274877906944`.
 
 ### Chords
 | symbol  | pronunciation         | notes                                                                                 |
@@ -717,6 +723,7 @@ To control when the beats of two similarly tuned notes occur use a phase offset 
 ```
 Warning: Phase offset is ignored in MIDI output.
 ## <a name="smitonic"></a> Smitonic Extension
+Note: In the future the Smitonic Extension will be respelled, hidden under a separate `N:` config and renamed to `orgone` as it doesn't actually produce smithirds in all edos.
 Because HEWMP is mainly focused on notating just intonation and temperaments thereof it can produce quite surprising results for edos. First an expression is parsed into a fraction and then the prime components of that fraction are used to decide what scale degree should represent that factor. If a prime component is mapped inaccurately the error will compound. This is especially damaging if the prime in question is 3 as it breaks the whole Pythagorean basis of the notation.
 
 Consider 11ed2:

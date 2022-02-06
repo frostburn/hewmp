@@ -99,6 +99,11 @@ $ Repeats are not literal so these are the same note
 ~3/2[2] R
 ```
 Repeats chain with `!` so `R!` is the last note but of duration 2.
+Repeats skip over rests.
+```
+77/62  $ Something complicated
+.R..R!!.RR.R  $ Cool rhythm without having to spell it out every time
+```
 
 ## Barlines
 Barlines `|` can be used to visually organize your music. They have no effect on the sound.

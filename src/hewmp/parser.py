@@ -784,7 +784,7 @@ def parse_track(lexer, default_config):
         elif all(mt in TEMPORAL_MINI_LANGUAGE for mt in token):
             for mini_token in token:
                 if mini_token == "R":
-                    repeated_pattern = pattern.last.retime(time, 1)
+                    repeated_pattern = pattern.last_voiced.retime(time, 1)
                     pattern.append(repeated_pattern)
                     time += pattern.last.duration
                 elif mini_token == ".":

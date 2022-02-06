@@ -543,6 +543,12 @@ class Pattern(MusicBase, Transposable):
             result = max(result, subpattern.end_time)
         return result
 
+    @property
+    def last_voiced(self):
+        for event in reversed(self.subpatterns):
+            if isinstance(event, (Note, Pattern)):
+                return event
+
     def simplify(self):
         common_denominator = 0
         for subpattern in self.subpatterns:

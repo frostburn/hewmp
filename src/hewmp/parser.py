@@ -541,6 +541,8 @@ def parse_track(lexer, default_config):
     time = Fraction(0)
     stack = []
     transposed_pattern = None
+    concatenated_pattern = None
+    add_concatenated_durations = None
     current_pitch = zero_pitch()
     timestamp = 0
     if "interval_parser" in default_config:
@@ -760,6 +762,9 @@ def parse_track(lexer, default_config):
         elif token == ")":
             subpattern = pattern
             pattern, time = stack.pop()
+            if concatenated_pattern:
+                subpattern = concatenated_pattern.concatenate(subpattern, add_concatenated_durations)
+                concatenated_pattern = None
             pattern.append(subpattern)
             time += subpattern.duration
         elif token == "[":
@@ -768,6 +773,14 @@ def parse_track(lexer, default_config):
             raise ParsingError('Unmatched "]"')
         elif token == "&":
             transposed_pattern = pattern.pop()
+        elif token == "+":
+            concatenated_pattern = patternify(pattern.pop())
+            add_concatenated_durations = True
+            time -= concatenated_pattern.duration
+        elif token == "=":
+            concatenated_pattern = patternify(pattern.pop())
+            add_concatenated_durations = False
+            time -= concatenated_pattern.duration
         elif all(mt in TEMPORAL_MINI_LANGUAGE for mt in token):
             for mini_token in token:
                 if mini_token == "R":
@@ -828,6 +841,13 @@ def parse_track(lexer, default_config):
                 subpattern.time = subpattern_time
                 subpattern.duration = subpattern_duration
                 pattern.append(subpattern)
+                if concatenated_pattern:
+                    subpattern = pattern.pop()
+                    time -= subpattern.duration
+                    subpattern = concatenated_pattern.concatenate(subpattern, add_concatenated_durations)
+                    concatenated_pattern = None
+                    pattern.append(subpattern)
+                    time += subpattern.duration
             else:
                 moves_root = False
                 if token.startswith("~"):
@@ -857,6 +877,14 @@ def parse_track(lexer, default_config):
                     time += note.duration
                 if "comma_reduction_cache" in config:
                     current_pitch = comma_reduce(current_pitch, config["tuning"].comma_list, persistence=config["CRD"], cache=config["comma_reduction_cache"])
+
+                if concatenated_pattern:
+                    subpattern = patternify(pattern.pop())
+                    time -= subpattern.duration
+                    subpattern = concatenated_pattern.concatenate(subpattern, add_concatenated_durations)
+                    concatenated_pattern = None
+                    pattern.append(subpattern)
+                    time += subpattern.duration
 
     pattern.insert(0, Articulation(ARTICULATIONS[";"]))
     pattern.insert(0, Dynamic(DYNAMICS["mf"]))

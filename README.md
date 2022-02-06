@@ -26,7 +26,7 @@ Plain ratios use the last moved ratio as the base so use *absolute* ratios if yo
 
 ## Installation
 The project is still in beta so you will have to clone this repository and install manually.
-I recommend setting up a virtualenv and installing the package as editable.
+I recommend setting up a [virtualenv](https://docs.python.org/3/library/venv.html) and installing the package as editable.
 ```
 pip install -e .
 ```
@@ -361,7 +361,8 @@ $ Major seventh chord with syntonic inflections on the major third and the major
 $ Same as
 8:10:12:15
 ```
-Some chords like `=aug` only have one version and do not support inflections. (TODO: Document all chords)
+Some chords like `=aug` only have one version and do not support inflections.
+(Chord documentation coming soon.)
 #### Added tones
 Tones can be added to the chord symbols that support inflections.
 ```
@@ -657,7 +658,58 @@ $ Step through equal divisions of the pure fourth
 P1 P4/3 P4/3*2 P4
 ```
 
+## Rhythm Modeling
+Text2Music offers many ways to turn notes and tuplets into more complex rhythmic patterns.
+
+### Arpeggiate Chord
+Use `a` to turn a simultaneous chord into a tuplet.
+```
+=m7+[a]  $ Minor seventh as a quadruplet arpeggio
+```
+### Reverse (Logical) Order
+Use `r` to reverse the order of the notes.
+```
+=m7+[r a]  $ Minor seventh arpeggiated down
+```
+### Reverse Time
+Use `R` to reverse the temporal information within a pattern
+```
+=m7+[a R]  $ Minor seventh arpeggiated down
+```
+### Concatenate Tuplets
+You can build complex patterns for further modeling by concatenating them with `+` (adds durations) or `=` (preserves the duration of the first tuplet).
+```
+=M- + =m+[a]  $ Major followed by minor arpeggiated
+=M- = =m+[a]  $ Major followed by minor arpeggiated, but twice as fast
+```
+### Rhythm Repeats
+A pattern can be repeated using `x` followed by a number inside square brackets. By default this doesn't affect the duration of the tuplet. Use a capital `X` to stretch the duration accordingly.
+```
+=M-[a X4]  $ Major chord arpeggiated four times over four beats
+P8[x5]     $ followed by the root note repeated five times over one beat an octave above.
+```
+### Stretch to Logical Duration
+Patterns keep internal time separate from song time. You can equalize those using a `?`.
+```
+=dom-[a x3 ?]  $ Dominant arpeggio that takes up 12 beats because of internal reasons
+```
+### Rhythm Rotation
+TODO
+
 ## Advanced Rhythms
+Text2Music has a few rhythm families that do different things based on how many notes there are in the manipulated pattern.
+### Geometric
+Some natural rhythms such as bouncing balls can be hard to notate using integer multiples and tuplets alone. This is where the Concatenated Geometric rhythm family comes in. As the name implies that the durations are in a geometric progression and that they are concatenated together in time. You could also call this the Exponential rhythm family due to the way it sounds, but `cg` is more precise in meaning. TODO: Change the name in code
+```
+P1[x22 cg0.9 ?]
+```
+### Arithmetic
+TODO
+### Harmonic
+TODO
+### Euclidean
+TODO
+### Moment of Symmetry
 TODO
 
 ## <a name="pronunciation"></a> Pronunciation

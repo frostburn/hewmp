@@ -10,7 +10,7 @@
 | (     | open tuplet |
 | )     | close tuplet |
 | *     | 17 up inflection, interval exponent |
-| +     | 5 up inflection, time accumulation |
+| +     | 5 up inflection, tuplet concatenation (add durations) |
 | ,     | simultaneuous notes |
 | -     | 5 down inflection, interval inversion |
 | .     | rest |
@@ -19,7 +19,7 @@
 | :     | otonal chords |
 | ;     | utonal chords |
 | <     | 7 down inflection, time rotation |
-| =     | chord symbol |
+| =     | chord symbol, tuplet concatenation (preserve duration) |
 | >     | 7 up inflection, time rotation |
 | ?     | time expansion |
 | @     | absolute pitch, absolute time |

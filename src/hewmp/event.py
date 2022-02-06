@@ -630,6 +630,18 @@ class Pattern(MusicBase, Transposable):
             subpattern.extend_duration(logical_extension)
         super().extend_duration(extension)
 
+    def concatenate(self, other, add_durations):
+        duration = self.duration
+        if add_durations:
+            duration += other.duration
+        result = Pattern([], self.time, duration)
+        for subpattern in self.subpatterns:
+            result.append(subpattern.copy())
+        offset = self.logical_duration
+        for subpattern in other.subpatterns:
+            result.append(subpattern.retime(subpattern.time + offset, subpattern.duration))
+        return result
+
     def flatten(self):
         logical_duration = self.logical_duration
         if logical_duration == 0:

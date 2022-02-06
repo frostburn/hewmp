@@ -539,7 +539,7 @@ def parse_track(lexer, default_config):
     stack = []
     transposed_pattern = None
     current_pitch = zero_pitch()
-    timestamp = None
+    timestamp = 0
     if "interval_parser" in default_config:
         interval_parser = default_config["interval_parser"]
     else:

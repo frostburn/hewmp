@@ -419,24 +419,24 @@ $ Funky second voice
 ~3/2[@0] (. 1) 1 (. 1) | (1 1 1)[2] 1 1 ||
 ```
 ## Timestamp
-To specify a timestamp use `T`. To jump to the timestamp use `@T`.
+To specify a timestamp use `T`. To jump to the timestamp use `@T`. The default behaviour is to jump to the beginning of the song.
 ```
 $ First section soprano voice
-(. C5) B4 (. A4) G4 |
+   (. C5) B4 (. A4) G4 |
 $ First section alto voice
-C4[@0] D4  E4    E4 |
+@T C4     D4 E4     E4 |
 
 T  $ Mark the beginning of the second section
 $$$$ Second section soprano voice
 (. E5) (. C5) (. F4) C5 |
 @T $ Jump to the beginning of the second section
 $$$$ Second section alto voice
-F4      C4     A4    !  |
+F4     C4     A4     !  |
 
 $ Final section soprano
  T (. G4) (. B4) C5 ! ||
 $ Final section alto
-@T  E4     !     C4 ! ||
+@T E4     !      C4 ! ||
 ```
 ## Tracks
 You can have multiple tracks in your HEWMP score by separating them with `---` (three dashes). The first track is used to define the global config and it should be left without any music when using multiple tracks.
@@ -470,7 +470,7 @@ Use the config `BF:` to define what frequency is used for `@P1` and `A4`. Everyt
 BF:432  $ Now we're vibing
 ```
 ### Base Note
-Us the config `BN:` to change what absolute pitch has the same frequency as `@P1`. Default is `A4,J5`. (`J5` comes from the [Smitonic Extension](#smitonic))
+Use the config `BN:` to change what absolute pitch has the same frequency as `@P1`. Default is `A4,J5`. (`J5` comes from the [Smitonic Extension](#smitonic))
 ```
 BN:C4  $ Start from C=440Hz
 ```
@@ -507,8 +507,8 @@ Percussion notation uses shorthands for drums. Here are some basics.
 | s         | Acoustic Snare     |        |
 | h         | Closed Hi-hat      |        |
 | o         | Open Hi-hat        |        |
-| c         | Crash Cymbal 1     |        |
 | r         | Ride Cymbal 1      |        |
+| c         | Crash Cymbal 1     |        |
 | t5        | High Tom           |        |
 | t4        | Hi-Mid Tom         |        |
 | t3        | Low-Mid Tom        |        |
@@ -516,7 +516,7 @@ Percussion notation uses shorthands for drums. Here are some basics.
 | t1        | High Floor Tom     |        |
 | t0        | Low Floor Tom      |        |
 
-TODO: Document all shorthands
+See [percussion](doc/percussion.md) for the full list.
 ### Instrument
 Use `I:` to select an instrument. If the name corresponds to General MIDI the matching program is selected as well.
 ```

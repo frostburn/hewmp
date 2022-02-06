@@ -699,19 +699,30 @@ Patterns keep internal time separate from song time. You can equalize those usin
 =dom-[a x3 ?]  $ Dominant arpeggio that takes up 12 beats because of internal reasons
 ```
 ### Rhythm Rotation
-TODO
-
+Arrows in different directions shuffle around the logic and rhythm in various ways.
+```
+(P1 !! P4 ! P5 P8) ... R[^] ... R[<] ... R[v] ... R[>]
+```
+TODO: Actually explain what these do.
 ## Advanced Rhythms
 Text2Music has a few rhythm families that do different things based on how many notes there are in the manipulated pattern.
 ### Geometric
-Some natural rhythms such as bouncing balls can be hard to notate using integer multiples and tuplets alone. This is where the Concatenated Geometric rhythm family comes in. As the name implies that the durations are in a geometric progression and that they are concatenated together in time. You could also call this the Exponential rhythm family due to the way it sounds, but `cg` is more precise in meaning. TODO: Change the name in code
+Some natural rhythms such as bouncing balls can be hard to notate using integer multiples and tuplets alone. This is where the Concatenated Geometric rhythm family comes in. As the name implies the durations are in a geometric progression and the notes are concatenated together in time. You could also call this the Exponential rhythm family due to the way it sounds, but `CG` is more precise in meaning.
 ```
-P1[x22 cg0.9 ?]
+P1[x22 CG0.9 ?]  $ Note played in a bouncing ball rhythm of 22 bounces such that
+$ the first bounce takes one beat of time and each bounce is 90% of the duration of the last one.
 ```
 ### Arithmetic
-TODO
+An arithmetic progression starts with an initial duration and progressively adds a fixed duration to it. The initial duration is to the left of `CA` and the fixed duration is to the right. Concatenated arithmetic rhythms align with a grid while geometric rhythms generally do not.
+```
+=M-[x2 6CA-1 4]  $ Notes of a major chord with relative durations 6, 5, 4, 3, 2 and 1 such that the whole figure takes up 4 beats.
+```
 ### Harmonic
-TODO
+Geometric rhythms can get pretty fast pretty quickly to the point that they produce a pitched squeal. Harmonic progressions (1/1, 1/2, 1/3, 1/4, etc.) of durations are more subdued while still producing a good accelerando. In `{initial}CH{delta}` the durations are calculated as `1/(initial + n*delta)` for the nth note in the pattern.
+```
+N:percussion
+(k h s h)[x8 3CH2 6]  $ A drum pattern gettin progressively faster over 6 beats.
+```
 ### Euclidean
 TODO
 ### Moment of Symmetry

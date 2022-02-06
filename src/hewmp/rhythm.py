@@ -81,12 +81,12 @@ def mos_rhythm(num_onsets, generator, period=1):
     return list(zip(times, durations))
 
 
-def exponential_rhythm(num_onsets, factor):
+def concatenated_geometric_rhythm(num_onsets, initial, factor):
     """
-    Cumulated geometric progression
+    Concatenated geometric progression
     """
     time = 0
-    duration = 1
+    duration = initial
     result = []
     for _ in range(num_onsets):
         result.append((time, duration))
@@ -95,9 +95,9 @@ def exponential_rhythm(num_onsets, factor):
     return result
 
 
-def quadratic_rhythm(num_onsets, initial, delta):
+def concatenated_arithmetic_rhythm(num_onsets, initial, delta):
     """
-    Cumulated arithmetic progression
+    Concatenated arithmetic progression
     """
     time = 0
     duration = initial
@@ -111,9 +111,9 @@ def quadratic_rhythm(num_onsets, initial, delta):
     return result
 
 
-def logarithmic_rhythm(num_onsets, initial, delta):
+def concatenated_harmonic_rhythm(num_onsets, initial, delta):
     """
-    Cumulated harmonic progression
+    Concatenated harmonic progression
     """
     time = Fraction(0)
     result = []

@@ -14,7 +14,7 @@ from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch,
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
 from .smitonic import SMITONIC_INTERVAL_QUALITIES, SMITONIC_BASIC_PITCHES, smitonic_parse_arrows, smitonic_parse_pitch, SMITONIC_INFLECTIONS,  SMITONIC_EXTRA_CHORDS
-from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, exponential_rhythm, rotate_sequence, quadratic_rhythm, logarithmic_rhythm
+from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, rotate_sequence, concatenated_geometric_rhythm, concatenated_arithmetic_rhythm, concatenated_harmonic_rhythm
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
@@ -697,35 +697,27 @@ def parse_track(lexer, default_config):
                     pattern.last.rotate_rhythm(-token.count("^"))
                 elif token == "~":
                     pattern.last.stretch_subpatterns()
-                elif token == "a" or "e" in token or "q" in token or "l" in token or "E" in token or "MOS" in token:
+                elif token == "a" or "CG" in token or "CA" in token or "CH" in token or "E" in token or "MOS" in token:
                     num_onsets = len(pattern.last)
+
+                    if "C" in token:
+                        initial_token = token[:token.index("C")]
+                        if initial_token:
+                            initial = Fraction(initial_token)
+                        else:
+                            initial = Fraction(1)
 
                     if token == "a":
                         times_durations = [(i, 1) for i in range(num_onsets)]
-                    elif "e" in token:
-                        root_token = token[:token.index("e")]
-                        if root_token:
-                            root = Fraction(root_token)
-                        else:
-                            root = Fraction(1)
-                        factor = Fraction(token[token.index("e")+1:]) ** (1 / root)
-                        times_durations = exponential_rhythm(num_onsets, factor)
-                    elif "q" in token:
-                        initial_token = token[:token.index("q")]
-                        if initial_token:
-                            initial = Fraction(initial_token)
-                        else:
-                            initial = Fraction(1)
-                        delta = Fraction(token[token.index("q")+1:])
-                        times_durations = quadratic_rhythm(num_onsets, initial, delta)
-                    elif "l" in token:
-                        initial_token = token[:token.index("l")]
-                        if initial_token:
-                            initial = Fraction(initial_token)
-                        else:
-                            initial = Fraction(1)
-                        delta = Fraction(token[token.index("l")+1:])
-                        times_durations = logarithmic_rhythm(num_onsets, initial, delta)
+                    elif "CG" in token:
+                        factor = Fraction(token[token.index("G")+1:])
+                        times_durations = concatenated_geometric_rhythm(num_onsets, initial, factor)
+                    elif "CA" in token:
+                        delta = Fraction(token[token.index("A")+1:])
+                        times_durations = concatenated_arithmetic_rhythm(num_onsets, initial, delta)
+                    elif "CH" in token:
+                        delta = Fraction(token[token.index("H")+1:])
+                        times_durations = concatenated_harmonic_rhythm(num_onsets, initial, delta)
                     elif "E" in token:
                         rotation_token = token[:token.index("E")]
                         num_beats = int(token[token.index("E")+1:])

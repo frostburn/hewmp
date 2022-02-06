@@ -555,7 +555,7 @@ def parse_track(lexer, default_config):
     config["tuning"] = config["tuning"].copy()
     config["tempo"] = config["tempo"].copy()
     config["flags"] = list(config["flags"])
-    current_notation = config["N"]
+    current_notation = "hewmp"
     max_polyphony = None
 
     for token_obj in lexer:

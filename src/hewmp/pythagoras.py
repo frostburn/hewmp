@@ -112,36 +112,30 @@ BASIC_PITCHES = {
 REFERENCE_OCTAVE = 4
 
 
+ACCIDENTALS = "#xbtd" + "♮♯𝄪♭𝄫𝄲𝄳"
+
+
 def parse_pitch(token):
     letter = token[0]
     token = token[1:]
     token, octave = read_number(token)
     sharp = 0
-    while token and token[0] == "♮":
-        token = token[1:]
-    while token and token[0] in "#♯":
-        sharp += 1
-        token = token[1:]
-    while token and token[0] in "x𝄪":
-        sharp += 2
-        token = token[1:]
-    while token and token[0] in "b♭":
-        sharp -= 1
-        token = token[1:]
-    while token and token[0] == "𝄫":
-        sharp -= 2
-        token = token[1:]
-
-    while token and token[0] in "t𝄲":
-        sharp += 0.5
-        token = token[1:]
-    while token and token[0] in "d𝄳":
-        sharp -= 0.5
+    while token and token[0] in ACCIDENTALS:
+        if token[0] in "#♯":
+            sharp += 1
+        elif token[0] in "x𝄪":
+            sharp += 2
+        elif token[0] in "b♭":
+            sharp -= 1
+        elif token[0] == "𝄫":
+            sharp -= 2
+        elif token[0] in "t𝄲":
+            sharp += 0.5
+        elif token[0] in "d𝄳":
+            sharp -= 0.5
         token = token[1:]
 
-    result = [0, 0]
-    result[0] += AUGMENTED_INFLECTION[0] * sharp
-    result[1] += AUGMENTED_INFLECTION[1] * sharp
+    result = [AUGMENTED_INFLECTION[0] * sharp, AUGMENTED_INFLECTION[1] * sharp]
 
     if octave is None:
         token, octave = read_number(token)
@@ -152,6 +146,3 @@ def parse_pitch(token):
     result[1] += basic_pitch[1]
 
     return token, result
-
-
-ACCIDENTALS = "#xbtd" + "♮♯𝄪♭𝄫𝄲𝄳"

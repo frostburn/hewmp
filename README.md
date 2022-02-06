@@ -239,7 +239,7 @@ To lower the pitch by `2187/2048` append a flat sign `b` (spelled as a lowercase
 ```
 A4 A4b A♭4 A𝄫4
 ```
-You can stack any number of `#`, `x` or `b` (in that order) to modify the pitch further.
+You can stack any number of `#`, `x` or `b` to modify the pitch further.
 ```
 A4 A4bb
 ```

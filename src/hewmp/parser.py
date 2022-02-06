@@ -14,7 +14,7 @@ from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch,
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
 from .smitonic import SMITONIC_INTERVAL_QUALITIES, SMITONIC_BASIC_PITCHES, smitonic_parse_arrows, smitonic_parse_pitch, SMITONIC_INFLECTIONS,  SMITONIC_EXTRA_CHORDS
-from .rhythm import sequence_to_time_duration, euclidean_rhythm, mos_rhythm, rotate_sequence, concatenated_geometric_rhythm, concatenated_arithmetic_rhythm, concatenated_harmonic_rhythm
+from .rhythm import sequence_to_time_duration, euclidean_rhythm, pergen_rhythm, rotate_sequence, concatenated_geometric_rhythm, concatenated_arithmetic_rhythm, concatenated_harmonic_rhythm
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
@@ -698,7 +698,7 @@ def parse_track(lexer, default_config):
                     pattern.last.rotate_rhythm(-token.count("^"))
                 elif token == "~":
                     pattern.last.stretch_subpatterns()
-                elif token == "a" or "CG" in token or "CA" in token or "CH" in token or "E" in token or "MOS" in token:
+                elif token == "a" or "CG" in token or "CA" in token or "CH" in token or "E" in token or "PG" in token:
                     num_onsets = len(pattern.last)
 
                     if "C" in token:
@@ -726,14 +726,14 @@ def parse_track(lexer, default_config):
                         if rotation_token:
                             rhythm = rotate_sequence(rhythm, int(rotation_token))
                         times_durations = sequence_to_time_duration(rhythm)
-                    elif "MOS" in token:
-                        generator = Fraction(token[:token.index("M")])  # TODO: search for a balanced generator if missing
-                        period_token = token[token.index("S")+1:]
+                    elif "PG" in token:
+                        generator = Fraction(token[token.index("G")+1:])
+                        period_token = token[:token.index("P")]
                         if period_token:
                             period = Fraction(period_token)
                         else:
                             period = Fraction(1)
-                        times_durations = mos_rhythm(num_onsets, generator, period)
+                        times_durations = pergen_rhythm(num_onsets, generator, period)
 
                     for subpattern, td in zip(pattern.last, times_durations):
                         subpattern.time, subpattern.duration = td

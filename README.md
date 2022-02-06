@@ -399,7 +399,8 @@ C4=M-add8  $ I with an octave on top
 ### Complex Voicings
 More complex voicings are created by specifying the order of the chord tones `1` through `7` come in relation to the root `R`.
 ```
-D4=m7+_5R573  $ ii with a fifth bellow the root, another fifth above the root, a seventh above that and a third on the next octave.
+D4=m7+_5R573  $ ii with a fifth bellow the root, another fifth above the root,
+              $ a seventh above that and a third on the next octave.
 G4=dom-_57R3  $ V7 with a pythagorean m7 in second inversion
 C4=M-_R351    $ I with an octave on top
 ```
@@ -430,7 +431,8 @@ $ Funky second voice
 A bare soft pedal `~` inside square brackets extends the durations of notes inside the tuplets so that they end at the same time.
 ```
 (1 5/4 3/2 15/8)[~]     $ All notes of the tetrad hold until the end.
-(1 5/4 3/2 15/8)[~ !3]  $ Notes arpeggiate within one beat of time and hold together for 3 additional beats.
+(1 5/4 3/2 15/8)[~ !3]  $ Notes arpeggiate within one beat of time and
+                        $ hold together for 3 additional beats.
 ```
 
 ## Timestamp
@@ -715,7 +717,8 @@ $ the first bounce takes one beat of time and each bounce is 90% of the duration
 ### Arithmetic
 An arithmetic progression starts with an initial duration and progressively adds a fixed duration to it. The initial duration is to the left of `CA` and the fixed duration is to the right. Concatenated arithmetic rhythms align with a grid while geometric rhythms generally do not.
 ```
-=M-[x2 6CA-1 4]  $ Notes of a major chord with relative durations 6, 5, 4, 3, 2 and 1 such that the whole figure takes up 4 beats.
+=M-[x2 6CA-1 4]  $ Notes of a major chord with relative durations
+                 $ 6, 5, 4, 3, 2 and 1 such that the whole figure takes up 4 beats.
 ```
 ### Harmonic
 Geometric rhythms can get pretty fast pretty quickly to the point that they produce a pitched squeal. Harmonic progressions (1/1, 1/2, 1/3, 1/4, etc.) of durations are more subdued while still producing a good accelerando. In `{initial}CH{delta}` the durations are calculated as `1/(initial + n*delta)` for the nth note in the pattern.
@@ -733,8 +736,17 @@ N:percussion
 @T (w1 w1 w0 w0 w1)[E16 4 X4]
 ```
 See the first few patterns [here](/doc/euclidean_rhythms.md).
-### Moment of Symmetry
-TODO
+### Pergen
+All of the Euclidean rhythms are MOS or Multi-MOS rhythms meaning that they only have gaps of two sizes between onsets. All MOS rhythms can be produced with a period (size of the pattern) and a generator (a fixed distance between two onsets, not necessarily adjacent) that wraps around the period. Multi-MOS patterns are simply repeated MOS patterns. You can specify the period and the generator using `PG`.
+```
+P1[x5 12PG7 4]  $ Rhythmic pattern inspired by the layout of the white keys on a piano
+```
+The default period is one and fractional generators are supported.
+```
+$ Quartal arpeggio in a rhythm based on the golden ratio
+(P1 P4 m7 cm3 cm6)[x11 PG.618033988749895 13]
+```
+See some patterns with integer parameters [here](/doc/pergen_rhythms.md).
 
 ## <a name="pronunciation"></a> Pronunciation
 ### Inflections

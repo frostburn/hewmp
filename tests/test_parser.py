@@ -395,7 +395,7 @@ def test_euclidean_rhythm():
 
 
 def test_mos_rhythm():
-    text = "(P1 ~P8 ~P8 ~P8)[5MOS7 ?]"
+    text = "(P1 ~P8 ~P8 ~P8)[7PG5 ?]"
     notes = get_notes(text)
     times_durations = []
     for i in range(4):

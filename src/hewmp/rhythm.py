@@ -74,7 +74,7 @@ def rotate_string(string):
     return string[-1] + string[:-1]
 
 
-def mos_rhythm(num_onsets, generator, period=1):
+def pergen_rhythm(num_onsets, generator, period=1):
     beats = sorted([(generator * i) % period for i in range(num_onsets)] + [period])
     times = beats[:num_onsets]
     durations = diff(beats)
@@ -127,32 +127,51 @@ def concatenated_harmonic_rhythm(num_onsets, initial, delta):
 
 
 if __name__ == "__main__":
-    limit = 8
-    show_variations = True
-    seen = set()
-    print("MOS rhythms")
-    for period in range(2, limit+1):
-        for generator in range(1, period+1):
-            for num_onsets in range(1, period+1):
-                td = mos_rhythm(num_onsets, generator, period)
-                string = sequence_to_string(time_duration_to_sequence(td))
-                if string in seen:
-                    continue
-                for _ in range(len(string)):
-                    seen.add(string)
-                    string = rotate_string(string)
-                print("MOS({:2d},{:2d},{:2d}) =".format(num_onsets, generator, period), string)
+    import argparse
 
-    print("Euclidean rhythms")
-    for i in range(2, limit+1):
-        for j in range(1, i+1):
-            sequence = euclidean_rhythm(j, i)
-            string = sequence_to_string(sequence)
-            print("E({:2d},{:2d}) =".format(j, i), string, "! "[string in seen])
-            if show_variations:
-                variations = set([string])
-                for k in range(1, sum(sequence)):
-                    variation = sequence_to_string(rotate_sequence(sequence, k))
-                    if variation not in variations:
-                        print(" {}: {}".format(k, variation))
-                        variations.add(variation)
+    parser = argparse.ArgumentParser(description='Display rhythm patterns')
+    parser.add_argument('limit', type=int)
+    parser.add_argument('family', choices=["PG", "E"])
+    parser.add_argument('--variations', action='store_true')
+    args = parser.parse_args()
+
+    if args.family == "PG":
+        seen = set()
+        print("Pergen Rhythms")
+        for period in range(2, args.limit+1):
+            for generator in range(1, period+1):
+                for num_onsets in range(1, period+1):
+                    td = pergen_rhythm(num_onsets, generator, period)
+                    string = sequence_to_string(time_duration_to_sequence(td))
+                    if string in seen:
+                        continue
+                    for _ in range(len(string)):
+                        seen.add(string)
+                        string = rotate_string(string)
+                    for i in range(2, 10):
+                        s = string.replace(".", "y" * i)
+                        s = s.replace("x", "x" + "." * (i-1))
+                        s = s.replace("y", ".")
+                        for _ in range(len(s)):
+                            seen.add(s)
+                            s = rotate_string(s)
+                    mos = "{}PG{}".format(period, generator)
+                    x = "x{}".format(num_onsets)
+                    print("[{} {}] =".format(x.ljust(3), mos.center(5)), string)
+    else:
+        print("Euclidean Rhythms")
+        for i in range(2, args.limit+1):
+            for j in range(1, i+1):
+                sequence = euclidean_rhythm(j, i)
+                string = sequence_to_string(sequence)
+                euclid = "E{}".format(i)
+                x = "x{}".format(j)
+                print("[{} {}] =".format(x.ljust(3), euclid.center(3)), string)
+                if args.variations:
+                    variations = set([string])
+                    for k in range(1, sum(sequence)):
+                        variation = sequence_to_string(rotate_sequence(sequence, k))
+                        if variation not in variations:
+                            euclid = "{}E{}".format(k, i)
+                            print(" [{} {}] =".format(x.ljust(3), euclid.center(5)), variation)
+                            variations.add(variation)

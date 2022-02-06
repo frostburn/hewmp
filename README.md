@@ -77,27 +77,28 @@ To advance time without playing a note use the rest symbol `.`.
 Rests chain so `..` lasts twice as long as a single rest.
 
 ## Pedal
-To extend the duration of the last played note by one use the pedal symbol `!`. You can think of it as a loud rest that doesn't cut off the sound.
+To extend the duration of the last played note (or rest) by one use the pedal symbol `!`. You can think of it as a loud rest that doesn't cut off the sound. To specify how much to extend the duration use `!` followed by a number inside square brackets.
 ```
 1 !   6/5 3/2  $ The root note lasts twice as long as the other two
-1[+1] 6/5 3/2  $ The same
+1[!1] 6/5 3/2  $ The same
 ```
-Pedals chain so `!!` extends duration by two.
+Pedals chain so `!!` extends duration by two. Pedals also chain with rests so `1 !.!.` is a note of duration two followed by a rest of duration two followed by a rest. Consider it bad practice to extend rests with `!`. The proper spelling is `1 !...`.
 
 ## Soft pedal
-To only extend the playing duration of the last played note use the soft pedal symbol `-`. The corresponding symbol within square brackets is `~`.
+To only extend the playing duration of the last played note use the soft pedal symbol `~`.
 ```
-1 --  5/4 3/2  $ The root note rings throughout the whole arpeggio
+1 ~~  5/4 3/2  $ The root note rings throughout the whole arpeggio
 1[~2] 5/4 3/2  $ The same
 ```
+Soft pedal chains with plain pedals so `1 !~` is a note of duration three that takes up two units of time.
 
 ## Repeats
-To repeat the last note or pattern (useful with chords) use `R`. The pitch(es) will be the same but duration is reset to one.
+To repeat the last note or tuplet (useful with chords) use `R`. The pitch(es) will be the same but duration is reset to one.
 ```
 $ Repeats are not literal so these are the same note
 ~3/2[2] R
 ```
-Repeats chain with `!` so `R!` is the last pattern but of duration 2.
+Repeats chain with `!` so `R!` is the last note but of duration 2.
 
 ## Barlines
 Barlines `|` can be used to visually organize your music. They have no effect on the sound.
@@ -124,9 +125,9 @@ $ This section is ignored
 ```
 
 ### Ties
-To play a note across a barline use additive duration
+To play a note across a barline use pedal extension.
 ```
-1/1[2] 5/4[2]|[+4] | 3/2 2/1 1/1[2] ||
+1/1[2] 5/4[2]|[!4] | 3/2 2/1 1/1[2] ||
 ```
 
 ## Absolute Pitches
@@ -418,6 +419,14 @@ $ Steady pedal tone
 $ Funky second voice
 ~3/2[@0] (. 1) 1 (. 1) | (1 1 1)[2] 1 1 ||
 ```
+
+## Arpeggiate and Hold
+A bare soft pedal `~` inside square brackets extends the durations of notes inside the tuplets so that they end at the same time.
+```
+(1 5/4 3/2 15/8)[~]     $ All notes of the tetrad hold until the end.
+(1 5/4 3/2 15/8)[~ !3]  $ Notes arpeggiate within one beat of time and hold together for 3 additional beats.
+```
+
 ## Timestamp
 To specify a timestamp use `T`. To jump to the timestamp use `@T`. The default behaviour is to jump to the beginning of the song.
 ```

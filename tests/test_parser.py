@@ -281,7 +281,7 @@ def test_removed_tone():
 
 
 def test_extended_duration():
-    text = "P1|[+1]|P5=M-|[+2]||"
+    text = "P1|[!1]|P5=M-|[!2]||"
     notes = get_notes(text)
     assert notes[0].duration == 2
     assert notes[0].time == 0
@@ -313,7 +313,7 @@ def test_stretch_to_logical_duration():
 
 
 def test_tuplet_hold():
-    text = "(P1 ~M3- ~P5 ~P8)[2 ! +1] P1"
+    text = "(P1 ~M3- ~P5 ~P8)[2 ~ !1] P1"
     notes = get_notes(text)
     assert notes[0].duration == 3
     assert notes[0].time == 0

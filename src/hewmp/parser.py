@@ -52,6 +52,9 @@ for key, value in list(DEFAULT_INFLECTIONS.items()):
     DEFAULT_INFLECTIONS[key] = array(value + [0] * (PITCH_LENGTH - len(value)))
 
 
+TEMPORAL_MINI_LANGUAGE = ".!~R"  # Chainable tokens
+
+
 def parse_warts(token, index=0):
     token = token.lower()
     if "d" in token:
@@ -660,12 +663,12 @@ def parse_track(lexer, default_config):
                 time -= pattern.last.duration
                 pattern.last.duration = pattern.last.logical_duration
                 time += pattern.last.duration
-            elif token.startswith("+") or token.startswith("-"):
+            elif token.startswith("!"):
                 time -= pattern.last.duration
-                extension = parse_time(token)
+                extension = parse_time(token[1:])
                 pattern.last.extend_duration(extension)
                 time += pattern.last.duration
-            elif token.startswith("~"):
+            elif token.startswith("~") and len(token) > 1:
                 extension = parse_time(token[1:])
                 pattern.last.extend_duration(extension)
             elif token.startswith("@"):
@@ -690,7 +693,7 @@ def parse_track(lexer, default_config):
                     pattern.last.rotate_rhythm(token.count("v"))
                 elif "^" in token:
                     pattern.last.rotate_rhythm(-token.count("^"))
-                elif token == "!":
+                elif token == "~":
                     pattern.last.stretch_subpatterns()
                 elif token == "a" or "e" in token or "q" in token or "l" in token or "E" in token or "MOS" in token:
                     num_onsets = len(pattern.last)
@@ -765,11 +768,20 @@ def parse_track(lexer, default_config):
             raise ParsingError('Unmatched "]"')
         elif token == "&":
             transposed_pattern = pattern.pop()
-        elif token[0] == "R":
-            duration = token.count("R") + token.count("!")
-            repeated_pattern = pattern.last.retime(time, duration)
-            pattern.append(repeated_pattern)
-            time += pattern.last.duration
+        elif all(mt in TEMPORAL_MINI_LANGUAGE for mt in token):
+            for mini_token in token:
+                if mini_token == "R":
+                    repeated_pattern = pattern.last.retime(time, 1)
+                    pattern.append(repeated_pattern)
+                    time += pattern.last.duration
+                elif mini_token == ".":
+                    pattern.append(Rest(time))
+                    time += pattern.last.duration
+                elif mini_token == "!":
+                    pattern.last.extend_duration(1)
+                    time += 1
+                elif mini_token == "~":
+                    pattern.last.extend_duration(1)
         elif token == ",":
             time -= pattern.last.duration
         elif token in ARTICULATIONS:
@@ -778,19 +790,6 @@ def parse_track(lexer, default_config):
         elif token in DYNAMICS:
             dynamic = Dynamic(DYNAMICS[token], time)
             pattern.append(dynamic)
-        elif token[0] == ".":
-            duration = token.count(".")
-            rest = Rest(time, duration)
-            pattern.append(rest)
-            time += rest.duration
-        elif token[0] == "!":
-            time -= pattern.last.duration
-            extension = token.count("!")
-            pattern.last.extend_duration(extension)
-            time += pattern.last.duration
-        elif all(c == "-" for c in token):
-            extension = len(token)
-            pattern.last.extend_duration(extension)
         elif token == "T":
             timestamp = time
         elif token == "@T":

@@ -1,6 +1,6 @@
 | Glyph | Usages |
 |:-----:|:------:|
-| !     | 13 down inflection, shorthand for [+1]|
+| !     | 13 down inflection, extend duration and take up time |
 | "     | user message |
 | #     | sharp sign |
 | $     | comment |
@@ -12,7 +12,7 @@
 | *     | 17 up inflection, interval exponent |
 | +     | 5 up inflection, time accumulation |
 | ,     | simultaneuous notes |
-| -     | 5 down inflection, interval inversion, shorthand for [~1] |
+| -     | 5 down inflection, interval inversion |
 | .     | rest |
 | /     | fractions, interval root |
 | 0-9   | time, duration, interval degree, pitch octave, complex chord voicings |

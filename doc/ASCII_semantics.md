@@ -4,7 +4,7 @@
 | "     | user message |
 | #     | sharp sign |
 | $     | comment |
-| %     | 17 down inflection |
+| %     | 17 down inflection, repeat last pattern |
 | &     | transposition |
 | '     | staccato |
 | (     | open tuplet |
@@ -40,7 +40,7 @@
 | O     | smitonic pitch |
 | P     | perfect interval |
 | Q     | smitonic pitch |
-| R     | repeat last pattern, indicate root in a complex voicing |
+| R     | indicate root in a complex voicing |
 | S     | smitonic pitch |
 | T     | timestamp |
 | U     | 29 up inflection, smitonic pitch |

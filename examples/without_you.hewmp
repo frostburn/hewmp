@@ -19,21 +19,21 @@ yD3 !!!!! !   ! | ! yD3 !!!!! .  |yD3 !!!!! !   ! | ! yD3 !!!!! .  | C3 !!!!! ! 
 
 @T $ Section A: Treble voices
 |:
-.   .  (yG3,Bb3,F4  )! R!! R|!! R! zDb4 C4   Bb3  ! |
-.   .  (yG3,Bb3,ryE4)! R!! R|!! R! zDb4 C4   Bb3  ! |
-.   .  (yA3,C4 ,zEb4)! R!! R|!! R! zDb4 !    C4   ! |
-Bb3 !  (F3 ,Bb3,yD4 )! R!! R|!! R! zAb3 zAb3 zAb3 !
+.   .  (yG3,Bb3,F4  )! %!! %|!! %! zDb4 C4   Bb3  ! |
+.   .  (yG3,Bb3,ryE4)! %!! %|!! %! zDb4 C4   Bb3  ! |
+.   .  (yA3,C4 ,zEb4)! %!! %|!! %! zDb4 !    C4   ! |
+Bb3 !  (F3 ,Bb3,yD4 )! %!! %|!! %! zAb3 zAb3 zAb3 !
 :|x2
 
 
 T  $ Section B: Bass voices
-(Eb2,Bb2)!!!!! R!|!!! (zGb2,zDb3)!!!!|(Ab2,Eb3)!!!!! R!|!!! (zGb2,zDb3)!!!!|
-(Eb2,Bb2)!!!!! R!|!!! (zGb2,zDb3)!!!!|
+(Eb2,Bb2)!!!!! %!|!!! (zGb2,zDb3)!!!!|(Ab2,Eb3)!!!!! %!|!!! (zGb2,zDb3)!!!!|
+(Eb2,Bb2)!!!!! %!|!!! (zGb2,zDb3)!!!!|
 
 @T $ Section B: Treble voices
-yG3 ! (yG3,Bb3,zDb4)! R!! R         |! R         !. Eb4 zDb4 Bb3 ! |
-Ab3 ! (Ab3,yC4     )! R!! (zGb3,Cb4)|! (Ab3,yC4) !. Eb4 zDb4 Bb3 ! |
-yG3 ! (yG3,Bb3,zDb4)! R!! R         |! R         !. Eb4 zDb4 Bb3 ! |
+yG3 ! (yG3,Bb3,zDb4)! %!! %         |! %         !. Eb4 zDb4 Bb3 ! |
+Ab3 ! (Ab3,yC4     )! %!! (zGb3,Cb4)|! (Ab3,yC4) !. Eb4 zDb4 Bb3 ! |
+yG3 ! (yG3,Bb3,zDb4)! %!! %         |! %         !. Eb4 zDb4 Bb3 ! |
 
 
 T  $ Section B continued: Low bass voice
@@ -46,8 +46,8 @@ C3 !!!!! !  !|! C3 !! ....|.   . Bb2 ! !    !    ! Bb2|!!!!!!! . |Bb2 !!!!! !  !
 .  ..... .  .|. .  .. ....|.   . .   . .    zDb3 ! .  |
 
 @T $ Section B continued: Treble voices
-yA3 ! (yA3,C4,zEb4)! R!! R|!! R! R ! (zAb3,ryB3,yD4)! | (yG3,Bb3,zDb4)!!! !!! !|!!!!!!!!|
-.   . (F3,Bb3,yD4 )! R!! R|!! R! ! R !              ! | (F3 ,Bb3,yD4 )!!! R!! R|!!!!!!!!||
+yA3 ! (yA3,C4,zEb4)! %!! %|!! %! % ! (zAb3,ryB3,yD4)! | (yG3,Bb3,zDb4)!!! !!! !|!!!!!!!!|
+.   . (F3,Bb3,yD4 )! %!! %|!! %! ! % !              ! | (F3 ,Bb3,yD4 )!!! %!! %|!!!!!!!!||
 
 ---
 I:Acoustic Bass
@@ -83,13 +83,13 @@ L:1/8
 .  $ Leave room for pick-up
 
 $ Section A first repeat
-|: k,h .   h . ss,h .  h,k k  :|x7
+|: k,h .   h . st,h .  h,k k  :|x7
 |  k,h .   h . t4   t3 t2  t1  |
 $ Section A second repeat
-|: k,h .   h . ss,h .  h,k k  :|x7
+|: k,h .   h . st,h .  h,k k  :|x7
 |  k,h .   h . t4   t3 t2  t1  |
 $ Section B
 |: k,r .   . k k,r  .  t3  t3 :|x8
 .[8] | c[8]
-|: k,h .   h . ss,h .  h,k k  :|x3
+|: k,h .   h . st,h .  h,k k  :|x3
 h[8] ||

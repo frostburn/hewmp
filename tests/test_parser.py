@@ -1,6 +1,6 @@
 from fractions import Fraction
 from numpy import array, dot, isclose, exp, log
-from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX, Tuning, Note, sync_playheads
+from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, E_INDEX, HZ_INDEX, RAD_INDEX, Tuning, Note, sync_playheads, Percussion
 from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interval
 from hewmp.smitonic import smitonic_tokenize_interval, SMITONIC_INFLECTIONS, smitonic_tokenize_pitch
 
@@ -698,7 +698,7 @@ def test_pedal():
 
 
 def test_repeat():
-    text = "(A4,C5)[3] R R!"
+    text = "(A4,C5)[3] % %!"
     notes = get_notes(text)
     durations = []
     times = []
@@ -738,6 +738,30 @@ def test_flavor_chord_ups_and_downs():
     notes = get_notes(text)
     pitches = [[0], [6, -5, 1], [-1, 1], [-8, 7, -1]]
     expect_pitches(notes, pitches)
+
+
+def test_percussion_chaining():
+    text = "N:percussion\nkh.sh%kh!sho"
+    pattern = parse_text(text)[0][0]
+    expected = [
+        ("Acoustic Bass Drum", 0, 1),
+        ("Closed Hi-hat", 1, 1),
+        ("Acoustic Snare", 3, 1),
+        ("Closed Hi-hat", 4, 1),
+        ("Closed Hi-hat", 5, 1),
+        ("Acoustic Bass Drum", 6, 1),
+        ("Closed Hi-hat", 7, 2),
+        ("Acoustic Snare", 9, 1),
+        ("Closed Hi-hat", 10, 1),
+        ("Open Hi-hat", 11, 1),
+    ]
+
+    for event in pattern:
+        if isinstance(event, Percussion):
+            name, time, duration = expected.pop(0)
+            assert event.name == name
+            assert event.time == time
+            assert event.duration == duration
 
 
 if __name__ == '__main__':
@@ -798,3 +822,4 @@ if __name__ == '__main__':
     test_up_down_chords()
     test_complex_voicing()
     test_flavor_chord_ups_and_downs()
+    test_percussion_chaining()

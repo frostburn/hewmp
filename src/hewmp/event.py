@@ -546,7 +546,7 @@ class Pattern(MusicBase, Transposable):
     @property
     def last_voiced(self):
         for event in reversed(self.subpatterns):
-            if isinstance(event, (Note, Pattern)):
+            if isinstance(event, (Note, Percussion, Pattern)):
                 return event
 
     def simplify(self):

@@ -52,7 +52,7 @@ for key, value in list(DEFAULT_INFLECTIONS.items()):
     DEFAULT_INFLECTIONS[key] = array(value + [0] * (PITCH_LENGTH - len(value)))
 
 
-TEMPORAL_MINI_LANGUAGE = ".!~R"  # Chainable tokens
+TEMPORAL_MINI_LANGUAGE = ".!~%"  # Chainable tokens
 
 
 def parse_warts(token, index=0):
@@ -776,7 +776,7 @@ def parse_track(lexer, default_config):
             time -= concatenated_pattern.duration
         elif all(mt in TEMPORAL_MINI_LANGUAGE for mt in token):
             for mini_token in token:
-                if mini_token == "R":
+                if mini_token == "%":
                     repeated_pattern = pattern.last_voiced.retime(time, 1)
                     pattern.append(repeated_pattern)
                     time += pattern.last.duration
@@ -812,10 +812,31 @@ def parse_track(lexer, default_config):
             message = UserMessage(token[1:], time)
             pattern.append(message)
         elif current_notation == "percussion":
-            index, name = PERCUSSION_SHORTHANDS[token]
-            percussion = Percussion(name, index, time)
-            pattern.append(percussion)
-            time += percussion.duration
+            if token in PERCUSSION_SHORTHANDS:
+                index, name = PERCUSSION_SHORTHANDS[token]
+                percussion = Percussion(name, index, time)
+                pattern.append(percussion)
+                time += percussion.duration
+            else:
+                for mini_token in token:
+                    if mini_token in PERCUSSION_SHORTHANDS:
+                        index, name = PERCUSSION_SHORTHANDS[mini_token]
+                        percussion = Percussion(name, index, time)
+                        pattern.append(percussion)
+                        time += percussion.duration
+                    elif mini_token == "%":
+                        repeated_pattern = pattern.last_voiced.retime(time, 1)
+                        pattern.append(repeated_pattern)
+                        time += pattern.last.duration
+                    elif mini_token == ".":
+                        pattern.append(Rest(time))
+                        time += pattern.last.duration
+                    elif mini_token == "!":
+                        pattern.last.extend_duration(1)
+                        time += 1
+                    elif mini_token == "~":
+                        pattern.last.extend_duration(1)
+
         elif current_notation == "hewmp":
             if token.startswith("=") or ":" in token or ";" in token:
                 if token_obj.whitespace or not token.startswith("=") or not pattern or isinstance(pattern[-1], NewLine):

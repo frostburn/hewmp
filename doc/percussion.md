@@ -1,49 +1,80 @@
-| shorthand | name               |
-|:---------:|:------------------:|
-| k         | Acoustic Bass Drum |
-| K         | Electric Bass Drum |
-| s         | Acoustic Snare     |
-| S         | Electric Snare     |
-| h         | Closed Hi-hat      |
-| H         | Pedal Hi-hat       |
-| o         | Open Hi-hat        |
-| r         | Ride Cymbal 1      |
-| R         | Ride Cymbal 2      |
-| rb        | Ride Bell          |
-| c         | Crash Cymbal 1     |
-| C         | Crash Cymbal 2     |
-| cc        | Chinese Cymbal     |
-| sc        | Splash Cymbal      |
-| t5        | High Tom           |
-| t4        | Hi-Mid Tom         |
-| t3        | Low-Mid Tom        |
-| t2        | Low Tom            |
-| t1        | High Floor Tom     |
-| t0        | Low Floor Tom      |
-| ss        | Side Stick         |
-| hc        | Hand Clap          |
-| tr        | Tabourine          |
-| cb        | Cowbell            |
-| v         | Vibraslap          |
-| b1        | High Bongo         |
-| b0        | Low Bongo          |
-| m1        | Mute High Conga    |
-| c1        | Open High Conga    |
-| c0        | Low Conga          |
-| T1        | High Timbale       |
-| T0        | Low Timbale        |
-| a1        | High Agogô         |
-| a0        | Low Agogô          |
-| ca        | Cabasa             |
-| m         | Maracas            |
-| sw        | Short Whistle      |
-| lw        | Long Whistle       |
-| sg        | Short Guiro        |
-| lg        | Long Guiro         |
-| cs        | Claves             |
-| w1        | High Woodblock     |
-| w0        | Low Woodblock      |
-| mc        | Mute Cuica         |
-| oc        | Open Cuica         |
-| mt        | Mute Triangle      |
-| ot        | Open Triangle      |
+| shorthand | name | index |
+|:---------:|:----:|:-----:|
+| k | Acoustic Bass Drum | 35 |
+| K | Electric Bass Drum | 36 |
+| z | Side Stick | 37 |
+| s | Acoustic Snare | 38 |
+| S | Electric Snare | 40 |
+| x | Hand Clap | 39 |
+| X | Claves | 75 |
+| h | Closed Hi-hat | 42 |
+| H | Pedal Hi-hat | 44 |
+| o | Open Hi-hat | 46 |
+| c | Crash Cymbal 1 | 49 |
+| C | Crash Cymbal 2 | 57 |
+| 0 | Low Floor Tom | 41 |
+| 1 | High Floor Tom | 43 |
+| 2 | Low Tom | 45 |
+| 3 | Low-Mid Tom | 47 |
+| 4 | Hi-Mid Tom | 48 |
+| 5 | High Tom | 50 |
+| r | Ride Cymbal 1 | 51 |
+| R | Ride Cymbal 2 | 59 |
+| d | Ride Bell | 53 |
+| y | Chinese Cymbal | 52 |
+| Y | Splash Cymbal | 55 |
+| j | Tambourine | 54 |
+| e | Cowbell | 56 |
+| v | Vibraslap | 58 |
+| B | High Bongo | 60 |
+| b | Low Bongo | 61 |
+| M | Mute High Conga | 62 |
+| G | Open High Conga | 63 |
+| g | Low Conga | 64 |
+| I | High Timbale | 65 |
+| i | Low Timbale | 66 |
+| A | High Agogô | 67 |
+| a | Low Agogô | 68 |
+| Z | Cabasa | 69 |
+| m | Maracas | 70 |
+| l | Short Whistle | 71 |
+| L | Long Whistle | 72 |
+| q | Short Guiro | 73 |
+| Q | Long Guiro | 74 |
+| W | High Woodblock | 76 |
+| w | Low Woodblock | 77 |
+| u | Mute Cuica | 78 |
+| U | Open Cuica | 79 |
+| n | Mute Triangle | 80 |
+| N | Open Triangle | 81 |
+
+## Longer Forms
+| shorthand | name | index |
+|:---------:|:----:|:-----:|
+| st | Side Stick | 37 |
+| hc | Hand Clap | 39 |
+| t0 | Low Floor Tom | 41 |
+| t1 | High Floor Tom | 43 |
+| t2 | Low Tom | 45 |
+| t3 | Low-Mid Tom | 47 |
+| t4 | Hi-Mid Tom | 48 |
+| t5 | High Tom | 50 |
+| cc | Chinese Cymbal | 52 |
+| rb | Ride Bell | 53 |
+| tr | Tambourine | 54 |
+| sc | Splash Cymbal | 55 |
+| cb | Cowbell | 56 |
+| m1 | Mute High Conga | 62 |
+| c1 | Open High Conga | 63 |
+| c0 | Low Conga | 64 |
+| T1 | High Timbale | 65 |
+| T0 | Low Timbale | 66 |
+| sw | Short Whistle | 71 |
+| lw | Long Whistle | 72 |
+| sg | Short Guiro | 73 |
+| lg | Long Guiro | 74 |
+| cs | Claves | 75 |
+| mc | Mute Cuica | 78 |
+| oc | Open Cuica | 79 |
+| mt | Mute Triangle | 80 |
+| ot | Open Triangle | 81 |

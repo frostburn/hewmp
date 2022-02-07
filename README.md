@@ -93,16 +93,16 @@ To only extend the playing duration of the last played note use the soft pedal s
 Soft pedal chains with plain pedals so `1 !~` is a note of duration three that takes up two units of time.
 
 ## Repeats
-To repeat the last note or tuplet (useful with chords) use `R`. The pitch(es) will be the same but duration is reset to one.
+To repeat the last note or tuplet (useful with chords) use `%`. The pitch(es) will be the same but duration is reset to one.
 ```
 $ Repeats are not literal so these are the same note
-~3/2[2] R
+~3/2[2] %
 ```
-Repeats chain with `!` so `R!` is the last note but of duration 2.
+Repeats chain with `!` so `%!` is the last note but of duration 2.
 Repeats skip over rests.
 ```
 77/62  $ Something complicated
-.R..R!!.RR.R  $ Cool rhythm without having to spell it out every time
+.%..%!!.%%.%  $ Cool rhythm without having to spell it out every time
 ```
 
 ## Barlines
@@ -532,8 +532,27 @@ Percussion notation uses shorthands for drums. Here are some basics.
 | t2        | Low Tom            |        |
 | t1        | High Floor Tom     |        |
 | t0        | Low Floor Tom      |        |
-
 See [percussion](doc/percussion.md) for the full list.
+
+Every percussion shorthand has a one letter alternative that chains with rests for concise notation.
+```
+N:percussion
+L:1/16
+$ 3 against 4 against 5 polymeter
+ T h..h..h..h..h..h..h..h..h..h..h..h..h..h..h..h..h..h..h..h..h
+@T s...s...s...s...s...s...s...s...s...s...s...s...s...s...s...s
+@T k....k....k....k....k....k....k....k....k....k....k....k....k
+```
+```
+N:percussion
+L:1/1
+$ 3 against 4 against 5 polyrhythm
+ T (k k k)(k k k)(k k k)(k k k)
+@T (ss ss)(ss ss)(ss ss)(ss ss)
+@T (hhhhh)(hhhhh)(hhhhh)(hhhhh)
+```
+Warning: Some two letter names look like chains. `hc` is one Hand Clap instead of a Closed Hi-hat followed by Crash Cymbal 1. Only use chaining for patterns longer than three beats to be safe.
+
 ### Instrument
 Use `I:` to select an instrument. If the name corresponds to General MIDI the matching program is selected as well.
 ```
@@ -733,7 +752,7 @@ $ Rhythm section composed of claves, hand claps and wood blocks.
 N:percussion
    cs[x5 E8 4 X4]
 @T hc[x7 E16 4 X4]
-@T (w1 w1 w0 w0 w1)[E16 4 X4]
+@T (W W w w W)[E16 4 X4]
 ```
 See the first few patterns [here](/doc/euclidean_rhythms.md).
 ### Pergen

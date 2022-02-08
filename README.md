@@ -327,6 +327,14 @@ A4 ryC5  $ Jump from wa A4 to ruyo C5
 A4 C5&r1&y1  $ The same, but with explicit commas using transpositions.
 ```
 For more details see [Color Notation](https://en.xen.wiki/w/Color_notation) in the Xenharmonic Wiki.
+### Color Chords
+The functionality of the Color Chord system is mostly implemented, but due to limitations of this beta the spelling has been changed. Root note octave and the chord token `=` is mandatory. Instead of `,` use `+` for added tones. Instead of `()` use `\` for replacements. Color Chords are in root position by default.
+```
+C4=y  $ C yo chord; Cy in the original system.
+D4=w\y5  $ D wa yo-5 chord; Dw(y5) in the original.
+E4=r+ry5no5  $ E ru ruyo-4 no 5 chord; Er,ry4no5 in the original.
+```
+
 ## Figuring Out Spellings
 If you want to see how a certain fraction is spelled use the notation module.
 ```

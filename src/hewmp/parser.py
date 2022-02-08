@@ -1082,7 +1082,7 @@ FREQ_A4 = 440
 INDEX_A4 = 69
 MIDI_STEP = 2**(1/12)
 
-def freq_to_midi_12(frequency, pitch_bend_depth):
+def freq_to_midi_12(frequency, pitch_bend_depth=2):
     ratio = frequency / FREQ_A4
     steps = log(ratio) / log(MIDI_STEP)
     steps += INDEX_A4
@@ -1111,7 +1111,7 @@ def freq_to_midi_et(frequency, et_divisions, et_divided=2):
     return index, bend
 
 
-def tracks_to_midi(tracks, freq_to_midi, reserve_channel_10=True, transpose=0, resolution=960):
+def tracks_to_midi(tracks, freq_to_midi=freq_to_midi_12, reserve_channel_10=True, transpose=0, resolution=960):
     """
     Save tracks as a midi file with per-channel pitch-bend for microtones.
 

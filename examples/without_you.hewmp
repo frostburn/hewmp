@@ -9,45 +9,36 @@ MP:14
 
 ff
 
-yG2  $ Low bass pick-up
-T  $ Section A: Low bass voice
-|:
-!   !!!!! yG2 ! | ! !   !!!!! yG2|!   !!!!! yG2 ! | ! !   !!!!! F2 | !  !!!!! F2 ! | ! !  !!!!!! | F2  !!!!! F2 ! | ! !   !!!!! yG2
-:| @T "Section A: High bass voice"  |:
-yD3 !!!!! !   ! | ! yD3 !!!!! .  |yD3 !!!!! !   ! | ! yD3 !!!!! .  | C3 !!!!! !  ! | ! C3 !!!!!! | Bb2 !!!!! !  ! | ! Bb2 !!!!! .
-:|x2
+.  $ Leave room for pick-up
 
-@T $ Section A: Treble voices
+$ Section A: Treble voices
 |:
 .   .  (yG3,Bb3,F4  )! %!! %|!! %! zDb4 C4   Bb3  ! |
 .   .  (yG3,Bb3,ryE4)! %!! %|!! %! zDb4 C4   Bb3  ! |
 .   .  (yA3,C4 ,zEb4)! %!! %|!! %! zDb4 !    C4   ! |
 Bb3 !  (F3 ,Bb3,yD4 )! %!! %|!! %! zAb3 zAb3 zAb3 !
-:|x2
+:|
+
+$ Section A: Bass voices
+@T .   |: yD3 !!!!! !   ! | ! yD3 !!!!! .  |yD3 !!!!! !   ! | ! yD3 !!!!! .  | C3 !!!!! !  ! | ! C3 !!!!!! | Bb2 !!!!! !  ! | ! Bb2 !!!!! .   :|
+@T yG2 |: !   !!!!! yG2 ! | ! !   !!!!! yG2|!   !!!!! yG2 ! | ! !   !!!!! F2 | !  !!!!! F2 ! | ! !  !!!!!! | F2  !!!!! F2 ! | ! !   !!!!! yG2 :|
 
 
-T  $ Section B: Bass voices
-(Eb2,Bb2)!!!!! %!|!!! (zGb2,zDb3)!!!!|(Ab2,Eb3)!!!!! %!|!!! (zGb2,zDb3)!!!!|
-(Eb2,Bb2)!!!!! %!|!!! (zGb2,zDb3)!!!!|
 
-@T $ Section B: Treble voices
+T  $ Section B: Treble voices
 yG3 ! (yG3,Bb3,zDb4)! %!! %         |! %         !. Eb4 zDb4 Bb3 ! |
 Ab3 ! (Ab3,yC4     )! %!! (zGb3,Cb4)|! (Ab3,yC4) !. Eb4 zDb4 Bb3 ! |
 yG3 ! (yG3,Bb3,zDb4)! %!! %         |! %         !. Eb4 zDb4 Bb3 ! |
 
-
-T  $ Section B continued: Low bass voice
-F2 !!!!! F2 !|! !  !! ....|yG2 ! !   ! !    !    ! Eb2|!!!!!!! F2|!   !!!!! F2 !|! !   !! F2 ! !   !|!! F2 !! !   !!|!!!!!!!!||
-@T $ Section B continued: High bass voice
-C3 !!!!! !  !|! C3 !! ....|.   . Bb2 ! !    !    ! Bb2|!!!!!!! . |Bb2 !!!!! !  !|! Bb2 !! !  ! Bb2 !|!! !  !! Bb2 !!|!!!!!!!!||
-@T $ Section B continued: Remaining bass voices
-.  ..... .  .|. .  .. ....|.   . .   . ryE3 !    ! Eb3|!!!!!!! . |
-@T $ Section B continued: Remaining bass voices
-.  ..... .  .|. .  .. ....|.   . .   . .    zDb3 ! .  |
-
-@T $ Section B continued: Treble voices
 yA3 ! (yA3,C4,zEb4)! %!! %|!! %! % ! (zAb3,ryB3,yD4)! | (yG3,Bb3,zDb4)!!! !!! !|!!!!!!!!|
 .   . (F3,Bb3,yD4 )! %!! %|!! %! ! % !              ! | (F3 ,Bb3,yD4 )!!! %!! %|!!!!!!!!||
+
+
+@T  $ Section B: Bass voices
+(Eb2,Bb2)!!!!! %!|!!! (zGb2,zDb3)!!!!|(Ab2,Eb3)!!!!! %!|!!! (zGb2,zDb3)!!!!|(Eb2,Bb2)!!!!! %!|!!! (zGb2,zDb3)!!!!|
+
+ T C3 !!!!! !  !|! C3 !! ....|.   . Bb2 !~~~ ryE3   !    ! Bb2      |!!!!!!! . |Bb2 !!!!! !  !|! Bb2 !! !  ! Bb2 !|!! !  !! Bb2 !!|!!!!!!!!||
+@T F2 !!!!! F2 !|! !  !! ....|yG2 ! !   !    !~~    zDb3 ! (Eb2,Eb3)|!!!!!!! F2|!   !!!!! F2 !|! !   !! F2 ! !   !|!! F2 !! !   !!|!!!!!!!!||
 
 ---
 I:Acoustic Bass

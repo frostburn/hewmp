@@ -467,8 +467,9 @@ def parse_time(token):
 
 
 class RepeatExpander:
-    def __init__(self, lexer):
+    def __init__(self, lexer, max_repeats=None):
         self.lexer = lexer
+        self.max_repeats = max_repeats
 
     def __iter__(self):
         self.repeated_section = []
@@ -494,6 +495,8 @@ class RepeatExpander:
                 num_repeats_token = self.lexer.peek()
                 if not num_repeats_token.is_end() and num_repeats_token.value.startswith("x"):
                     num_repeats = int(num_repeats_token.value[1:])
+                    if self.max_repeats is not None and num_repeats > self.max_repeats:
+                        raise ParsingError("Too many section repeats")
                     self.repeated_section *= num_repeats
                     next(self.lexer)
                 else:
@@ -532,7 +535,7 @@ DYNAMICS = {
 }
 
 
-def parse_track(lexer, default_config):
+def parse_track(lexer, default_config, max_repeats=None):
     config_mode = False
     config_key = None
     time_mode = False
@@ -681,7 +684,10 @@ def parse_track(lexer, default_config):
             elif token.lower().startswith("x"):
                 pattern.last = patternify(pattern.last)
                 time -= pattern.last.duration
-                pattern.last.repeat(int(token[1:]), affect_duration=(token.startswith("X")))
+                num_repeats = int(token[1:])
+                if max_repeats is not None and num_repeats > max_repeats:
+                    raise ParsingError("Too many repeats")
+                pattern.last.repeat(num_repeats, affect_duration=(token.startswith("X")))
                 time += pattern.last.duration
             elif isinstance(pattern.last, Pattern):
                 if token == "R":
@@ -919,20 +925,20 @@ def parse_track(lexer, default_config):
     return pattern, config
 
 
-def parse_file(file):
+def parse_file(file, max_repeats=None):
     if not file.seekable():
         file = StringIO(file.read())
-    lexer = RepeatExpander(Lexer(file))
-    global_track, global_config = parse_track(lexer, DEFAULT_CONFIG)
+    lexer = RepeatExpander(Lexer(file), max_repeats=max_repeats)
+    global_track, global_config = parse_track(lexer, DEFAULT_CONFIG, max_repeats=max_repeats)
     results = [global_track]
     while not lexer.done:
-        pattern, _ = parse_track(lexer, global_config)
+        pattern, _ = parse_track(lexer, global_config, max_repeats=max_repeats)
         results.append(pattern)
     return results, global_config
 
 
-def parse_text(text):
-    return parse_file(StringIO(text))
+def parse_text(text, max_repeats=None):
+    return parse_file(StringIO(text), max_repeats=max_repeats)
 
 
 def simplify_tracks(data):

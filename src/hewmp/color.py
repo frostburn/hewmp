@@ -10,6 +10,9 @@ from .monzo import PRIMES, fraction_to_monzo
 PSEUDO_EDO_MAPPING = (7, 11, 16, 20, 24, 26, 29, 30, 32, 34, 37)
 
 
+MAX_HARMONIC_CHORD = 36
+
+
 LONG_FORMS = {
     "yo": (2, 1),
     "gu": (2, -1),
@@ -367,7 +370,10 @@ def expand_chord(token):
         if token[0] == "f":
             full = True
             token = token[1:]
-        chord = make_harmonic_chord(int(token), full, close_voicing)
+        limit = int(token)
+        if limit > MAX_HARMONIC_CHORD:
+            raise ColorParsingError("Too large harmonic chord")
+        chord = make_harmonic_chord(limit, full, close_voicing)
 
         for tone in removed_tones[:]:
             if tone > 13:
@@ -403,7 +409,10 @@ def expand_chord(token):
         if token == "6":
             chord = ["w1", "g3", "w5", "r6"]
         else:
-            chord = make_subharmonic_chord(int(token), full, close_voicing)
+            limit = int(token)
+            if limit > MAX_HARMONIC_CHORD:
+                raise ColorParsingError("Too large subharmonic chord")
+            chord = make_subharmonic_chord(limit, full, close_voicing)
             chord = [fraction_to_color(tone) for tone in chord]
 
     if chord is None:

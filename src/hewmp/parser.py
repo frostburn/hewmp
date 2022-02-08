@@ -1069,6 +1069,15 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
     return ""
 
 
+def patterns_to_fractions(patterns, outfile):
+    for pattern in patterns:
+        if pattern.duration <= 0:
+            continue
+        outfile.write("---\n")
+        outfile.write(tokenize_pattern(pattern, _tokenize_fractions_chord, _tokenize_fractions_pitch, True))
+        outfile.write("\n")
+
+
 FREQ_A4 = 440
 INDEX_A4 = 69
 MIDI_STEP = 2**(1/12)
@@ -1262,12 +1271,7 @@ if __name__ == "__main__":
         export_midi = False
 
     if args.fractional:
-        for pattern in patterns:
-            if pattern.duration <= 0:
-                continue
-            args.outfile.write("---\n")
-            args.outfile.write(tokenize_pattern(pattern, _tokenize_fractions_chord, _tokenize_fractions_pitch, True))
-            args.outfile.write("\n")
+        patterns_to_fractions(patterns, args.outfile)
     elif args.absolute:
         inflections = reverse_inflections(DEFAULT_INFLECTIONS)
         _chord = lambda pattern: _tokenize_absolute_chord(pattern, inflections)

@@ -3,7 +3,7 @@ from hewmp.lexer import Lexer
 
 
 def test_lexer():
-    reader = StringIO("""
+    text = """
         $ Global config
         T:whatever
         Q:1/5=777  $ Somewhat speedily
@@ -26,9 +26,16 @@ def test_lexer():
         =M-[~][!2]
         (P1,M2,M2,M2)[~ !1]
         =M-7[< r R E7 vv 2]
-    """)
+    """
+    reader = StringIO(text)
     lexer = Lexer(reader)
     tokens = list(lexer)
+    token = tokens[2]
+    assert text[:token.index][-len(token.value):] == "T:"
+    assert token.value == "T:"
+    assert token.index == 35
+    assert token.line == 2
+    assert token.column == 10
     result = [token.value for token in tokens]
     expected_result = [
         '\n', '\n', 'T:', 'whatever', '\n', 'Q:', '1/5=777  ', '\n', 'G:', '9/15=2 3 5 7 2', '\n', '---', '\n', '\n', 'P1', 'M3-', '=m7+', 'm3+',

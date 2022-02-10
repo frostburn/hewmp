@@ -150,8 +150,9 @@ def parse_fraction(token):
 
 
 def parse_arrows(token, inflections):
-    token, base, interval_class = parse_pythagorean_interval(token)
+    token, interval = parse_pythagorean_interval(token)
     result = zero_pitch()
+    base = interval.exponents()
     result[:2] = base
 
     separated = separate_by_arrows(token)
@@ -162,7 +163,7 @@ def parse_arrows(token, inflections):
             arrows = int(arrow_token[1:])
         result += inflections[arrow_token[0]]*arrows
 
-    return result, interval_class
+    return result, interval.interval_class
 
 
 def parse_pitch(token, inflections):

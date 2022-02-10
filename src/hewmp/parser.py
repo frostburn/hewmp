@@ -212,10 +212,11 @@ class IntervalParser:
         elif token[0] in SMITONIC_BASIC_PITCHES:
             self.smitonic_base_pitch = smitonic_parse_pitch(token, self.smitonic_inflections)
         else:
-            color_monzo, color_absolute = parse_color_interval(token)
+            color = parse_color_interval(token)
+            color_monzo = color.monzo()
             color_offset = zero_pitch()
             color_offset[:len(color_monzo)] = color_monzo
-            if color_absolute:
+            if color.absolute:
                 self.base_pitch = color_offset
             else:
                 raise ParsingError("Unrecognized absolute pitch {}".format(token))
@@ -314,13 +315,16 @@ class IntervalParser:
             pitch += smitonic_parse_pitch(token, self.smitonic_inflections) - self.smitonic_base_pitch
             absolute = True
         else:
-            color_monzo, color_absolute, interval_class = parse_color_interval(token)
+            color = parse_color_interval(token)
+            color_monzo = color.monzo()
             color_offset = zero_pitch()
             color_offset[:len(color_monzo)] = color_monzo
             pitch += color_offset
-            if color_absolute:
+            if color.absolute:
                 pitch -= self.base_pitch
-            absolute = absolute or color_absolute
+                absolute = True
+            else:
+                interval_class = color.interval_class
 
         if direction is not None:
             pitch *= direction

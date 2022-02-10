@@ -111,6 +111,55 @@ def int_to_unicode_exponent(n):
     return result
 
 
+class Interval:
+    absolute = False
+
+    def __init__(self, stepspan, magnitude, off_white_monzo, po_qu=0):
+        self.stepspan = stepspan
+        self.magnitude = magnitude
+        self.off_white_monzo = off_white_monzo
+        self.po_qu = po_qu
+
+    @property
+    def interval_class(self):
+        if self.stepspan >= 0:
+            return self.stepspan + 1
+        return self.stepspan - 1
+
+    def monzo(self):
+        stepspan = self.stepspan - self.po_qu
+        span_prime = dot(self.off_white_monzo, PSEUDO_EDO_MAPPING)
+        magnitude_prime = round((2 * (stepspan - span_prime) + self.off_white_monzo.sum()) / 7)
+        a = -3*(stepspan - span_prime) - 11 * (self.magnitude - magnitude_prime)
+        b = 2*(stepspan - span_prime) + 7 * (self.magnitude - magnitude_prime)
+
+        result = self.off_white_monzo + 0
+        result[0] = a
+        result[1] = b
+        return result
+
+
+class Pitch:
+    absolute = True
+
+    def __init__(self, spine, off_white_monzo):
+        self.spine = spine
+        self.off_white_monzo = off_white_monzo
+
+    def monzo(self):
+        result = self.off_white_monzo + 0
+        result[:2] = self.spine.exponents()
+        for piece in decompose(self.off_white_monzo):
+            # TODO: Optimize into plain lookups
+            span_prime = dot(piece, PSEUDO_EDO_MAPPING)
+            magnitude_prime = round((-2*span_prime + piece.sum()) / 7)
+            a = 3 * span_prime + 11 * magnitude_prime
+            b = -2 * span_prime - 7 * magnitude_prime
+            result[0] += a
+            result[1] += b
+        return result
+
+
 def monzo_to_color(monzo):
     result = ""
     for index in range(2, len(PRIMES)):
@@ -171,18 +220,6 @@ class ColorParsingError(Exception):
     pass
 
 
-def monzo_from_parts(stepspan, magnitude, off_white_monzo):
-    span_prime = dot(off_white_monzo, PSEUDO_EDO_MAPPING)
-    magnitude_prime = round((2 * (stepspan - span_prime) + off_white_monzo.sum()) / 7)
-    a = -3*(stepspan - span_prime) - 11 * (magnitude - magnitude_prime)
-    b = 2*(stepspan - span_prime) + 7 * (magnitude - magnitude_prime)
-
-    result = off_white_monzo + 0
-    result[0] = a
-    result[1] = b
-    return result
-
-
 def decompose(monzo):
     zero = monzo*0
     remaining = monzo + 0
@@ -234,20 +271,14 @@ def parse_interval(token):
         if monzo[0] or monzo[1] or magnitude:
             raise ColorParsingError("Only pythagorean absolute pitches supported")
         token, pitch = parse_pitch(token)
-        result = monzo * 0
-        result[:2] = pitch.exponents()
-        for piece in decompose(monzo):
-            result += monzo_from_parts(0, 0, piece)
-        return result, True, None
+        return Pitch(pitch, monzo)
     else:
         try:
             stepspan = fromRoman(token)
         except InvalidRomanNumeralError:
             stepspan = int(token)
-        interval_class = stepspan
         stepspan -= sign(stepspan)
-        result = monzo_from_parts(stepspan - po_qu, magnitude, monzo)
-        return result, False, interval_class
+        return Interval(stepspan, magnitude, monzo, po_qu)
 
 
 def has_symbol(token, symbols):

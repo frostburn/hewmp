@@ -18,7 +18,7 @@ from .rhythm import sequence_to_time_duration, euclidean_rhythm, pergen_rhythm, 
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
-from .pythagoras import AUGMENTED_INFLECTION, INTERVAL_QUALITIES, BASIC_PITCHES
+from .pythagoras import AUGMENTED_INFLECTION, INTERVAL_QUALITIES, PITCH_LETTERS
 from .pythagoras import parse_pitch as parse_pythagorean_pitch, parse_interval as parse_pythagorean_interval
 from .monzo import fraction_to_monzo, PRIMES
 from . import ups_and_downs
@@ -167,9 +167,9 @@ def parse_arrows(token, inflections):
 
 
 def parse_pitch(token, inflections):
-    token, base = parse_pythagorean_pitch(token)
+    token, pitch = parse_pythagorean_pitch(token)
     result = zero_pitch()
-    result[:2] = base
+    result[:2] = pitch.exponents()
 
     separated = separate_by_arrows(token)
 
@@ -207,7 +207,7 @@ class IntervalParser:
             self.up_down_inflection[E_INDEX] = log(self.et_divided) / self.et_divisions
 
     def set_base_pitch(self, token):
-        if token[0] in BASIC_PITCHES:
+        if token[0] in PITCH_LETTERS:
             self.base_pitch = parse_pitch(token, self.inflections)
         elif token[0] in SMITONIC_BASIC_PITCHES:
             self.smitonic_base_pitch = smitonic_parse_pitch(token, self.smitonic_inflections)
@@ -301,7 +301,7 @@ class IntervalParser:
         elif token[0] in INTERVAL_QUALITIES:
             interval, interval_class = parse_arrows(token, self.inflections)
             pitch += interval
-        elif token[0] in BASIC_PITCHES:
+        elif token[0] in PITCH_LETTERS:
             if direction is not None:
                 raise ParsingError("Signed absolute pitch")
             pitch += parse_pitch(token, self.inflections) - self.base_pitch

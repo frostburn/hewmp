@@ -24,11 +24,24 @@ class Quality(Enum):
 
 class Letter(Enum):
     A = "A"
+    B = "B"
     C = "C"
     D = "D"
     E = "E"
     F = "F"
     G = "G"
+
+
+BASIC_PITCHES = {
+    Letter.F: (6, -4),
+    Letter.C: (4, -3),
+    Letter.G: (3, -2),
+    Letter.D: (1, -1),
+    Letter.A: (0, 0),
+    Letter.E: (-2, 1),
+    Letter.B: (-3, 2),
+}
+REFERENCE_OCTAVE = 4
 
 
 class Interval:
@@ -61,6 +74,33 @@ class Interval:
 
     def __repr__(self):
         return "{}({}, {!r}, {!r})".format(self.__class__.__name__, self.quality, self.interval_class, self.augmentations)
+
+
+class Pitch:
+    def __init__(self, letter, sharps, octave):
+        self.letter = letter
+        self.sharps = sharps
+        self.octave = octave
+
+    def exponents(self):
+        """
+        Monzo components of two and three
+        """
+        twos, threes = BASIC_PITCHES[self.letter]
+        twos += self.octave - REFERENCE_OCTAVE
+        twos += self.sharps * AUGMENTED_INFLECTION[0]
+        threes += self.sharps * AUGMENTED_INFLECTION[1]
+
+        return twos, threes
+
+    def __hash__(self):
+        return hash((self.letter, self.sharps, self.octave))
+
+    def __eq__(self, other):
+        return self.letter == other.letter and self.sharps == other.sharps and self.octave == other.octave
+
+    def __repr__(self):
+        "{}({}, {!r}, {!r})".format(self.__class__.__name__, self.sharps, self.octave)
 
 
 def read_number(token):
@@ -155,50 +195,32 @@ for token, exponents in items:
 
 INTERVAL_QUALITIES = "dmPNMha"
 
-
-BASIC_PITCHES = {
-    "F": (6, -4),
-    "C": (4, -3),
-    "G": (3, -2),
-    "D": (1, -1),
-    "A": (0, 0),
-    "E": (-2, 1),
-    "B": (-3, 2),
-}
-REFERENCE_OCTAVE = 4
-
+PITCH_LETTERS = "ABCDEFG"
 
 ACCIDENTALS = "#xbtd" + "♮♯𝄪♭𝄫𝄲𝄳"
 
 
 def parse_pitch(token):
-    letter = token[0]
+    letter = Letter(token[0])
     token = token[1:]
     token, octave = read_number(token)
-    sharp = 0
+    sharps = 0
     while token and token[0] in ACCIDENTALS:
         if token[0] in "#♯":
-            sharp += 1
+            sharps += 1
         elif token[0] in "x𝄪":
-            sharp += 2
+            sharps += 2
         elif token[0] in "b♭":
-            sharp -= 1
+            sharps -= 1
         elif token[0] == "𝄫":
-            sharp -= 2
+            sharps -= 2
         elif token[0] in "t𝄲":
-            sharp += 0.5
+            sharps += 0.5
         elif token[0] in "d𝄳":
-            sharp -= 0.5
+            sharps -= 0.5
         token = token[1:]
-
-    result = [AUGMENTED_INFLECTION[0] * sharp, AUGMENTED_INFLECTION[1] * sharp]
 
     if octave is None:
         token, octave = read_number(token)
 
-    basic_pitch = BASIC_PITCHES[letter]
-
-    result[0] += octave - REFERENCE_OCTAVE + basic_pitch[0]
-    result[1] += basic_pitch[1]
-
-    return token, result
+    return token, Pitch(letter, sharps, octave)

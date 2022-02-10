@@ -3,7 +3,7 @@ from collections import defaultdict
 from roman import fromRoman, InvalidRomanNumeralError
 from numpy import dot, zeros, sign, array
 from .util import Splitter
-from .pythagoras import parse_pitch, BASIC_PITCHES
+from .pythagoras import parse_pitch, PITCH_LETTERS
 from .monzo import PRIMES, fraction_to_monzo
 
 
@@ -230,12 +230,12 @@ def parse_interval(token):
         po_qu -= 1
         token = token[1:]
 
-    if token[0] in BASIC_PITCHES:
+    if token[0] in PITCH_LETTERS:
         if monzo[0] or monzo[1] or magnitude:
             raise ColorParsingError("Only pythagorean absolute pitches supported")
-        token, base = parse_pitch(token)
+        token, pitch = parse_pitch(token)
         result = monzo * 0
-        result[:2] = base
+        result[:2] = pitch.exponents()
         for piece in decompose(monzo):
             result += monzo_from_parts(0, 0, piece)
         return result, True, None

@@ -1,4 +1,5 @@
 # coding: utf-8
+from enum import Enum
 from io import StringIO
 from collections import Counter, defaultdict
 try:
@@ -53,6 +54,63 @@ for key, value in list(DEFAULT_INFLECTIONS.items()):
 
 
 TEMPORAL_MINI_LANGUAGE = ".!~%"  # Chainable tokens
+
+
+class SignedArrow(Enum):
+    PLUS_MINUS = "+-"
+    LESS_MORE = "<>"
+    UP_DOWN = "^v"
+    AYE_LEI = "i!"
+    STAR_HOLES = "*%"
+    HIGH_LOW = "AV"
+    HOOK_SINKER = "un"
+    ARC_BOW = "UD"
+    MIGHTY_WEAK = "MW"
+
+
+SIGN_BY_ARROW = {}
+for arrow in SignedArrow:
+    SIGN_BY_ARROW[arrow.value[0]] = (1, arrow)
+    SIGN_BY_ARROW[arrow.value[1]] = (-1, arrow)
+
+
+DEFAULT_SIGNED_INFLECTIONS = {}
+for arrow in SignedArrow:
+    DEFAULT_SIGNED_INFLECTIONS[arrow] = DEFAULT_INFLECTIONS[arrow.value[0]]
+
+
+class Interval:
+    absolute = False
+    def __init__(self, spine, arrows, inflections=None):
+        self.spine = spine
+        self.arrows = arrows
+        self.inflections = inflections
+
+    @property
+    def interval_class(self):
+        return self.spine.interval_class
+
+    def monzo(self):
+        result = zero_pitch()
+        result[:2] = self.spine.exponents()
+        for arrow, count in self.arrows.items():
+            result += self.inflections[arrow] * count
+        return result
+
+
+class Pitch:
+    absolute = True
+    def __init__(self, spine, arrows, inflections=None):
+        self.spine = spine
+        self.arrows = arrows
+        self.inflections = inflections
+
+    def monzo(self):
+        result = zero_pitch()
+        result[:2] = self.spine.exponents()
+        for arrow, count in self.arrows.items():
+            result += self.inflections[arrow] * count
+        return result
 
 
 def parse_warts(token, index=0):
@@ -149,41 +207,32 @@ def parse_fraction(token):
     return result
 
 
-def parse_arrows(token, inflections):
-    token, interval = parse_pythagorean_interval(token)
-    result = zero_pitch()
-    base = interval.exponents()
-    result[:2] = base
-
+def parse_signed_arrows(token):
     separated = separate_by_arrows(token)
-
+    arrows = Counter()
     for arrow_token in separated[1:]:
-        arrows = 1
+        count = 1
         if len(arrow_token) > 1:
-            arrows = int(arrow_token[1:])
-        result += inflections[arrow_token[0]]*arrows
+            count = int(arrow_token[1:])
+        sign, arrow = SIGN_BY_ARROW[arrow_token[0]]
+        arrows[arrow] += sign * count
+    return arrows
 
-    return result, interval.interval_class
+
+def parse_interval(token):
+    token, spine = parse_pythagorean_interval(token)
+    arrows = parse_signed_arrows(token)
+    return Interval(spine, arrows)
 
 
-def parse_pitch(token, inflections):
-    token, pitch = parse_pythagorean_pitch(token)
-    result = zero_pitch()
-    result[:2] = pitch.exponents()
-
-    separated = separate_by_arrows(token)
-
-    for arrow_token in separated[1:]:
-        arrows = 1
-        if len(arrow_token) > 1:
-            arrows = int(arrow_token[1:])
-        result += inflections[arrow_token[0]]*arrows
-
-    return result
+def parse_pitch(token):
+    token, spine = parse_pythagorean_pitch(token)
+    arrows = parse_signed_arrows(token)
+    return Pitch(spine, arrows)
 
 
 class IntervalParser:
-    def __init__(self, inflections=DEFAULT_INFLECTIONS, smitonic_inflections=SMITONIC_INFLECTIONS, et_divisions=Fraction(12), et_divided=Fraction(2), warts=""):
+    def __init__(self, inflections=DEFAULT_SIGNED_INFLECTIONS, smitonic_inflections=SMITONIC_INFLECTIONS, et_divisions=Fraction(12), et_divided=Fraction(2), warts=""):
         self.inflections = inflections
         self.smitonic_inflections = smitonic_inflections
         self.et_divisions = et_divisions
@@ -208,7 +257,9 @@ class IntervalParser:
 
     def set_base_pitch(self, token):
         if token[0] in PITCH_LETTERS:
-            self.base_pitch = parse_pitch(token, self.inflections)
+            ppitch = parse_pitch(token)
+            ppitch.inflections = self.inflections
+            self.base_pitch = ppitch.monzo()
         elif token[0] in SMITONIC_BASIC_PITCHES:
             self.smitonic_base_pitch = smitonic_parse_pitch(token, self.smitonic_inflections)
         else:
@@ -300,12 +351,16 @@ class IntervalParser:
             else:
                 pitch += parse_fraction(token)
         elif token[0] in INTERVAL_QUALITIES:
-            interval, interval_class = parse_arrows(token, self.inflections)
-            pitch += interval
+            interval = parse_interval(token)
+            interval.inflections = self.inflections
+            pitch += interval.monzo()
+            interval_class = interval.interval_class
         elif token[0] in PITCH_LETTERS:
             if direction is not None:
                 raise ParsingError("Signed absolute pitch")
-            pitch += parse_pitch(token, self.inflections) - self.base_pitch
+            ppitch = parse_pitch(token)
+            ppitch.inflections = self.inflections
+            pitch += ppitch.monzo() - self.base_pitch
             absolute = True
         elif token[0] == "p" or (token[0] in SMITONIC_INTERVAL_QUALITIES and not is_colored):
             pitch += smitonic_parse_arrows(token, self.smitonic_inflections)

@@ -113,6 +113,50 @@ class Pitch:
         return result
 
 
+class MonzoInterval:
+    def __init__(self, value, absolute=False):
+        self.value = value
+        self.absolute = absolute
+
+    def monzo(self):
+        return self.value
+
+
+class ParsedInterval:
+    def __init__(self, base, octaves=0, ups=0, root=1, exponent=1, absolute=False, up_inflection=None, offset=None):
+        self.base = base
+        self.octaves = octaves
+        self.ups = ups
+        self.root = root
+        self.exponent = exponent
+        self.up_inflection = up_inflection
+        self._absolute = absolute
+        self.offset = offset
+
+    @property
+    def interval_class(self):
+        return getattr(self.base, "interval_class", None)
+
+    def monzo(self):
+        result = zero_pitch()
+        base_monzo = self.base.monzo()
+        result[:len(base_monzo)] = base_monzo
+        result[0] += self.octaves
+        result += self.ups * self.up_inflection
+        result = result / self.root * self.exponent
+        if self.offset is not None:
+            result += self.offset
+        return result
+
+    @property
+    def absolute(self):
+        return self.base.absolute or self._absolute
+
+    @absolute.setter
+    def absolute(self, value):
+        self._absolute = value
+
+
 def parse_warts(token, index=0):
     token = token.lower()
     if "d" in token:
@@ -286,25 +330,26 @@ class IntervalParser:
                 direction = 1
             token = token[1:]
 
-        pitch = zero_pitch()
+        octaves = 0
 
         while token[0] == "c":
-            pitch[0] += 1
+            octaves += 1
             token = token[1:]
 
         while token[0] == "`":
-            pitch[0] -= 1
+            octaves -= 1
             token = token[1:]
 
         has_up_down = (token[0] in "^v")
+        ups = 0
         while token[0] == "^":
-            pitch += self.up_down_inflection
+            ups += 1
             token = token[1:]
         while token[0] == "v":
-            pitch -= self.up_down_inflection
+            ups -= 1
             token = token[1:]
         if has_up_down and token[0].isdigit():
-            token = "P" + token
+            token = "w" + token
 
         exponent_degree = 1
         root_degree = 1
@@ -326,9 +371,12 @@ class IntervalParser:
             )
         )
 
-        interval_class = None
+        if direction is not None:
+            exponent_degree *= direction
+        result = ParsedInterval(None, octaves, ups, root_degree, exponent_degree, absolute, self.up_down_inflection)
 
         if token[0].isdigit() and not is_colored:
+            pitch = zero_pitch()
             if token.endswith("c"):
                 cents_in_nats = float(token[:-1])/1200*log(2)
                 pitch[E_INDEX] = cents_in_nats
@@ -350,61 +398,47 @@ class IntervalParser:
                 pitch[E_INDEX] = float(steps) / float(divisions) * log(float(divided))
             else:
                 pitch += parse_fraction(token)
+            result.base = MonzoInterval(pitch)
         elif token[0] in INTERVAL_QUALITIES:
             interval = parse_interval(token)
             interval.inflections = self.inflections
-            pitch += interval.monzo()
-            interval_class = interval.interval_class
+            result.base = interval
         elif token[0] in PITCH_LETTERS:
             if direction is not None:
                 raise ParsingError("Signed absolute pitch")
             ppitch = parse_pitch(token)
             ppitch.inflections = self.inflections
-            pitch += ppitch.monzo() - self.base_pitch
-            absolute = True
+            result.base = ppitch
+            result.offset = -self.base_pitch
         elif token[0] == "p" or (token[0] in SMITONIC_INTERVAL_QUALITIES and not is_colored):
-            pitch += smitonic_parse_arrows(token, self.smitonic_inflections)
+            # TODO: Remove this and respell smitonics as an alternative notation
+            pitch = smitonic_parse_arrows(token, self.smitonic_inflections)
+            result.base = MonzoInterval(pitch)
         elif token[0] in SMITONIC_BASIC_PITCHES:
+            # TODO: Remove this and respell smitonics as an alternative notation
             if direction is not None:
                 raise ParsingError("Signed absolute pitch")
-            pitch += smitonic_parse_pitch(token, self.smitonic_inflections) - self.smitonic_base_pitch
-            absolute = True
+            pitch = smitonic_parse_pitch(token, self.smitonic_inflections)
+            result.base = MonzoInterval(pitch)
+            result.offset = -self.smitonic_base_pitch
+            result.absolute = True
         else:
             color = parse_color_interval(token)
-            color_monzo = color.monzo()
-            color_offset = zero_pitch()
-            color_offset[:len(color_monzo)] = color_monzo
-            pitch += color_offset
             if color.absolute:
-                pitch -= self.base_pitch
-                absolute = True
-            else:
-                interval_class = color.interval_class
+                result.offset = -self.base_pitch
+            result.base = color
 
-        if direction is not None:
-            pitch *= direction
-
-        if self.comma_list is not None and self.comma_root_cache is not None:
-            maybe_pitch = comma_root(pitch * exponent_degree, root_degree, self.comma_list, persistence=self.persistence, cache=self.comma_root_cache)
-            if maybe_pitch is not None:
-                if return_root_degree:
-                    raise ValueError("Cannot return root degree when solving for comma roots")
-                return maybe_pitch, absolute
-        if return_root_degree:
-            return pitch, absolute, exponent_degree, root_degree
-        if return_interval_class:
-            return pitch / root_degree * exponent_degree, absolute, interval_class
-        return pitch / root_degree * exponent_degree, absolute
+        return result
 
 
 def parse_otonal(token, interval_parser):
     subtokens = token.split(":")
     pitches = []
     for subtoken in subtokens:
-        pitch, absolute = interval_parser.parse(subtoken)
-        if absolute:
+        interval = interval_parser.parse(subtoken)
+        if interval.absolute:
             raise ParsingError("Otonal chord using absolute pitches")
-        pitches.append(pitch)
+        pitches.append(interval.monzo())
     root = pitches[0]
     for i in range(len(pitches)):
         pitches[i] = pitches[i] - root
@@ -415,10 +449,10 @@ def parse_utonal(token, interval_parser):
     subtokens = token.split(";")
     pitches = []
     for subtoken in subtokens:
-        pitch, absolute = interval_parser.parse(subtoken)
-        if absolute:
+        interval = interval_parser.parse(subtoken)
+        if interval.absolute:
             raise ParsingError("Utonal chord using absolute pitches")
-        pitches.append(pitch)
+        pitches.append(interval.monzo())
     root = pitches[0]
     for i in range(len(pitches)):
         pitches[i] = root - pitches[i]
@@ -475,12 +509,13 @@ def parse_chord(token, transposition, interval_parser):
                 subtokens = expand_chord(token)
         result = Pattern()
         for subtoken in subtokens:
-            pitch, absolute, interval_class = interval_parser.parse(subtoken, return_interval_class=True)
-            if absolute:
+            interval = interval_parser.parse(subtoken)
+            pitch = interval.monzo()
+            if interval.absolute:
                 result.append(Note(pitch))
             else:
                 result.append(Note(pitch + transposition))
-            interval_classes.append(interval_class)
+            interval_classes.append(interval.interval_class)
     for i in range(inversion):
         result[i].pitch[0] += 1
     if inversion:
@@ -644,19 +679,19 @@ def parse_track(lexer, default_config, max_repeats=None):
                 if tuning_name in TEMPERAMENTS:
                     comma_list, subgroup = TEMPERAMENTS[tuning_name]
                     subgroup = subgroup.split(".")
-                    config["tuning"].subgroup = [interval_parser.parse(basis_vector)[0] for basis_vector in subgroup]
-                    config["tuning"].comma_list = [interval_parser.parse(comma)[0] for comma in comma_list]
+                    config["tuning"].subgroup = [interval_parser.parse(basis_vector).monzo() for basis_vector in subgroup]
+                    config["tuning"].comma_list = [interval_parser.parse(comma).monzo() for comma in comma_list]
                 else:
                     raise ParsingError("Unrecognized tuning '{}'".format(tuning_name))
             if config_key == "CL":
                 comma_list = [comma.strip() for comma in token.split(",")]
-                config["tuning"].comma_list = [interval_parser.parse(comma)[0] for comma in comma_list]
+                config["tuning"].comma_list = [interval_parser.parse(comma).monzo() for comma in comma_list]
             if config_key == "SG":
                 subgroup = [basis_fraction.strip() for basis_fraction in token.split(".")]
-                config["tuning"].subgroup = [interval_parser.parse(basis_vector)[0] for basis_vector in subgroup]
+                config["tuning"].subgroup = [interval_parser.parse(basis_vector).monzo() for basis_vector in subgroup]
             if config_key == "C":
                 constraints = [constraint.strip() for constraint in token.split(",")]
-                config["tuning"].constraints = [interval_parser.parse(constraint)[0] for constraint in constraints]
+                config["tuning"].constraints = [interval_parser.parse(constraint).monzo() for constraint in constraints]
             if config_key == "CRD":
                 config[config_key] = int(token)
                 interval_parser.persistence = int(token)
@@ -711,6 +746,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 if "CR" in config["flags"]:
                     config["comma_reduction_cache"] = {}
                 if "CRS" in config["flags"]:
+                    raise NotImplementedError("Comma Root Solving temporarily disabled")
                     interval_parser.comma_list = config["tuning"].comma_list
                     interval_parser.comma_root_cache = {}
             config_mode = False
@@ -933,23 +969,24 @@ def parse_track(lexer, default_config, max_repeats=None):
                 if token.startswith("~"):
                     moves_root = True
                     token = token[1:]
-                interval, absolute = interval_parser.parse(token)
+                interval = interval_parser.parse(token)
+                monzo = interval.monzo()
 
                 if transposed_pattern:
-                    if absolute:
+                    if interval.absolute:
                         raise ParsingError("Absolute transposition")
-                    transposed_pattern.transpose(interval)
+                    transposed_pattern.transpose(monzo)
                     pattern.append(transposed_pattern)
                     transposed_pattern = None
                     if moves_root:
-                        current_pitch += interval
+                        current_pitch += monzo
                 else:
-                    if absolute:
+                    if interval.absolute:
                         if moves_root:
                             raise ParsingError("Superfluous root move (~) with an absolute pitch")
                         current_pitch = zero_pitch()
                         moves_root = True
-                    pitch = current_pitch + interval
+                    pitch = current_pitch + monzo
                     if moves_root:
                         current_pitch = pitch
                     note = Note(pitch, time)

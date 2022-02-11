@@ -22,11 +22,11 @@ def test_parse_interval():
     mapping = array([12, 19, 28])
     interval_parser = IntervalParser()
     scale = ["P1", "m2", "M2", "m3+", "M3-", "P4", "a4", "P5", "m6+", "M6-", "m7+", "M7-", "P8", "m9", "M9"]
-    edo12 = [dot(mapping, interval_parser.parse(s)[0][:len(mapping)]) for s in scale]
+    edo12 = [dot(mapping, interval_parser.parse(s).monzo()[:len(mapping)]) for s in scale]
     assert edo12 == list(range(15))
 
-    assert (interval_parser.parse("M3-")[0][:3] == array([-2, 0, 1])).all()
-    assert (interval_parser.parse("d7+2")[0][:3] == array([7, -1, -2])).all()
+    assert (interval_parser.parse("M3-").monzo()[:3] == array([-2, 0, 1])).all()
+    assert (interval_parser.parse("d7+2").monzo()[:3] == array([7, -1, -2])).all()
 
 
 def test_parse_higher_prime():
@@ -40,10 +40,10 @@ def test_parse_pitch():
     mapping = array([12, 19, 28])
     interval_parser = IntervalParser()
     scale = ["C4", "C4#", "D4", "E4b", "F4b", "F4", "G4b", "F4x", "F4#x", "A4", "C5bb", "B4"]
-    edo12 = [dot(mapping, interval_parser.parse(s)[0][:len(mapping)]) for s in scale]
+    edo12 = [dot(mapping, interval_parser.parse(s).monzo()[:len(mapping)]) for s in scale]
     assert edo12 == list(range(-9, 3))
 
-    assert (interval_parser.parse("A-2x<")[0][:4] == array([-34, 16, 0, 1])).all()
+    assert (interval_parser.parse("A-2x<").monzo()[:4] == array([-34, 16, 0, 1])).all()
 
 
 def test_neutral_intervals():
@@ -121,7 +121,7 @@ def test_pitch_translation():
             for accidental in ("" ,"b", "#", "x"):
                 for arrow in ("", "-", "<2", "+2^3", "u4", "n"):
                     token = letter + octave + accidental + arrow
-                    pitch = IntervalParser().parse(token)[0]
+                    pitch = IntervalParser().parse(token).monzo()
                     retoken = tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
                     assert token == retoken
 
@@ -137,7 +137,7 @@ def test_interval_translation():
         for quality in qualities:
             for arrow in ("", "-", "<2", "+2^3"):
                 token = "{}{}{}".format(quality, value, arrow)
-                pitch = IntervalParser().parse(token)[0]
+                pitch = IntervalParser().parse(token).monzo()
                 retoken = tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
                 assert token == retoken
 
@@ -161,7 +161,7 @@ def test_smitonic_pitch_translation():
             for accidental in ("" ,"b", "#", "x"):
                 for arrow in ("", "-", "<2", "+2^3"):
                     token = letter + octave + accidental + arrow
-                    pitch = IntervalParser().parse(token)[0]
+                    pitch = IntervalParser().parse(token).monzo()
                     retoken = smitonic_tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
                     assert token == retoken
 
@@ -177,7 +177,7 @@ def test_smitonic_interval_translation():
         for quality in qualities:
             for arrow in ("", "-", "<2", "+2^3"):
                 token = "{}{}{}".format(quality, value, arrow)
-                pitch = IntervalParser().parse(token)[0]
+                pitch = IntervalParser().parse(token).monzo()
                 retoken = smitonic_tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
                 assert token == retoken
 
@@ -208,27 +208,27 @@ def test_playhead():
 
 def test_split_fifth():
     interval_parser = IntervalParser()
-    pitch = interval_parser.parse("P5/2")[0]
+    pitch = interval_parser.parse("P5/2").monzo()
     assert (pitch[:2] == array([-0.5, 0.5])).all()
-    pitch = interval_parser.parse("3/2")[0]
+    pitch = interval_parser.parse("3/2").monzo()
     assert (pitch[:2] == array([-1, 1])).all()
-    pitch = interval_parser.parse("3/2/2")[0]
+    pitch = interval_parser.parse("3/2/2").monzo()
     assert (pitch[:2] == array([-0.5, 0.5])).all()
 
 
 def test_double_tone():
     interval_parser = IntervalParser()
-    pitch = interval_parser.parse("M2/1*2")[0]
+    pitch = interval_parser.parse("M2/1*2").monzo()
     assert (pitch[:2] == array([-6, 4])).all()
 
 
 def test_compound():
     interval_parser = IntervalParser()
-    pitch = interval_parser.parse("M6")[0]
+    pitch = interval_parser.parse("M6").monzo()
     assert (pitch[:2] == array([-4, 3])).all()
-    pitch = interval_parser.parse("-cM6")[0]
+    pitch = interval_parser.parse("-cM6").monzo()
     assert (pitch[:2] == array([3, -3])).all()
-    pitch = interval_parser.parse("`M6")[0]
+    pitch = interval_parser.parse("`M6").monzo()
     assert (pitch[:2] == array([-5, 3])).all()
 
 

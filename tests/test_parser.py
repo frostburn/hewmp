@@ -280,6 +280,27 @@ def test_removed_tone():
     assert isclose(notes[2].pitch[:2], [4, -2]).all()
 
 
+def test_tuplets():
+    text = "(P1 ~P8) (~P8 ~P8 ~P8) (~P8 ~P8)[2] (~P8[2] ~P8) ~P8"
+    notes = get_notes(text)
+    times_durations = [
+        (0, Fraction(1, 2)),
+        (Fraction(1, 2), Fraction(1, 2)),
+        (1, Fraction(1, 3)),
+        (Fraction(4, 3), Fraction(1, 3)),
+        (Fraction(5, 3), Fraction(1, 3)),
+        (2, 1),
+        (3, 1),
+        (4, Fraction(2, 3)),
+        (Fraction(14, 3), Fraction(1, 3)),
+        (5, 1),
+    ]
+    for i in range(len(notes)):
+        assert notes[i].pitch[0] == i
+        assert notes[i].time == times_durations[i][0]
+        assert notes[i].duration == times_durations[i][1]
+
+
 def test_extended_duration():
     text = "P1|[!1]|P5=M-|[!2]||"
     notes = get_notes(text)
@@ -787,6 +808,7 @@ if __name__ == '__main__':
     test_utonal()
     test_added_tone_inversion()
     test_removed_tone()
+    test_tuplets()
     test_extended_duration()
     test_extend_duration_without_advancing_time()
     test_stretch_to_logical_duration()

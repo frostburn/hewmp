@@ -442,7 +442,7 @@ def parse_otonal(token, interval_parser):
     root = pitches[0]
     for i in range(len(pitches)):
         pitches[i] = pitches[i] - root
-    return Pattern([Note(pitch) for pitch in pitches])
+    return Pattern([Note(pitch) for pitch in pitches], logical_duration=1)
 
 
 def parse_utonal(token, interval_parser):
@@ -456,7 +456,7 @@ def parse_utonal(token, interval_parser):
     root = pitches[0]
     for i in range(len(pitches)):
         pitches[i] = root - pitches[i]
-    return Pattern([Note(pitch) for pitch in pitches])
+    return Pattern([Note(pitch) for pitch in pitches], logical_duration=1)
 
 
 def parse_chord(token, transposition, interval_parser):
@@ -507,7 +507,7 @@ def parse_chord(token, transposition, interval_parser):
             subtokens = expand_color_chord(token)
             if subtokens is None:
                 subtokens = expand_chord(token)
-        result = Pattern()
+        result = Pattern(logical_duration=1)
         for subtoken in subtokens:
             interval = interval_parser.parse(subtoken)
             pitch = interval.monzo()
@@ -546,7 +546,7 @@ def comma_reduce_pattern(pattern, comma_list, persistence, cache=None):
 
 def patternify(pattern):
     if not isinstance(pattern, Pattern):
-        pattern = Pattern([pattern], time=pattern.time, duration=pattern.duration)
+        pattern = Pattern([pattern], time=pattern.time, duration=pattern.duration, logical_duration=pattern.duration)
         pattern[0].time = Fraction(0)
     return pattern
 
@@ -619,6 +619,7 @@ ARTICULATIONS = {
 
 
 DYNAMICS = {
+    "pppp": Fraction(1, 16),
     "ppp": Fraction(1, 8),
     "pp": Fraction(1, 4),
     "p": Fraction(1, 3),
@@ -626,7 +627,8 @@ DYNAMICS = {
     "mf": Fraction(2, 3),
     "f": Fraction(3, 4),
     "ff": Fraction(7, 8),
-    "fff": Fraction(1),
+    "fff": Fraction(9, 10),
+    "ffff": Fraction(1),
 }
 
 
@@ -636,7 +638,6 @@ def parse_track(lexer, default_config, max_repeats=None):
     time_mode = False
     repeat_mode = False
     pattern = Pattern()
-    time = Fraction(0)
     stack = []
     transposed_pattern = None
     concatenated_pattern = None
@@ -706,7 +707,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 config["tempo"].groove_span = Fraction(span_token)
                 config["tempo"].groove_pattern = list(map(Fraction, filter(None, pattern_token.split(" "))))
             if config_key == "V":
-                track_volume = TrackVolume(Fraction(token), time)
+                track_volume = TrackVolume(Fraction(token), pattern.t)
                 pattern.append(track_volume)
                 config[config_key] = track_volume.volume
             if config_key == "ET":
@@ -732,11 +733,11 @@ def parse_track(lexer, default_config, max_repeats=None):
                     raise ParsingError("Unknown notation '{}'".format(current_notation))
                 current_notation = current_notation.lower()
                 config[config_key] = current_notation
-                pattern.append(ContextChange(current_notation, time))
+                pattern.append(ContextChange(current_notation, pattern.t))
             if config_key == "I":
                 name = token.strip()
                 program = GM_PROGRAMS.get(name)
-                program_change = ProgramChange(name, program, time)
+                program_change = ProgramChange(name, program, pattern.t)
                 pattern.append(program_change)
                 config[config_key] = name
             if config_key == "MP":
@@ -758,33 +759,33 @@ def parse_track(lexer, default_config, max_repeats=None):
                 time_mode = False
             elif token.startswith("*"):
                 duration_token = token[1:]
-                time -= pattern.last.duration
+                pattern.t -= pattern.last.duration
                 pattern.last.duration *= parse_time(duration_token)
-                time += pattern.last.duration
+                pattern.t += pattern.last.duration
             elif token == "?":
-                time -= pattern.last.duration
-                pattern.last.duration = pattern.last.logical_duration
-                time += pattern.last.duration
+                pattern.t -= pattern.last.duration
+                pattern.last.duration = pattern.last.logical_duration  # TODO: Better error for Notes
+                pattern.t += pattern.last.duration
             elif token.startswith("!"):
-                time -= pattern.last.duration
+                pattern.t -= pattern.last.duration
                 extension = parse_time(token[1:])
                 pattern.last.extend_duration(extension)
-                time += pattern.last.duration
+                pattern.t += pattern.last.duration
             elif token.startswith("~") and len(token) > 1:
                 extension = parse_time(token[1:])
                 pattern.last.extend_duration(extension)
             elif token.startswith("@"):
                 pattern.last.time = parse_time(token[1:])
-                time = pattern.last.time
-                time += pattern.last.duration
+                pattern.t = pattern.last.time
+                pattern.t += pattern.last.duration
             elif token.lower().startswith("x"):
                 pattern.last = patternify(pattern.last)
-                time -= pattern.last.duration
+                pattern.t -= pattern.last.duration
                 num_repeats = int(token[1:])
                 if max_repeats is not None and num_repeats > max_repeats:
                     raise ParsingError("Too many repeats")
                 pattern.last.repeat(num_repeats, affect_duration=(token.startswith("X")))
-                time += pattern.last.duration
+                pattern.t += pattern.last.duration
             elif isinstance(pattern.last, Pattern):
                 if token == "R":
                     pattern.last.reverse_time()
@@ -839,29 +840,30 @@ def parse_track(lexer, default_config, max_repeats=None):
 
                     for subpattern, td in zip(pattern.last, times_durations):
                         subpattern.time, subpattern.duration = td
+                    pattern.last.logical_duration = pattern.last.last.end_time
                 else:
                     default = True
             else:
                 default = True
             if default:
                 duration_token = token
-                time -= pattern.last.duration
+                pattern.t -= pattern.last.duration
                 pattern.last.duration = parse_time(duration_token)
-                time += pattern.last.duration
+                pattern.t += pattern.last.duration
             continue
 
         if token == "(":
-            stack.append((pattern, time))
+            time = pattern.t
+            stack.append(pattern)
             pattern = Pattern([], time)
-            time = Fraction(0)
         elif token == ")":
             subpattern = pattern
-            pattern, time = stack.pop()
+            pattern = stack.pop()
             if concatenated_pattern:
                 subpattern = concatenated_pattern.concatenate(subpattern, add_concatenated_durations)
                 concatenated_pattern = None
             pattern.append(subpattern)
-            time += subpattern.duration
+            pattern.t += subpattern.duration
         elif token == "[":
             time_mode = True
         elif token == "]":
@@ -871,80 +873,80 @@ def parse_track(lexer, default_config, max_repeats=None):
         elif token == "+":
             concatenated_pattern = patternify(pattern.pop())
             add_concatenated_durations = True
-            time -= concatenated_pattern.duration
+            pattern.t -= concatenated_pattern.duration
         elif token == "=":
             concatenated_pattern = patternify(pattern.pop())
             add_concatenated_durations = False
-            time -= concatenated_pattern.duration
+            pattern.t -= concatenated_pattern.duration
         elif all(mt in TEMPORAL_MINI_LANGUAGE for mt in token):
             for mini_token in token:
                 if mini_token == "%":
-                    repeated_pattern = pattern.last_voiced.retime(time, 1)
+                    repeated_pattern = pattern.last_voiced.retime(pattern.t, 1)
                     pattern.append(repeated_pattern)
-                    time += pattern.last.duration
+                    pattern.t += pattern.last.duration
                 elif mini_token == ".":
-                    pattern.append(Rest(time))
-                    time += pattern.last.duration
+                    pattern.append(Rest(pattern.t))
+                    pattern.t += pattern.last.duration
                 elif mini_token == "!":
                     pattern.last.extend_duration(1)
-                    time += 1
+                    pattern.t += 1
                 elif mini_token == "~":
                     pattern.last.extend_duration(1)
         elif token == ",":
-            time -= pattern.last.duration
+            pattern.t -= pattern.last.duration
         elif token in ARTICULATIONS:
-            articulation = Articulation(ARTICULATIONS[token], time)
+            articulation = Articulation(ARTICULATIONS[token], pattern.t)
             pattern.append(articulation)
         elif token in DYNAMICS:
-            dynamic = Dynamic(DYNAMICS[token], time)
+            dynamic = Dynamic(DYNAMICS[token], pattern.t)
             pattern.append(dynamic)
         elif token == "T":
-            timestamp = time
+            timestamp = pattern.t
         elif token == "@T":
-            time = timestamp
+            pattern.t = timestamp
         elif token == "\n":
-            pattern.append(NewLine(token, time))
+            pattern.append(NewLine(token, pattern.t))
         elif token == "|":
-            pattern.append(BarLine(token, time))
+            pattern.append(BarLine(token, pattern.t))
         elif token == "|>":
-            pattern.append(Playhead(token, time))
+            pattern.append(Playhead(token, pattern.t))
         elif token == ">|":
-            pattern.append(Playstop(token, time))
+            pattern.append(Playstop(token, pattern.t))
         elif token.startswith('"'):
-            message = UserMessage(token[1:], time)
+            message = UserMessage(token[1:], pattern.t)
             pattern.append(message)
         elif current_notation == "percussion":
             if token in PERCUSSION_SHORTHANDS:
                 index, name = PERCUSSION_SHORTHANDS[token]
-                percussion = Percussion(name, index, time)
+                percussion = Percussion(name, index, time=pattern.t)
                 pattern.append(percussion)
-                time += percussion.duration
+                pattern.t += percussion.duration
             else:
                 for mini_token in token:
                     if mini_token in PERCUSSION_SHORTHANDS:
                         index, name = PERCUSSION_SHORTHANDS[mini_token]
-                        percussion = Percussion(name, index, time)
+                        percussion = Percussion(name, index, time=pattern.t)
                         pattern.append(percussion)
-                        time += percussion.duration
+                        pattern.t += percussion.duration
                     elif mini_token == "%":
-                        repeated_pattern = pattern.last_voiced.retime(time, 1)
+                        repeated_pattern = pattern.last_voiced.retime(pattern.t, 1)
                         pattern.append(repeated_pattern)
-                        time += pattern.last.duration
+                        pattern.t += pattern.last.duration
                     elif mini_token == ".":
-                        pattern.append(Rest(time))
-                        time += pattern.last.duration
+                        pattern.append(Rest(pattern.t))
+                        pattern.t += pattern.last.duration
                     elif mini_token == "!":
                         pattern.last.extend_duration(1)
-                        time += 1
+                        pattern.t += 1
                     elif mini_token == "~":
                         pattern.last.extend_duration(1)
 
         elif current_notation == "hewmp":
             if token.startswith("=") or ":" in token or ";" in token:
                 if token_obj.whitespace or not token.startswith("=") or not pattern or isinstance(pattern[-1], NewLine):
-                    subpattern_time = time
+                    subpattern_time = pattern.t
                     subpattern_duration = Fraction(1)
-                    time += subpattern_duration
+                    pattern.t += subpattern_duration
                     pitch = current_pitch
                 else:
                     replaced = pattern.pop()
@@ -959,11 +961,11 @@ def parse_track(lexer, default_config, max_repeats=None):
                 pattern.append(subpattern)
                 if concatenated_pattern:
                     subpattern = pattern.pop()
-                    time -= subpattern.duration
+                    pattern.t -= subpattern.duration
                     subpattern = concatenated_pattern.concatenate(subpattern, add_concatenated_durations)
                     concatenated_pattern = None
                     pattern.append(subpattern)
-                    time += subpattern.duration
+                    pattern.t += subpattern.duration
             else:
                 moves_root = False
                 if token.startswith("~"):
@@ -989,19 +991,19 @@ def parse_track(lexer, default_config, max_repeats=None):
                     pitch = current_pitch + monzo
                     if moves_root:
                         current_pitch = pitch
-                    note = Note(pitch, time)
+                    note = Note(pitch, time=pattern.t)
                     pattern.append(note)
-                    time += note.duration
+                    pattern.t += note.duration
                 if "comma_reduction_cache" in config:
                     current_pitch = comma_reduce(current_pitch, config["tuning"].comma_list, persistence=config["CRD"], cache=config["comma_reduction_cache"])
 
                 if concatenated_pattern:
                     subpattern = patternify(pattern.pop())
-                    time -= subpattern.duration
+                    pattern.t -= subpattern.duration
                     subpattern = concatenated_pattern.concatenate(subpattern, add_concatenated_durations)
                     concatenated_pattern = None
                     pattern.append(subpattern)
-                    time += subpattern.duration
+                    pattern.t += subpattern.duration
 
     pattern.insert(0, Articulation(ARTICULATIONS[";"]))
     pattern.insert(0, Dynamic(DYNAMICS["mf"]))
@@ -1214,6 +1216,10 @@ def freq_to_midi_et(frequency, et_divisions, et_divided=2):
     return index, bend
 
 
+def midi_velocity(velocity):
+    return int(round(float(127 * Fraction(velocity))))
+
+
 def tracks_to_midi(tracks, freq_to_midi=freq_to_midi_12, reserve_channel_10=True, transpose=0, resolution=960):
     """
     Save tracks as a midi file with per-channel pitch-bend for microtones.
@@ -1230,24 +1236,15 @@ def tracks_to_midi(tracks, freq_to_midi=freq_to_midi_12, reserve_channel_10=True
         midi.tracks.append(track)
 
         data = pattern.realize(start_time=start_time, end_time=end_time).to_json()
-        base_frequency = None
-        mapping = None
-        velocity = 85
         events = []
         time_offset = 0
         for event in data["events"]:
-            if event["type"] == "tuning":
-                base_frequency = event["baseFrequency"]
-                mapping = event["suggestedMapping"]
-            if event["type"] == "dynamic":
-                velocity = int(round(float(127 * Fraction(event["velocity"]))))
             if event["type"] in ("note", "percussion", "programChange", "contextChange") or event.get("subtype") == "controlChange":
                 time = int(round(resolution * event["realTime"]))
             if event["type"] == "note":
-                frequency = base_frequency*exp(dot(mapping, event["pitch"])) + event["pitch"][HZ_INDEX]
-                events.append((time, event, frequency, velocity))
+                events.append((time, event, event["frequency"], midi_velocity(event["velocity"])))
             if event["type"] == "percussion":
-                events.append((time, event, None, velocity))
+                events.append((time, event, None, midi_velocity(event["velocity"])))
             if event["type"] == "programChange" or event.get("subtype") == "controlChange":
                 change_time = time - 1
                 if change_time < 0:

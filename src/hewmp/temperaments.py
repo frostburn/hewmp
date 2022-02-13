@@ -1,4 +1,6 @@
 # coding: utf-8
+from fractions import Fraction
+
 WA = "2.3"
 WA_TEMPERAMENTS = {
     "blackwood": ["256/243"],  # No fives 5tet
@@ -175,10 +177,10 @@ for temperaments, subgroup in _:
 TEMPERAMENTS.update(ISLAND_TEMPERAMENTS)
 
 EQUAL_TEMPERAMENTS = {
-    "alpha": (9*9 + 5*5 + 4*4, (3/2)**9*(5/4)**5*(6/5)**4),
-    "beta": (11*11 + 6*6 + 5*5, (3/2)**11*(5/4)**6*(6/5)**5),
-    "gamma": (20*20 + 11*11 + 9*9, (3/2)**20*(5/4)**11*(6/5)**9),
-    "delta": (50*50 + 28*28 + 23*23, (3/2)**50*(5/4)**28*(6/5)**23),
+    "alpha": (9*9 + 5*5 + 4*4, Fraction(3, 2)**9*Fraction(5, 4)**5*Fraction(6, 5)**4),
+    "beta": (11*11 + 6*6 + 5*5, Fraction(3, 2)**11*Fraction(5, 4)**6*Fraction(6, 5)**5),
+    "gamma": (20*20 + 11*11 + 9*9, Fraction(3, 2)**20*Fraction(5, 4)**11*Fraction(6, 5)**9),
+    "delta": (50*50 + 28*28 + 23*23, Fraction(3, 2)**50*Fraction(5, 4)**28*Fraction(6, 5)**23),
     "Bohlen-Pierce": (13, 3),
     "bohlen-pierce": (13, 3),
     "BP": (13, 3),

@@ -21,7 +21,9 @@ from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
 from .pythagoras import AUGMENTED_INFLECTION, INTERVAL_QUALITIES, PITCH_LETTERS
 from .pythagoras import parse_pitch as parse_pythagorean_pitch, parse_interval as parse_pythagorean_interval
-from .monzo import fraction_to_monzo, PRIMES
+from .monzo import PRIMES, SemiMonzo, et_to_semimonzo
+from .monzo import Interval as SemiInterval
+from .monzo import Pitch as SemiPitch
 from . import ups_and_downs
 
 
@@ -50,7 +52,7 @@ ARROWS = ""
 
 for key, value in list(DEFAULT_INFLECTIONS.items()):
     ARROWS += key
-    DEFAULT_INFLECTIONS[key] = array(value + [0] * (PITCH_LENGTH - len(value)))
+    DEFAULT_INFLECTIONS[key] = array(value + [0] * (len(PRIMES) - len(value)))
 
 
 TEMPORAL_MINI_LANGUAGE = ".!~%"  # Chainable tokens
@@ -91,7 +93,7 @@ class Interval:
         return self.spine.interval_class
 
     def monzo(self):
-        result = zero_pitch()
+        result = zeros(len(PRIMES))
         result[:2] = self.spine.exponents()
         for arrow, count in self.arrows.items():
             result += self.inflections[arrow] * count
@@ -106,7 +108,7 @@ class Pitch:
         self.inflections = inflections
 
     def monzo(self):
-        result = zero_pitch()
+        result = zeros(len(PRIMES))
         result[:2] = self.spine.exponents()
         for arrow, count in self.arrows.items():
             result += self.inflections[arrow] * count
@@ -137,15 +139,18 @@ class ParsedInterval:
     def interval_class(self):
         return getattr(self.base, "interval_class", None)
 
-    def monzo(self):
-        result = zero_pitch()
-        base_monzo = self.base.monzo()
-        result[:len(base_monzo)] = base_monzo
-        result[0] += self.octaves
-        result += self.ups * self.up_inflection
+    def value(self):
+        if not isinstance(self.base, SemiInterval):
+            result = SemiInterval(SemiMonzo(self.base.monzo()))
+        else:
+            result = self.base.copy()
+        result.monzo.vector[0] += self.octaves
+        result += self.up_inflection * self.ups
         result = result / self.root * self.exponent
         if self.offset is not None:
             result += self.offset
+        if self.absolute:
+            return SemiPitch() + result
         return result
 
     @property
@@ -243,14 +248,6 @@ class ParsingError(Exception):
     pass
 
 
-def parse_fraction(token):
-    result = zero_pitch()
-    monzo, unrepresentable = fraction_to_monzo(token)
-    result[:len(monzo)] = monzo
-    result[E_INDEX] = log(float(unrepresentable))
-    return result
-
-
 def parse_signed_arrows(token):
     separated = separate_by_arrows(token)
     arrows = Counter()
@@ -282,37 +279,34 @@ class IntervalParser:
         self.et_divisions = et_divisions
         self.et_divided = et_divided
         self.warts = warts
-        self.base_pitch = zero_pitch()
-        self.smitonic_base_pitch = zero_pitch()
+        self.base_pitch = SemiInterval()
+        self.smitonic_base_pitch = SemiInterval()
         self.comma_list = None
-        self.comma_root_cache = None
         self.persistence = 5
-        self.up_down_inflection = zero_pitch()
-        self.up_down_inflection[0] = 0.5  # Default to half-octave
+        self.up_down_inflection = SemiInterval()
+        self.up_down_inflection.monzo.vector[0] = Fraction(1, 2)  # Default to half-octave
 
     def calculate_up_down(self):
         wart_str = "{}{}ED{}".format(self.et_divisions, self.warts, self.et_divided)
-        self.up_down_inflection = zero_pitch()
+        self.up_down_inflection = SemiInterval()
         if wart_str in ups_and_downs.ARROW_INFLECTIONS:
             base = ups_and_downs.ARROW_INFLECTIONS[wart_str]
-            self.up_down_inflection[:len(base)] = base
+            self.up_down_inflection.monzo.vector[:len(base)] = base
         else:
-            self.up_down_inflection[E_INDEX] = log(self.et_divided) / self.et_divisions
+            self.up_down_inflection = SemiInterval(et_to_semimonzo(1, self.et_divisions, self.et_divided))
 
     def set_base_pitch(self, token):
         if token[0] in PITCH_LETTERS:
-            ppitch = parse_pitch(token)
-            ppitch.inflections = self.inflections
-            self.base_pitch = ppitch.monzo()
+            pitch = parse_pitch(token)
+            pitch.inflections = self.inflections
+            self.base_pitch = pitch.monzo()
         elif token[0] in SMITONIC_BASIC_PITCHES:
             self.smitonic_base_pitch = smitonic_parse_pitch(token, self.smitonic_inflections)
         else:
             color = parse_color_interval(token)
             color_monzo = color.monzo()
-            color_offset = zero_pitch()
-            color_offset[:len(color_monzo)] = color_monzo
             if color.absolute:
-                self.base_pitch = color_offset
+                self.base_pitch = color_monzo
             else:
                 raise ParsingError("Unrecognized absolute pitch {}".format(token))
 
@@ -376,16 +370,13 @@ class IntervalParser:
         result = ParsedInterval(None, octaves, ups, root_degree, exponent_degree, absolute, self.up_down_inflection)
 
         if token[0].isdigit() and not is_colored:
-            pitch = zero_pitch()
+            interval = SemiInterval()
             if token.endswith("c"):
-                cents_in_nats = float(token[:-1])/1200*log(2)
-                pitch[E_INDEX] = cents_in_nats
+                interval.nats = float(token[:-1])/1200*log(2)
             elif token.endswith("Hz"):
-                hz = float(token[:-2])
-                pitch[HZ_INDEX] = hz
+                interval.frequency_delta = float(token[:-2])
             elif token.endswith("deg"):
-                rad = float(token[:-3]) / 180 * pi
-                pitch[RAD_INDEX] = rad
+                interval.phase_delta = float(token[:-3]) / 180 * pi
             elif "\\" in token:
                 divisions = self.et_divisions
                 divided = self.et_divided
@@ -395,10 +386,10 @@ class IntervalParser:
                     divisions = Fraction(step_spec[1])
                 if len(step_spec) == 3:
                     divided = Fraction(step_spec[2])
-                pitch[E_INDEX] = float(steps) / float(divisions) * log(float(divided))
+                interval.monzo = et_to_semimonzo(steps, divisions, divided)
             else:
-                pitch += parse_fraction(token)
-            result.base = MonzoInterval(pitch)
+                interval.monzo = SemiMonzo(Fraction(token))
+            result.base = interval
         elif token[0] in INTERVAL_QUALITIES:
             interval = parse_interval(token)
             interval.inflections = self.inflections
@@ -406,9 +397,9 @@ class IntervalParser:
         elif token[0] in PITCH_LETTERS:
             if direction is not None:
                 raise ParsingError("Signed absolute pitch")
-            ppitch = parse_pitch(token)
-            ppitch.inflections = self.inflections
-            result.base = ppitch
+            pitch = parse_pitch(token)
+            pitch.inflections = self.inflections
+            result.base = pitch
             result.offset = -self.base_pitch
         elif token[0] == "p" or (token[0] in SMITONIC_INTERVAL_QUALITIES and not is_colored):
             # TODO: Remove this and respell smitonics as an alternative notation
@@ -433,30 +424,30 @@ class IntervalParser:
 
 def parse_otonal(token, interval_parser):
     subtokens = token.split(":")
-    pitches = []
+    intervals = []
     for subtoken in subtokens:
         interval = interval_parser.parse(subtoken)
         if interval.absolute:
             raise ParsingError("Otonal chord using absolute pitches")
-        pitches.append(interval.monzo())
-    root = pitches[0]
-    for i in range(len(pitches)):
-        pitches[i] = pitches[i] - root
-    return Pattern([Note(pitch) for pitch in pitches], logical_duration=1)
+        intervals.append(interval.value())
+    root = intervals[0]
+    for i in range(len(intervals)):
+        intervals[i] = intervals[i] - root
+    return Pattern([Note(interval) for interval in intervals], logical_duration=1)
 
 
 def parse_utonal(token, interval_parser):
     subtokens = token.split(";")
-    pitches = []
+    intervals = []
     for subtoken in subtokens:
         interval = interval_parser.parse(subtoken)
         if interval.absolute:
             raise ParsingError("Utonal chord using absolute pitches")
-        pitches.append(interval.monzo())
-    root = pitches[0]
-    for i in range(len(pitches)):
-        pitches[i] = root - pitches[i]
-    return Pattern([Note(pitch) for pitch in pitches], logical_duration=1)
+        intervals.append(interval.value())
+    root = intervals[0]
+    for i in range(len(intervals)):
+        intervals[i] = root - intervals[i]
+    return Pattern([Note(interval) for interval in intervals], logical_duration=1)
 
 
 def parse_chord(token, transposition, interval_parser):
@@ -510,26 +501,26 @@ def parse_chord(token, transposition, interval_parser):
         result = Pattern(logical_duration=1)
         for subtoken in subtokens:
             interval = interval_parser.parse(subtoken)
-            pitch = interval.monzo()
-            if interval.absolute:
+            pitch = interval.value()
+            if pitch.absolute:
                 result.append(Note(pitch))
             else:
                 result.append(Note(pitch + transposition))
             interval_classes.append(interval.interval_class)
     for i in range(inversion):
-        result[i].pitch[0] += 1
+        result[i].pitch.monzo.vector[0] += 1
     if inversion:
         for i in range(len(result)):  #pylint: disable=consider-using-enumerate
-            result[i].pitch[0] -= 1
+            result[i].pitch.monzo.vector[0] -= 1
     if voicing is not None:
         for tone, octaves in voicing.items():
-            pitch = result[interval_classes.index(tone)].pitch + 0
+            pitch = result[interval_classes.index(tone)].pitch.copy()
             for i, octave in enumerate(octaves):
                 if i == 0:
-                    result[interval_classes.index(tone)].pitch[0] += octave
+                    result[interval_classes.index(tone)].pitch.monzo.vector[0] += octave
                 else:
                     result.append(Note(pitch))
-                    result[-1].pitch[0] += octave
+                    result[-1].pitch.monzo.vector[0] += octave
 
     return result
 
@@ -538,7 +529,8 @@ def comma_reduce_pattern(pattern, comma_list, persistence, cache=None):
     if cache is None:
         cache = {}
     if isinstance(pattern, Note):
-        pattern.pitch = comma_reduce(pattern.pitch, comma_list, persistence, cache)
+        # TODO: Convert back to Fractions
+        pattern.pitch.monzo.vector = comma_reduce(pattern.pitch.monzo.vector, comma_list, persistence, cache)
     if isinstance(pattern, Pattern):
         for subpattern in pattern:
             comma_reduce_pattern(subpattern, comma_list, persistence, cache)
@@ -642,7 +634,7 @@ def parse_track(lexer, default_config, max_repeats=None):
     transposed_pattern = None
     concatenated_pattern = None
     add_concatenated_durations = None
-    current_pitch = zero_pitch()
+    current_pitch = SemiPitch()
     timestamp = 0
     if "interval_parser" in default_config:
         interval_parser = default_config["interval_parser"]
@@ -680,19 +672,19 @@ def parse_track(lexer, default_config, max_repeats=None):
                 if tuning_name in TEMPERAMENTS:
                     comma_list, subgroup = TEMPERAMENTS[tuning_name]
                     subgroup = subgroup.split(".")
-                    config["tuning"].subgroup = [interval_parser.parse(basis_vector).monzo() for basis_vector in subgroup]
-                    config["tuning"].comma_list = [interval_parser.parse(comma).monzo() for comma in comma_list]
+                    config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.vector.astype("float") for basis_vector in subgroup]
+                    config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.vector.astype("float") for comma in comma_list]
                 else:
                     raise ParsingError("Unrecognized tuning '{}'".format(tuning_name))
             if config_key == "CL":
                 comma_list = [comma.strip() for comma in token.split(",")]
-                config["tuning"].comma_list = [interval_parser.parse(comma).monzo() for comma in comma_list]
+                config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.vector.astype("float") for comma in comma_list]
             if config_key == "SG":
                 subgroup = [basis_fraction.strip() for basis_fraction in token.split(".")]
-                config["tuning"].subgroup = [interval_parser.parse(basis_vector).monzo() for basis_vector in subgroup]
+                config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.vector.astype("float") for basis_vector in subgroup]
             if config_key == "C":
                 constraints = [constraint.strip() for constraint in token.split(",")]
-                config["tuning"].constraints = [interval_parser.parse(constraint).monzo() for constraint in constraints]
+                config["tuning"].constraints = [interval_parser.parse(constraint).value().monzo.vector.astype("float") for constraint in constraints]
             if config_key == "CRD":
                 config[config_key] = int(token)
                 interval_parser.persistence = int(token)
@@ -746,10 +738,6 @@ def parse_track(lexer, default_config, max_repeats=None):
                 config["flags"] = [flag.strip() for flag in token.split(",")]
                 if "CR" in config["flags"]:
                     config["comma_reduction_cache"] = {}
-                if "CRS" in config["flags"]:
-                    raise NotImplementedError("Comma Root Solving temporarily disabled")
-                    interval_parser.comma_list = config["tuning"].comma_list
-                    interval_parser.comma_root_cache = {}
             config_mode = False
             continue
 
@@ -971,31 +959,31 @@ def parse_track(lexer, default_config, max_repeats=None):
                 if token.startswith("~"):
                     moves_root = True
                     token = token[1:]
-                interval = interval_parser.parse(token)
-                monzo = interval.monzo()
+                interval = interval_parser.parse(token).value()
 
                 if transposed_pattern:
                     if interval.absolute:
                         raise ParsingError("Absolute transposition")
-                    transposed_pattern.transpose(monzo)
+                    transposed_pattern.transpose(interval)
                     pattern.append(transposed_pattern)
                     transposed_pattern = None
                     if moves_root:
-                        current_pitch += monzo
+                        current_pitch += interval
                 else:
                     if interval.absolute:
                         if moves_root:
                             raise ParsingError("Superfluous root move (~) with an absolute pitch")
-                        current_pitch = zero_pitch()
-                        moves_root = True
-                    pitch = current_pitch + monzo
-                    if moves_root:
-                        current_pitch = pitch
+                        current_pitch = interval
+                        pitch = current_pitch
+                    else:
+                        pitch = current_pitch + interval
+                        if moves_root:
+                            current_pitch = pitch
                     note = Note(pitch, time=pattern.t)
                     pattern.append(note)
+                    if "comma_reduction_cache" in config:  # TODO: Convert to Fractions
+                        current_pitch.monzo.vector = comma_reduce(current_pitch.monzo.vector, config["tuning"].comma_list, persistence=config["CRD"], cache=config["comma_reduction_cache"])
                     pattern.t += note.duration
-                if "comma_reduction_cache" in config:
-                    current_pitch = comma_reduce(current_pitch, config["tuning"].comma_list, persistence=config["CRD"], cache=config["comma_reduction_cache"])
 
                 if concatenated_pattern:
                     subpattern = patternify(pattern.pop())
@@ -1041,16 +1029,14 @@ def parse_text(text, max_repeats=None):
 
 
 def simplify_tracks(data):
-    used = array([False] * len(SEMANTIC))
+    used = array([False] * len(PRIMES))
 
     for track in data["tracks"]:
         for event in track["events"]:
             if event["type"] == "note":
-                for i, coord in enumerate(event["pitch"]):
+                for i, coord in enumerate(event["monzo"]):
                     if coord != 0:
                         used[i] = True
-
-    data["semantic"] = list(array(SEMANTIC)[used])
 
     def simplify(pitch):
         result = []
@@ -1063,7 +1049,7 @@ def simplify_tracks(data):
     for track in data["tracks"]:
         for event in track["events"]:
             if event["type"] == "note":
-                event["pitch"] = simplify(event["pitch"])
+                event["monzo"] = simplify(event["monzo"])
 
             if event["type"] == "tuning":
                 event["suggestedMapping"] = simplify(event["suggestedMapping"])
@@ -1242,7 +1228,7 @@ def tracks_to_midi(tracks, freq_to_midi=freq_to_midi_12, reserve_channel_10=True
             if event["type"] in ("note", "percussion", "programChange", "contextChange") or event.get("subtype") == "controlChange":
                 time = int(round(resolution * event["realTime"]))
             if event["type"] == "note":
-                events.append((time, event, event["frequency"], midi_velocity(event["velocity"])))
+                events.append((time, event, event["realFrequency"], midi_velocity(event["velocity"])))
             if event["type"] == "percussion":
                 events.append((time, event, None, midi_velocity(event["velocity"])))
             if event["type"] == "programChange" or event.get("subtype") == "controlChange":
@@ -1403,13 +1389,11 @@ if __name__ == "__main__":
         midi = tracks_to_midi(patterns, freq_to_midi, not args.override_channel_10, args.midi_transpose)
         midi.save(file=outfile)
     else:
-        semantic = SEMANTIC
         result = {
-            "semantic": SEMANTIC,
             "tracks": [],
         }
         for pattern, (start_time, end_time) in zip(patterns, sync_playheads(patterns)):
-            result["tracks"].append(pattern.realize(semantic, start_time, end_time).to_json())
+            result["tracks"].append(pattern.realize(start_time, end_time).to_json())
         if args.simplify:
             simplify_tracks(result)
         json.dump(result, args.outfile)

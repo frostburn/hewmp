@@ -5,25 +5,7 @@ from numpy import array, zeros, log, floor, pi, around, dot, exp, cumsum, linspa
 from scipy.interpolate import interp1d
 from .temperament import temper_subgroup, comma_reduce, comma_equals, comma_root
 from .notation import tokenize_fraction
-from .monzo import PRIMES
-
-
-E_INDEX = len(PRIMES)
-HZ_INDEX = E_INDEX + 1
-RAD_INDEX = HZ_INDEX + 1
-PITCH_LENGTH = RAD_INDEX + 1
-
-SEMANTIC = []
-for prime in PRIMES:
-    SEMANTIC.append(str(prime))
-SEMANTIC.append("e")
-SEMANTIC.append("Hz")
-SEMANTIC.append("rad")
-SEMANTIC = tuple(SEMANTIC)
-
-
-def zero_pitch():
-    return zeros(PITCH_LENGTH)
+from .monzo import PRIMES, Mapping
 
 
 DEFAULT_METRIC = ones(len(PRIMES))
@@ -79,7 +61,7 @@ class Event(MusicBase):
 
 
 class Tuning(Event):
-    def __init__(self, base_frequency, comma_list, constraints, subgroup, et_divisions=None, et_divided=None, warts=None, suggested_mapping=None, semantic=None, time=0, duration=0, real_time=None, real_duration=None):
+    def __init__(self, base_frequency, comma_list, constraints, subgroup, et_divisions=None, et_divided=None, warts=None, suggested_mapping=None, time=0, duration=0, real_time=None, real_duration=None):
         super().__init__(time, duration, real_time, real_duration)
         self.base_frequency = base_frequency
         self.comma_list = comma_list
@@ -89,7 +71,6 @@ class Tuning(Event):
         self.et_divided = et_divided
         self.warts = warts
         self.suggested_mapping = suggested_mapping
-        self.semantic = semantic
         self.cache = {}
 
     def suggest_mapping(self):
@@ -116,9 +97,7 @@ class Tuning(Event):
                     else:
                         steps[index] += modification
                 mapping = steps*generator
-        self.suggested_mapping = zero_pitch()
-        self.suggested_mapping[:len(JI)] = mapping
-        self.suggested_mapping[E_INDEX] = 1
+        self.suggested_mapping = Mapping(mapping, self.base_frequency)
 
     def to_json(self):
         result = super().to_json()
@@ -133,8 +112,7 @@ class Tuning(Event):
             "subgroup": subgroup,
             "equalTemperament": [None if self.et_divisions is None else str(self.et_divisions), None if self.et_divided is None else str(self.et_divided)],
             "warts": None if self.warts is None else list(self.warts),
-            "suggestedMapping": list(self.suggested_mapping),
-            "semantic": self.semantic,
+            "suggestedMapping": list(self.suggested_mapping.vector),
         })
         return result
 
@@ -151,14 +129,13 @@ class Tuning(Event):
             self.et_divisions,
             self.et_divided,
             warts,
-            array(self.suggested_mapping),
-            self.semantic,
+            self.suggested_mapping,
             time,
             duration
         )
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
             self.__class__.__name__,
             self.base_frequency,
             self.comma_list,
@@ -168,19 +145,11 @@ class Tuning(Event):
             self.et_divided,
             self.warts,
             self.suggested_mapping,
-            self.semantic,
             self.time,
             self.duration,
             self.real_time,
             self.real_duration,
         )
-
-    def pitch_to_freq_rads(self, pitch):
-        nats = dot(self.suggested_mapping, pitch)
-        freq_offset = pitch[self.semantic.index("Hz")] if "Hz" in self.semantic else 0.0
-        freq = self.base_frequency * exp(nats) + freq_offset
-        rads = pitch[self.semantic.index("rad")] if "rad" in self.semantic else 0.0
-        return freq, rads
 
     def equals(self, pitch_a, pitch_b, persistence=5):
         """
@@ -426,8 +395,8 @@ class ProgramChange(Event):
 
 
 class Transposable:
-    def transpose(self, pitch):
-        pass
+    def transpose(self, interval):
+        raise ValueError("Sub-classes should implement transposing")
 
 
 class GatedEvent(Event):
@@ -442,39 +411,38 @@ class GatedEvent(Event):
 
 
 class Note(GatedEvent, Transposable):
-    def __init__(self, pitch, frequency=None, phase=None, velocity=None, gate_ratio=None, time=0, duration=1, real_time=None, real_duration=None, real_gate_length=None):
+    def __init__(self, pitch, velocity=None, gate_ratio=None, time=0, duration=1, real_time=None, real_duration=None, real_gate_length=None, real_frequency=None):
         super().__init__(time, duration, real_time, real_duration, real_gate_length)
         self.pitch = pitch
-        self.frequency = frequency
-        self.phase = phase
-        if phase is None:
-            self.phase = pitch[RAD_INDEX]
         self.velocity = velocity
         self.gate_ratio = gate_ratio
+        self.real_frequency = real_frequency
 
-    def transpose(self, pitch):
-        self.pitch = self.pitch + pitch
+    def transpose(self, interval):
+        self.pitch = self.pitch + interval
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
-            self.__class__.__name__, self.pitch, self.frequency, self.phase, self.velocity, self.gate_ratio,
-            self.time, self.duration, self.real_time, self.real_duration, self.real_gate_length
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
+            self.__class__.__name__, self.pitch, self.velocity, self.gate_ratio,
+            self.time, self.duration, self.real_time, self.real_duration, self.real_gate_length, self.real_frequency
         )
 
     def to_json(self):
         result = super().to_json()
         result.update({
             "type": "note",
-            "pitch": list(self.pitch),
-            "frequency": self.frequency,
-            "phase": self.phase * 360 / (2*pi),
-            "velocity": self.velocity,
-            "gate_ratio": self.gate_ratio,
+            "monzo": [float(component) for component in self.pitch.monzo.vector],
+            "centOffset": self.pitch.monzo.nats / log(2) * 1200,
+            "frequencyOffset": self.pitch.frequency_offset,
+            "phase": self.pitch.phase * 360 / (2*pi),
+            "velocity": str(self.velocity),
+            "gate_ratio": str(self.gate_ratio),
+            "realFrequency": self.real_frequency,
         })
         return result
 
     def retime(self, time, duration):
-        return self.__class__(array(self.pitch), self.frequency, self.phase, self.velocity, self.gate_ratio, time, duration, real_gate_length=self.real_gate_length)
+        return self.__class__(self.pitch.copy(), self.velocity, self.gate_ratio, time, duration, real_gate_length=self.real_gate_length, real_frequency=self.real_frequency)
 
 
 class Percussion(GatedEvent):
@@ -679,12 +647,12 @@ class Pattern(MusicBase, Transposable):
                 ))
         return result
 
-    def transpose(self, pitch):
+    def transpose(self, interval):
         for subpattern in self.subpatterns:
             if isinstance(subpattern, Transposable):
-                subpattern.transpose(pitch)
+                subpattern.transpose(interval)
 
-    def realize(self, semantic=SEMANTIC, start_time=None, end_time=None):
+    def realize(self, start_time=None, end_time=None):
         flat = []
         tempo = None
         tuning = None
@@ -696,7 +664,6 @@ class Pattern(MusicBase, Transposable):
             if isinstance(event, Tempo) and tempo is None:
                 tempo = event
             if isinstance(event, Tuning):
-                event.semantic = semantic
                 if tuning is None:
                     tuning = event
             if isinstance(event, Articulation) and articulation is None:
@@ -730,7 +697,7 @@ class Pattern(MusicBase, Transposable):
                     continue
                 event.real_gate_length = real_gate_length
             if isinstance(event, Note):
-                event.frequency, event.phase = tuning.pitch_to_freq_rads(event.pitch)
+                event.real_frequency = tuning.suggested_mapping(event.pitch)
             if start_time is not None and event.time < start_time:
                 for type_ in missing:
                     if isinstance(event, type_):

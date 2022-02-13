@@ -5,25 +5,7 @@ from numpy import array, zeros, log, floor, pi, around, dot, exp, cumsum, linspa
 from scipy.interpolate import interp1d
 from .temperament import temper_subgroup, comma_reduce, comma_equals, comma_root
 from .notation import tokenize_fraction
-from .monzo import PRIMES
-
-
-E_INDEX = len(PRIMES)
-HZ_INDEX = E_INDEX + 1
-RAD_INDEX = HZ_INDEX + 1
-PITCH_LENGTH = RAD_INDEX + 1
-
-SEMANTIC = []
-for prime in PRIMES:
-    SEMANTIC.append(str(prime))
-SEMANTIC.append("e")
-SEMANTIC.append("Hz")
-SEMANTIC.append("rad")
-SEMANTIC = tuple(SEMANTIC)
-
-
-def zero_pitch():
-    return zeros(PITCH_LENGTH)
+from .monzo import PRIMES, Mapping
 
 
 DEFAULT_METRIC = ones(len(PRIMES))
@@ -46,9 +28,6 @@ class MusicBase:
     def end_time(self, value):
         self.duration = value - self.time
 
-    @property
-    def logical_duration(self):
-        return self.duration
 
     @property
     def real_end_time(self):
@@ -67,7 +46,7 @@ class MusicBase:
         }
 
     def retime(self, time, duration):
-        pass
+        raise ValueError("Sub-classes must implement retiming")
 
     def copy(self):
         return self.retime(self.time, self.duration)
@@ -82,7 +61,7 @@ class Event(MusicBase):
 
 
 class Tuning(Event):
-    def __init__(self, base_frequency, comma_list, constraints, subgroup, et_divisions=None, et_divided=None, warts=None, suggested_mapping=None, semantic=None, time=0, duration=0, real_time=None, real_duration=None):
+    def __init__(self, base_frequency, comma_list, constraints, subgroup, et_divisions=None, et_divided=None, warts=None, suggested_mapping=None, time=0, duration=0, real_time=None, real_duration=None):
         super().__init__(time, duration, real_time, real_duration)
         self.base_frequency = base_frequency
         self.comma_list = comma_list
@@ -92,7 +71,6 @@ class Tuning(Event):
         self.et_divided = et_divided
         self.warts = warts
         self.suggested_mapping = suggested_mapping
-        self.semantic = semantic
         self.cache = {}
 
     def suggest_mapping(self):
@@ -119,9 +97,7 @@ class Tuning(Event):
                     else:
                         steps[index] += modification
                 mapping = steps*generator
-        self.suggested_mapping = zero_pitch()
-        self.suggested_mapping[:len(JI)] = mapping
-        self.suggested_mapping[E_INDEX] = 1
+        self.suggested_mapping = Mapping(mapping, self.base_frequency)
 
     def to_json(self):
         result = super().to_json()
@@ -136,8 +112,7 @@ class Tuning(Event):
             "subgroup": subgroup,
             "equalTemperament": [None if self.et_divisions is None else str(self.et_divisions), None if self.et_divided is None else str(self.et_divided)],
             "warts": None if self.warts is None else list(self.warts),
-            "suggestedMapping": list(self.suggested_mapping),
-            "semantic": self.semantic,
+            "suggestedMapping": list(self.suggested_mapping.vector),
         })
         return result
 
@@ -154,14 +129,13 @@ class Tuning(Event):
             self.et_divisions,
             self.et_divided,
             warts,
-            array(self.suggested_mapping),
-            self.semantic,
+            self.suggested_mapping,
             time,
             duration
         )
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
             self.__class__.__name__,
             self.base_frequency,
             self.comma_list,
@@ -171,19 +145,11 @@ class Tuning(Event):
             self.et_divided,
             self.warts,
             self.suggested_mapping,
-            self.semantic,
             self.time,
             self.duration,
             self.real_time,
             self.real_duration,
         )
-
-    def pitch_to_freq_rads(self, pitch):
-        nats = dot(self.suggested_mapping, pitch)
-        freq_offset = pitch[self.semantic.index("Hz")] if "Hz" in self.semantic else 0.0
-        freq = self.base_frequency * exp(nats) + freq_offset
-        rads = pitch[self.semantic.index("rad")] if "rad" in self.semantic else 0.0
-        return freq, rads
 
     def equals(self, pitch_a, pitch_b, persistence=5):
         """
@@ -429,8 +395,8 @@ class ProgramChange(Event):
 
 
 class Transposable:
-    def transpose(self, pitch):
-        pass
+    def transpose(self, interval):
+        raise ValueError("Sub-classes should implement transposing")
 
 
 class GatedEvent(Event):
@@ -445,36 +411,53 @@ class GatedEvent(Event):
 
 
 class Note(GatedEvent, Transposable):
-    def __init__(self, pitch, time=0, duration=1, real_time=None, real_duration=None, real_gate_length=None):
+    def __init__(self, pitch, velocity=None, gate_ratio=None, time=0, duration=1, real_time=None, real_duration=None, real_gate_length=None, real_frequency=None):
         super().__init__(time, duration, real_time, real_duration, real_gate_length)
         self.pitch = pitch
+        self.velocity = velocity
+        self.gate_ratio = gate_ratio
+        self.real_frequency = real_frequency
 
-    def transpose(self, pitch):
-        self.pitch = self.pitch + pitch
+    def transpose(self, interval):
+        self.pitch = self.pitch + interval
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.pitch, self.time, self.duration, self.real_time, self.real_duration, self.real_gate_length)
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
+            self.__class__.__name__, self.pitch, self.velocity, self.gate_ratio,
+            self.time, self.duration, self.real_time, self.real_duration, self.real_gate_length, self.real_frequency
+        )
 
     def to_json(self):
         result = super().to_json()
         result.update({
             "type": "note",
-            "pitch": list(self.pitch),
+            "monzo": [float(component) for component in self.pitch.monzo.vector],
+            "centOffset": self.pitch.monzo.nats / log(2) * 1200,
+            "frequencyOffset": self.pitch.frequency_offset,
+            "phase": self.pitch.phase * 360 / (2*pi),
+            "velocity": str(self.velocity),
+            "gate_ratio": str(self.gate_ratio),
+            "realFrequency": self.real_frequency,
         })
         return result
 
     def retime(self, time, duration):
-        return self.__class__(array(self.pitch), time, duration, real_gate_length=self.real_gate_length)
+        return self.__class__(self.pitch.copy(), self.velocity, self.gate_ratio, time, duration, real_gate_length=self.real_gate_length, real_frequency=self.real_frequency)
 
 
 class Percussion(GatedEvent):
-    def __init__(self, name, index=None, time=0, duration=1, real_time=None, real_duration=None, real_gate_length=None):
+    def __init__(self, name, index=None, velocity=None, gate_ratio=None, time=0, duration=1, real_time=None, real_duration=None, real_gate_length=None):
         super().__init__(time, duration, real_time, real_duration, real_gate_length)
         self.name = name
         self.index = index
+        self.velocity = velocity
+        self.gate_ratio = gate_ratio
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.name, self.index, self.time, self.duration, self.real_time, self.real_duration, self.real_gate_length)
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(
+            self.__class__.__name__, self.name, self.index, self.velocity, self.gate_ratio,
+            self.time, self.duration, self.real_time, self.real_duration, self.real_gate_length
+        )
 
     def to_json(self):
         result = super().to_json()
@@ -482,20 +465,23 @@ class Percussion(GatedEvent):
             "type": "percussion",
             "name": self.name,
             "index": self.index,
+            "velocity": self.velocity,
+            "gate_ratio": self.gate_ratio,
         })
         return result
 
     def retime(self, time, duration):
-        return self.__class__(self.name, self.index, time, duration, real_gate_length=self.real_gate_length)
+        return self.__class__(self.name, self.index, self.velocity, self.gate_ratio, time, duration, real_gate_length=self.real_gate_length)
 
 
 class Pattern(MusicBase, Transposable):
-    def __init__(self, subpatterns=None, time=0, duration=1, real_time=None, real_duration=None):
+    def __init__(self, subpatterns=None, time=0, duration=1, logical_duration=0, real_time=None, real_duration=None):
         super().__init__(time, duration, real_time, real_duration)
         if subpatterns is None:
             self.subpatterns = []
         else:
             self.subpatterns = subpatterns
+        self.logical_duration = logical_duration
 
     def __bool__(self):
         return bool(self.subpatterns)
@@ -522,6 +508,14 @@ class Pattern(MusicBase, Transposable):
         return iter(self.subpatterns)
 
     @property
+    def t(self):
+        return self.logical_duration
+
+    @t.setter
+    def t(self, value):
+        self.logical_duration = value
+
+    @property
     def last(self):
         for event in reversed(self.subpatterns):
             if not isinstance(event, Spacer):
@@ -535,13 +529,6 @@ class Pattern(MusicBase, Transposable):
             if not isinstance(self[-i], Spacer):
                 self[-i] = value
                 return
-
-    @property
-    def logical_duration(self):
-        result = 0
-        for subpattern in self.subpatterns:
-            result = max(result, subpattern.end_time)
-        return result
 
     @property
     def last_voiced(self):
@@ -571,18 +558,17 @@ class Pattern(MusicBase, Transposable):
 
 
     def repeat(self, num_repeats, affect_duration=False):
-        logical_duration = self.logical_duration
         subpatterns = self.subpatterns
         self.subpatterns = []
         offset = 0
         for _ in range(num_repeats):
             self.subpatterns += [sub.retime(sub.time + offset, sub.duration) for sub in subpatterns]
-            offset += logical_duration
+            offset += self.logical_duration
+        self.logical_duration *= num_repeats
         if affect_duration:
             self.duration *= num_repeats
 
     def fill(self, num_onsets):
-        logical_duration = self.logical_duration
         subpatterns = self.subpatterns
         self.subpatterns = []
         offset = 0
@@ -591,21 +577,20 @@ class Pattern(MusicBase, Transposable):
                 self.subpatterns.append(subpattern.retime(subpattern.time + offset, subpattern.duration))
                 if len(self) >= num_onsets:
                     break
-            offset += logical_duration
+            offset += self.logical_duration
+        self.logical_duration = self.last.end_time
 
     def reverse_time(self):
-        logical_duration = self.logical_duration
-        for subpattern in self:
+        for subpattern in self.subpatterns:
             start_time = subpattern.time
             end_time = subpattern.end_time
-            subpattern.time = logical_duration - end_time
-            subpattern.end_time = logical_duration - start_time
+            subpattern.time = self.logical_duration - end_time
+            subpattern.end_time = self.logical_duration - start_time
 
     def reverse_logic(self):
         self.subpatterns = self.subpatterns[::-1]
 
     def _rotate_time(self, steps):
-        logical_duration = self.logical_duration
         offset = self[steps % len(self)].time
         for subpattern in self:
             subpattern.time = (subpattern.time - offset) % self.logical_duration
@@ -626,21 +611,21 @@ class Pattern(MusicBase, Transposable):
         self.subpatterns = list(d)
 
     def stretch_subpatterns(self):
-        logical_duration = self.logical_duration
         for subpattern in self:
-            subpattern.end_time = logical_duration
+            subpattern.end_time = self.logical_duration
 
     def extend_duration(self, extension):
         logical_extension = extension * self.logical_duration / self.duration
         for subpattern in self.subpatterns:
             subpattern.extend_duration(logical_extension)
+        self.logical_duration += logical_extension
         super().extend_duration(extension)
 
     def concatenate(self, other, add_durations):
         duration = self.duration
         if add_durations:
             duration += other.duration
-        result = Pattern([], self.time, duration)
+        result = Pattern([], self.time, duration, self.logical_duration + other.logical_duration)
         for subpattern in self.subpatterns:
             result.append(subpattern.copy())
         offset = self.logical_duration
@@ -649,8 +634,7 @@ class Pattern(MusicBase, Transposable):
         return result
 
     def flatten(self):
-        logical_duration = self.logical_duration
-        if logical_duration == 0:
+        if self.logical_duration == 0:
             dilation = Fraction(0)
         else:
             dilation = self.duration/self.logical_duration
@@ -663,25 +647,31 @@ class Pattern(MusicBase, Transposable):
                 ))
         return result
 
-    def transpose(self, pitch):
+    def transpose(self, interval):
         for subpattern in self.subpatterns:
             if isinstance(subpattern, Transposable):
-                subpattern.transpose(pitch)
+                subpattern.transpose(interval)
 
-    def realize(self, semantic=SEMANTIC, start_time=None, end_time=None):
+    def realize(self, start_time=None, end_time=None):
         flat = []
         tempo = None
         tuning = None
+        articulation = None
+        dynamic = None
         for event in self.flatten():
             if not isinstance(event, Spacer):
                 flat.append(event)
-            if isinstance(event, Tempo):
+            if isinstance(event, Tempo) and tempo is None:
                 tempo = event
             if isinstance(event, Tuning):
-                tuning = event
+                if tuning is None:
+                    tuning = event
+            if isinstance(event, Articulation) and articulation is None:
+                articulation = event
+            if isinstance(event, Dynamic) and dynamic is None:
+                dynamic = event
         events = []
 
-        articulation = None
         missing = {
             Articulation: None,
             Dynamic: None,
@@ -696,12 +686,18 @@ class Pattern(MusicBase, Transposable):
         for event in flat:
             if isinstance(event, Articulation):
                 articulation = event
+            if isinstance(event, Dynamic):
+                dynamic = event
             real_time, real_duration = tempo.to_real_time(event.time, event.duration)
             if isinstance(event, GatedEvent):
+                event.gate_ratio = articulation.gate_ratio
+                event.velocity = dynamic.velocity
                 _, real_gate_length = tempo.to_real_time(event.time, event.duration * articulation.gate_ratio)
                 if real_gate_length <= 0:
                     continue
                 event.real_gate_length = real_gate_length
+            if isinstance(event, Note):
+                event.real_frequency = tuning.suggested_mapping(event.pitch)
             if start_time is not None and event.time < start_time:
                 for type_ in missing:
                     if isinstance(event, type_):
@@ -735,16 +731,16 @@ class Pattern(MusicBase, Transposable):
                 events.insert(0, extra)
         duration = end_time - start_time
         real_time, real_duration = tempo.to_real_time(start_time, duration)
-        return Pattern(events, start_time, duration, real_time, real_duration)
+        return Pattern(events, start_time, duration, duration, real_time, real_duration)
 
     def retime(self, time, duration):
-        result = self.__class__([], time, duration)
+        result = self.__class__([], time, duration, self.logical_duration)
         for subpattern in self.subpatterns:
             result.append(subpattern.copy())
         return result
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.subpatterns, self.time, self.duration, self.real_time, self.real_duration)
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.subpatterns, self.time, self.duration, self.logical_duration, self.real_time, self.real_duration)
 
     def is_chord(self):
         for note in self:

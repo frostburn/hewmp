@@ -8,6 +8,7 @@ from .color import monzo_to_color
 from .monzo import PRIMES
 
 
+# TODO: Parse monzos into classes and add tokenization methods instead
 # TODO: Notate neutral intervals
 
 
@@ -159,15 +160,13 @@ PYTHAGOREAN_QUALITIES = ("m", "m", "m", "m", "P", "P", "P", "M", "M", "M", "M")
 PYTHAGOREAN_INDEX_P1 = 5
 
 
-def tokenize_interval(pitch, inflections, *extra_indices):
+def tokenize_interval(pitch, inflections):
     """
     Tokenize (relative) pitch monzo using the inflections provided
 
     Assumes that the first two coordinates form the pythagorean basis
     """
     derooted = pitch
-    for index in extra_indices:
-        derooted[index] = 0
     derooted, root = extract_root(derooted)
     twos, threes, arrow_counts = basis_and_arrows(derooted, inflections)
     arrow_str = tokenize_arrows(arrow_counts)
@@ -195,7 +194,7 @@ def tokenize_interval(pitch, inflections, *extra_indices):
     if root != 1:
         root_str = "/{}".format(root)
 
-    return "{}{}{}{}{}{}".format(sign, quality, value, arrow_str, root_str, tokenize_extras(pitch, *extra_indices))
+    return "{}{}{}{}{}".format(sign, quality, value, arrow_str, root_str)
 
 
 def tokenize_color_interval(pitch, *extra_indices):
@@ -247,15 +246,13 @@ def notate_pitch(pitch, inflections):
     return letter, octave, arrow_counts
 
 
-def tokenize_pitch(pitch, inflections, *extra_indices):
+def tokenize_pitch(pitch, inflections):
     """
     Tokenize (absolute) pitch monzo using the inflections provided
 
     Assumes that the first two coordinates form the pythagorean basis
     """
     fractional_pitch = pitch - around(pitch)
-    for index in extra_indices:
-        fractional_pitch[index] = 0
     pitch = pitch - fractional_pitch
     letter, octave, arrow_counts = notate_pitch(pitch, inflections)
     accidental = "b" * arrow_counts.pop("b", 0) + "#" * arrow_counts.pop("#", 0) + "x" * arrow_counts.pop("x", 0)
@@ -263,9 +260,9 @@ def tokenize_pitch(pitch, inflections, *extra_indices):
 
     fractional_transposition = ""
     if fractional_pitch.any():
-        fractional_transposition = "&" + tokenize_interval(fractional_pitch, inflections, *extra_indices)
+        fractional_transposition = "&" + tokenize_interval(fractional_pitch, inflections)
 
-    return "{}{}{}{}{}{}".format(letter, octave, accidental, arrow_str, fractional_transposition, tokenize_extras(pitch, *extra_indices))
+    return "{}{}{}{}{}".format(letter, octave, accidental, arrow_str, fractional_transposition)
 
 
 def get_inflections():

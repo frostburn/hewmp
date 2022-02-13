@@ -1,4 +1,5 @@
 # coding: utf-8
+from enum import Enum
 from io import StringIO
 from collections import Counter, defaultdict
 try:
@@ -18,9 +19,11 @@ from .rhythm import sequence_to_time_duration, euclidean_rhythm, pergen_rhythm, 
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
-from .pythagoras import AUGMENTED_INFLECTION, INTERVAL_QUALITIES, BASIC_PITCHES
+from .pythagoras import AUGMENTED_INFLECTION, INTERVAL_QUALITIES, PITCH_LETTERS
 from .pythagoras import parse_pitch as parse_pythagorean_pitch, parse_interval as parse_pythagorean_interval
-from .monzo import fraction_to_monzo, PRIMES
+from .monzo import PRIMES, SemiMonzo, et_to_semimonzo
+from .monzo import Interval as SemiInterval
+from .monzo import Pitch as SemiPitch
 from . import ups_and_downs
 
 
@@ -49,10 +52,114 @@ ARROWS = ""
 
 for key, value in list(DEFAULT_INFLECTIONS.items()):
     ARROWS += key
-    DEFAULT_INFLECTIONS[key] = array(value + [0] * (PITCH_LENGTH - len(value)))
+    DEFAULT_INFLECTIONS[key] = array(value + [0] * (len(PRIMES) - len(value)))
 
 
 TEMPORAL_MINI_LANGUAGE = ".!~%"  # Chainable tokens
+
+
+class SignedArrow(Enum):
+    PLUS_MINUS = "+-"
+    LESS_MORE = "<>"
+    UP_DOWN = "^v"
+    AYE_LEI = "i!"
+    STAR_HOLES = "*%"
+    HIGH_LOW = "AV"
+    HOOK_SINKER = "un"
+    ARC_BOW = "UD"
+    MIGHTY_WEAK = "MW"
+
+
+SIGN_BY_ARROW = {}
+for arrow in SignedArrow:
+    SIGN_BY_ARROW[arrow.value[0]] = (1, arrow)
+    SIGN_BY_ARROW[arrow.value[1]] = (-1, arrow)
+
+
+DEFAULT_SIGNED_INFLECTIONS = {}
+for arrow in SignedArrow:
+    DEFAULT_SIGNED_INFLECTIONS[arrow] = DEFAULT_INFLECTIONS[arrow.value[0]]
+
+
+class Interval:
+    absolute = False
+    def __init__(self, spine, arrows, inflections=None):
+        self.spine = spine
+        self.arrows = arrows
+        self.inflections = inflections
+
+    @property
+    def interval_class(self):
+        return self.spine.interval_class
+
+    def monzo(self):
+        result = zeros(len(PRIMES))
+        result[:2] = self.spine.exponents()
+        for arrow, count in self.arrows.items():
+            result += self.inflections[arrow] * count
+        return result
+
+
+class Pitch:
+    absolute = True
+    def __init__(self, spine, arrows, inflections=None):
+        self.spine = spine
+        self.arrows = arrows
+        self.inflections = inflections
+
+    def monzo(self):
+        result = zeros(len(PRIMES))
+        result[:2] = self.spine.exponents()
+        for arrow, count in self.arrows.items():
+            result += self.inflections[arrow] * count
+        return result
+
+
+class MonzoInterval:
+    def __init__(self, value, absolute=False):
+        self.value = value
+        self.absolute = absolute
+
+    def monzo(self):
+        return self.value
+
+
+class ParsedInterval:
+    def __init__(self, base, octaves=0, ups=0, root=1, exponent=1, absolute=False, up_inflection=None, offset=None):
+        self.base = base
+        self.octaves = octaves
+        self.ups = ups
+        self.root = root
+        self.exponent = exponent
+        self.up_inflection = up_inflection
+        self._absolute = absolute
+        self.offset = offset
+
+    @property
+    def interval_class(self):
+        return getattr(self.base, "interval_class", None)
+
+    def value(self):
+        if not isinstance(self.base, SemiInterval):
+            result = SemiInterval(SemiMonzo(self.base.monzo()))
+        else:
+            result = self.base.copy()
+        result.monzo.vector[0] += self.octaves
+        result += self.up_inflection * self.ups
+        result = result / self.root * self.exponent
+        if self.offset is not None:
+            result += self.offset
+        if self.absolute:
+            return SemiPitch() + result
+        return result
+
+    @property
+    def absolute(self):
+        return self.base.absolute or self._absolute
+
+    @absolute.setter
+    def absolute(self, value):
+        self._absolute = value
 
 
 def parse_warts(token, index=0):
@@ -141,81 +248,65 @@ class ParsingError(Exception):
     pass
 
 
-def parse_fraction(token):
-    result = zero_pitch()
-    monzo, unrepresentable = fraction_to_monzo(token)
-    result[:len(monzo)] = monzo
-    result[E_INDEX] = log(float(unrepresentable))
-    return result
-
-
-def parse_arrows(token, inflections):
-    token, base, interval_class = parse_pythagorean_interval(token)
-    result = zero_pitch()
-    result[:2] = base
-
+def parse_signed_arrows(token):
     separated = separate_by_arrows(token)
-
+    arrows = Counter()
     for arrow_token in separated[1:]:
-        arrows = 1
+        count = 1
         if len(arrow_token) > 1:
-            arrows = int(arrow_token[1:])
-        result += inflections[arrow_token[0]]*arrows
+            count = int(arrow_token[1:])
+        sign, arrow = SIGN_BY_ARROW[arrow_token[0]]
+        arrows[arrow] += sign * count
+    return arrows
 
-    return result, interval_class
+
+def parse_interval(token):
+    token, spine = parse_pythagorean_interval(token)
+    arrows = parse_signed_arrows(token)
+    return Interval(spine, arrows)
 
 
-def parse_pitch(token, inflections):
-    token, base = parse_pythagorean_pitch(token)
-    result = zero_pitch()
-    result[:2] = base
-
-    separated = separate_by_arrows(token)
-
-    for arrow_token in separated[1:]:
-        arrows = 1
-        if len(arrow_token) > 1:
-            arrows = int(arrow_token[1:])
-        result += inflections[arrow_token[0]]*arrows
-
-    return result
+def parse_pitch(token):
+    token, spine = parse_pythagorean_pitch(token)
+    arrows = parse_signed_arrows(token)
+    return Pitch(spine, arrows)
 
 
 class IntervalParser:
-    def __init__(self, inflections=DEFAULT_INFLECTIONS, smitonic_inflections=SMITONIC_INFLECTIONS, et_divisions=Fraction(12), et_divided=Fraction(2), warts=""):
+    def __init__(self, inflections=DEFAULT_SIGNED_INFLECTIONS, smitonic_inflections=SMITONIC_INFLECTIONS, et_divisions=Fraction(12), et_divided=Fraction(2), warts=""):
         self.inflections = inflections
         self.smitonic_inflections = smitonic_inflections
         self.et_divisions = et_divisions
         self.et_divided = et_divided
         self.warts = warts
-        self.base_pitch = zero_pitch()
-        self.smitonic_base_pitch = zero_pitch()
+        self.base_pitch = SemiInterval()
+        self.smitonic_base_pitch = SemiInterval()
         self.comma_list = None
-        self.comma_root_cache = None
         self.persistence = 5
-        self.up_down_inflection = zero_pitch()
-        self.up_down_inflection[0] = 0.5  # Default to half-octave
+        self.up_down_inflection = SemiInterval()
+        self.up_down_inflection.monzo.vector[0] = Fraction(1, 2)  # Default to half-octave
 
     def calculate_up_down(self):
         wart_str = "{}{}ED{}".format(self.et_divisions, self.warts, self.et_divided)
-        self.up_down_inflection = zero_pitch()
+        self.up_down_inflection = SemiInterval()
         if wart_str in ups_and_downs.ARROW_INFLECTIONS:
             base = ups_and_downs.ARROW_INFLECTIONS[wart_str]
-            self.up_down_inflection[:len(base)] = base
+            self.up_down_inflection.monzo.vector[:len(base)] = base
         else:
-            self.up_down_inflection[E_INDEX] = log(self.et_divided) / self.et_divisions
+            self.up_down_inflection = SemiInterval(et_to_semimonzo(1, self.et_divisions, self.et_divided))
 
     def set_base_pitch(self, token):
-        if token[0] in BASIC_PITCHES:
-            self.base_pitch = parse_pitch(token, self.inflections)
+        if token[0] in PITCH_LETTERS:
+            pitch = parse_pitch(token)
+            pitch.inflections = self.inflections
+            self.base_pitch = pitch.monzo()
         elif token[0] in SMITONIC_BASIC_PITCHES:
             self.smitonic_base_pitch = smitonic_parse_pitch(token, self.smitonic_inflections)
         else:
-            color_monzo, color_absolute = parse_color_interval(token)
-            color_offset = zero_pitch()
-            color_offset[:len(color_monzo)] = color_monzo
-            if color_absolute:
-                self.base_pitch = color_offset
+            color = parse_color_interval(token)
+            color_monzo = color.monzo()
+            if color.absolute:
+                self.base_pitch = color_monzo
             else:
                 raise ParsingError("Unrecognized absolute pitch {}".format(token))
 
@@ -233,25 +324,26 @@ class IntervalParser:
                 direction = 1
             token = token[1:]
 
-        pitch = zero_pitch()
+        octaves = 0
 
         while token[0] == "c":
-            pitch[0] += 1
+            octaves += 1
             token = token[1:]
 
         while token[0] == "`":
-            pitch[0] -= 1
+            octaves -= 1
             token = token[1:]
 
         has_up_down = (token[0] in "^v")
+        ups = 0
         while token[0] == "^":
-            pitch += self.up_down_inflection
+            ups += 1
             token = token[1:]
         while token[0] == "v":
-            pitch -= self.up_down_inflection
+            ups -= 1
             token = token[1:]
         if has_up_down and token[0].isdigit():
-            token = "P" + token
+            token = "w" + token
 
         exponent_degree = 1
         root_degree = 1
@@ -273,18 +365,18 @@ class IntervalParser:
             )
         )
 
-        interval_class = None
+        if direction is not None:
+            exponent_degree *= direction
+        result = ParsedInterval(None, octaves, ups, root_degree, exponent_degree, absolute, self.up_down_inflection)
 
         if token[0].isdigit() and not is_colored:
+            interval = SemiInterval()
             if token.endswith("c"):
-                cents_in_nats = float(token[:-1])/1200*log(2)
-                pitch[E_INDEX] = cents_in_nats
+                interval.nats = float(token[:-1])/1200*log(2)
             elif token.endswith("Hz"):
-                hz = float(token[:-2])
-                pitch[HZ_INDEX] = hz
+                interval.frequency_delta = float(token[:-2])
             elif token.endswith("deg"):
-                rad = float(token[:-3]) / 180 * pi
-                pitch[RAD_INDEX] = rad
+                interval.phase_delta = float(token[:-3]) / 180 * pi
             elif "\\" in token:
                 divisions = self.et_divisions
                 divided = self.et_divided
@@ -294,75 +386,68 @@ class IntervalParser:
                     divisions = Fraction(step_spec[1])
                 if len(step_spec) == 3:
                     divided = Fraction(step_spec[2])
-                pitch[E_INDEX] = float(steps) / float(divisions) * log(float(divided))
+                interval.monzo = et_to_semimonzo(steps, divisions, divided)
             else:
-                pitch += parse_fraction(token)
+                interval.monzo = SemiMonzo(Fraction(token))
+            result.base = interval
         elif token[0] in INTERVAL_QUALITIES:
-            interval, interval_class = parse_arrows(token, self.inflections)
-            pitch += interval
-        elif token[0] in BASIC_PITCHES:
+            interval = parse_interval(token)
+            interval.inflections = self.inflections
+            result.base = interval
+        elif token[0] in PITCH_LETTERS:
             if direction is not None:
                 raise ParsingError("Signed absolute pitch")
-            pitch += parse_pitch(token, self.inflections) - self.base_pitch
-            absolute = True
+            pitch = parse_pitch(token)
+            pitch.inflections = self.inflections
+            result.base = pitch
+            result.offset = -self.base_pitch
         elif token[0] == "p" or (token[0] in SMITONIC_INTERVAL_QUALITIES and not is_colored):
-            pitch += smitonic_parse_arrows(token, self.smitonic_inflections)
+            # TODO: Remove this and respell smitonics as an alternative notation
+            pitch = smitonic_parse_arrows(token, self.smitonic_inflections)
+            result.base = MonzoInterval(pitch)
         elif token[0] in SMITONIC_BASIC_PITCHES:
+            # TODO: Remove this and respell smitonics as an alternative notation
             if direction is not None:
                 raise ParsingError("Signed absolute pitch")
-            pitch += smitonic_parse_pitch(token, self.smitonic_inflections) - self.smitonic_base_pitch
-            absolute = True
+            pitch = smitonic_parse_pitch(token, self.smitonic_inflections)
+            result.base = MonzoInterval(pitch)
+            result.offset = -self.smitonic_base_pitch
+            result.absolute = True
         else:
-            color_monzo, color_absolute, interval_class = parse_color_interval(token)
-            color_offset = zero_pitch()
-            color_offset[:len(color_monzo)] = color_monzo
-            pitch += color_offset
-            if color_absolute:
-                pitch -= self.base_pitch
-            absolute = absolute or color_absolute
+            color = parse_color_interval(token)
+            if color.absolute:
+                result.offset = -self.base_pitch
+            result.base = color
 
-        if direction is not None:
-            pitch *= direction
-
-        if self.comma_list is not None and self.comma_root_cache is not None:
-            maybe_pitch = comma_root(pitch * exponent_degree, root_degree, self.comma_list, persistence=self.persistence, cache=self.comma_root_cache)
-            if maybe_pitch is not None:
-                if return_root_degree:
-                    raise ValueError("Cannot return root degree when solving for comma roots")
-                return maybe_pitch, absolute
-        if return_root_degree:
-            return pitch, absolute, exponent_degree, root_degree
-        if return_interval_class:
-            return pitch / root_degree * exponent_degree, absolute, interval_class
-        return pitch / root_degree * exponent_degree, absolute
+        return result
 
 
 def parse_otonal(token, interval_parser):
     subtokens = token.split(":")
-    pitches = []
+    intervals = []
     for subtoken in subtokens:
-        pitch, absolute = interval_parser.parse(subtoken)
-        if absolute:
+        interval = interval_parser.parse(subtoken)
+        if interval.absolute:
             raise ParsingError("Otonal chord using absolute pitches")
-        pitches.append(pitch)
-    root = pitches[0]
-    for i in range(len(pitches)):
-        pitches[i] = pitches[i] - root
-    return Pattern([Note(pitch) for pitch in pitches])
+        intervals.append(interval.value())
+    root = intervals[0]
+    for i in range(len(intervals)):
+        intervals[i] = intervals[i] - root
+    return Pattern([Note(interval) for interval in intervals], logical_duration=1)
 
 
 def parse_utonal(token, interval_parser):
     subtokens = token.split(";")
-    pitches = []
+    intervals = []
     for subtoken in subtokens:
-        pitch, absolute = interval_parser.parse(subtoken)
-        if absolute:
+        interval = interval_parser.parse(subtoken)
+        if interval.absolute:
             raise ParsingError("Utonal chord using absolute pitches")
-        pitches.append(pitch)
-    root = pitches[0]
-    for i in range(len(pitches)):
-        pitches[i] = root - pitches[i]
-    return Pattern([Note(pitch) for pitch in pitches])
+        intervals.append(interval.value())
+    root = intervals[0]
+    for i in range(len(intervals)):
+        intervals[i] = root - intervals[i]
+    return Pattern([Note(interval) for interval in intervals], logical_duration=1)
 
 
 def parse_chord(token, transposition, interval_parser):
@@ -413,28 +498,29 @@ def parse_chord(token, transposition, interval_parser):
             subtokens = expand_color_chord(token)
             if subtokens is None:
                 subtokens = expand_chord(token)
-        result = Pattern()
+        result = Pattern(logical_duration=1)
         for subtoken in subtokens:
-            pitch, absolute, interval_class = interval_parser.parse(subtoken, return_interval_class=True)
-            if absolute:
+            interval = interval_parser.parse(subtoken)
+            pitch = interval.value()
+            if pitch.absolute:
                 result.append(Note(pitch))
             else:
                 result.append(Note(pitch + transposition))
-            interval_classes.append(interval_class)
+            interval_classes.append(interval.interval_class)
     for i in range(inversion):
-        result[i].pitch[0] += 1
+        result[i].pitch.monzo.vector[0] += 1
     if inversion:
         for i in range(len(result)):  #pylint: disable=consider-using-enumerate
-            result[i].pitch[0] -= 1
+            result[i].pitch.monzo.vector[0] -= 1
     if voicing is not None:
         for tone, octaves in voicing.items():
-            pitch = result[interval_classes.index(tone)].pitch + 0
+            pitch = result[interval_classes.index(tone)].pitch.copy()
             for i, octave in enumerate(octaves):
                 if i == 0:
-                    result[interval_classes.index(tone)].pitch[0] += octave
+                    result[interval_classes.index(tone)].pitch.monzo.vector[0] += octave
                 else:
                     result.append(Note(pitch))
-                    result[-1].pitch[0] += octave
+                    result[-1].pitch.monzo.vector[0] += octave
 
     return result
 
@@ -443,7 +529,8 @@ def comma_reduce_pattern(pattern, comma_list, persistence, cache=None):
     if cache is None:
         cache = {}
     if isinstance(pattern, Note):
-        pattern.pitch = comma_reduce(pattern.pitch, comma_list, persistence, cache)
+        # TODO: Convert back to Fractions
+        pattern.pitch.monzo.vector = comma_reduce(pattern.pitch.monzo.vector, comma_list, persistence, cache)
     if isinstance(pattern, Pattern):
         for subpattern in pattern:
             comma_reduce_pattern(subpattern, comma_list, persistence, cache)
@@ -451,7 +538,7 @@ def comma_reduce_pattern(pattern, comma_list, persistence, cache=None):
 
 def patternify(pattern):
     if not isinstance(pattern, Pattern):
-        pattern = Pattern([pattern], time=pattern.time, duration=pattern.duration)
+        pattern = Pattern([pattern], time=pattern.time, duration=pattern.duration, logical_duration=pattern.duration)
         pattern[0].time = Fraction(0)
     return pattern
 
@@ -524,6 +611,7 @@ ARTICULATIONS = {
 
 
 DYNAMICS = {
+    "pppp": Fraction(1, 16),
     "ppp": Fraction(1, 8),
     "pp": Fraction(1, 4),
     "p": Fraction(1, 3),
@@ -531,7 +619,8 @@ DYNAMICS = {
     "mf": Fraction(2, 3),
     "f": Fraction(3, 4),
     "ff": Fraction(7, 8),
-    "fff": Fraction(1),
+    "fff": Fraction(9, 10),
+    "ffff": Fraction(1),
 }
 
 
@@ -541,12 +630,11 @@ def parse_track(lexer, default_config, max_repeats=None):
     time_mode = False
     repeat_mode = False
     pattern = Pattern()
-    time = Fraction(0)
     stack = []
     transposed_pattern = None
     concatenated_pattern = None
     add_concatenated_durations = None
-    current_pitch = zero_pitch()
+    current_pitch = SemiPitch()
     timestamp = 0
     if "interval_parser" in default_config:
         interval_parser = default_config["interval_parser"]
@@ -584,19 +672,19 @@ def parse_track(lexer, default_config, max_repeats=None):
                 if tuning_name in TEMPERAMENTS:
                     comma_list, subgroup = TEMPERAMENTS[tuning_name]
                     subgroup = subgroup.split(".")
-                    config["tuning"].subgroup = [interval_parser.parse(basis_vector)[0] for basis_vector in subgroup]
-                    config["tuning"].comma_list = [interval_parser.parse(comma)[0] for comma in comma_list]
+                    config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.vector.astype("float") for basis_vector in subgroup]
+                    config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.vector.astype("float") for comma in comma_list]
                 else:
                     raise ParsingError("Unrecognized tuning '{}'".format(tuning_name))
             if config_key == "CL":
                 comma_list = [comma.strip() for comma in token.split(",")]
-                config["tuning"].comma_list = [interval_parser.parse(comma)[0] for comma in comma_list]
+                config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.vector.astype("float") for comma in comma_list]
             if config_key == "SG":
                 subgroup = [basis_fraction.strip() for basis_fraction in token.split(".")]
-                config["tuning"].subgroup = [interval_parser.parse(basis_vector)[0] for basis_vector in subgroup]
+                config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.vector.astype("float") for basis_vector in subgroup]
             if config_key == "C":
                 constraints = [constraint.strip() for constraint in token.split(",")]
-                config["tuning"].constraints = [interval_parser.parse(constraint)[0] for constraint in constraints]
+                config["tuning"].constraints = [interval_parser.parse(constraint).value().monzo.vector.astype("float") for constraint in constraints]
             if config_key == "CRD":
                 config[config_key] = int(token)
                 interval_parser.persistence = int(token)
@@ -611,7 +699,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 config["tempo"].groove_span = Fraction(span_token)
                 config["tempo"].groove_pattern = list(map(Fraction, filter(None, pattern_token.split(" "))))
             if config_key == "V":
-                track_volume = TrackVolume(Fraction(token), time)
+                track_volume = TrackVolume(Fraction(token), pattern.t)
                 pattern.append(track_volume)
                 config[config_key] = track_volume.volume
             if config_key == "ET":
@@ -637,11 +725,11 @@ def parse_track(lexer, default_config, max_repeats=None):
                     raise ParsingError("Unknown notation '{}'".format(current_notation))
                 current_notation = current_notation.lower()
                 config[config_key] = current_notation
-                pattern.append(ContextChange(current_notation, time))
+                pattern.append(ContextChange(current_notation, pattern.t))
             if config_key == "I":
                 name = token.strip()
                 program = GM_PROGRAMS.get(name)
-                program_change = ProgramChange(name, program, time)
+                program_change = ProgramChange(name, program, pattern.t)
                 pattern.append(program_change)
                 config[config_key] = name
             if config_key == "MP":
@@ -650,9 +738,6 @@ def parse_track(lexer, default_config, max_repeats=None):
                 config["flags"] = [flag.strip() for flag in token.split(",")]
                 if "CR" in config["flags"]:
                     config["comma_reduction_cache"] = {}
-                if "CRS" in config["flags"]:
-                    interval_parser.comma_list = config["tuning"].comma_list
-                    interval_parser.comma_root_cache = {}
             config_mode = False
             continue
 
@@ -662,33 +747,33 @@ def parse_track(lexer, default_config, max_repeats=None):
                 time_mode = False
             elif token.startswith("*"):
                 duration_token = token[1:]
-                time -= pattern.last.duration
+                pattern.t -= pattern.last.duration
                 pattern.last.duration *= parse_time(duration_token)
-                time += pattern.last.duration
+                pattern.t += pattern.last.duration
             elif token == "?":
-                time -= pattern.last.duration
-                pattern.last.duration = pattern.last.logical_duration
-                time += pattern.last.duration
+                pattern.t -= pattern.last.duration
+                pattern.last.duration = pattern.last.logical_duration  # TODO: Better error for Notes
+                pattern.t += pattern.last.duration
             elif token.startswith("!"):
-                time -= pattern.last.duration
+                pattern.t -= pattern.last.duration
                 extension = parse_time(token[1:])
                 pattern.last.extend_duration(extension)
-                time += pattern.last.duration
+                pattern.t += pattern.last.duration
             elif token.startswith("~") and len(token) > 1:
                 extension = parse_time(token[1:])
                 pattern.last.extend_duration(extension)
             elif token.startswith("@"):
                 pattern.last.time = parse_time(token[1:])
-                time = pattern.last.time
-                time += pattern.last.duration
+                pattern.t = pattern.last.time
+                pattern.t += pattern.last.duration
             elif token.lower().startswith("x"):
                 pattern.last = patternify(pattern.last)
-                time -= pattern.last.duration
+                pattern.t -= pattern.last.duration
                 num_repeats = int(token[1:])
                 if max_repeats is not None and num_repeats > max_repeats:
                     raise ParsingError("Too many repeats")
                 pattern.last.repeat(num_repeats, affect_duration=(token.startswith("X")))
-                time += pattern.last.duration
+                pattern.t += pattern.last.duration
             elif isinstance(pattern.last, Pattern):
                 if token == "R":
                     pattern.last.reverse_time()
@@ -743,29 +828,30 @@ def parse_track(lexer, default_config, max_repeats=None):
 
                     for subpattern, td in zip(pattern.last, times_durations):
                         subpattern.time, subpattern.duration = td
+                    pattern.last.logical_duration = pattern.last.last.end_time
                 else:
                     default = True
             else:
                 default = True
             if default:
                 duration_token = token
-                time -= pattern.last.duration
+                pattern.t -= pattern.last.duration
                 pattern.last.duration = parse_time(duration_token)
-                time += pattern.last.duration
+                pattern.t += pattern.last.duration
             continue
 
         if token == "(":
-            stack.append((pattern, time))
+            time = pattern.t
+            stack.append(pattern)
             pattern = Pattern([], time)
-            time = Fraction(0)
         elif token == ")":
             subpattern = pattern
-            pattern, time = stack.pop()
+            pattern = stack.pop()
             if concatenated_pattern:
                 subpattern = concatenated_pattern.concatenate(subpattern, add_concatenated_durations)
                 concatenated_pattern = None
             pattern.append(subpattern)
-            time += subpattern.duration
+            pattern.t += subpattern.duration
         elif token == "[":
             time_mode = True
         elif token == "]":
@@ -775,80 +861,80 @@ def parse_track(lexer, default_config, max_repeats=None):
         elif token == "+":
             concatenated_pattern = patternify(pattern.pop())
             add_concatenated_durations = True
-            time -= concatenated_pattern.duration
+            pattern.t -= concatenated_pattern.duration
         elif token == "=":
             concatenated_pattern = patternify(pattern.pop())
             add_concatenated_durations = False
-            time -= concatenated_pattern.duration
+            pattern.t -= concatenated_pattern.duration
         elif all(mt in TEMPORAL_MINI_LANGUAGE for mt in token):
             for mini_token in token:
                 if mini_token == "%":
-                    repeated_pattern = pattern.last_voiced.retime(time, 1)
+                    repeated_pattern = pattern.last_voiced.retime(pattern.t, 1)
                     pattern.append(repeated_pattern)
-                    time += pattern.last.duration
+                    pattern.t += pattern.last.duration
                 elif mini_token == ".":
-                    pattern.append(Rest(time))
-                    time += pattern.last.duration
+                    pattern.append(Rest(pattern.t))
+                    pattern.t += pattern.last.duration
                 elif mini_token == "!":
                     pattern.last.extend_duration(1)
-                    time += 1
+                    pattern.t += 1
                 elif mini_token == "~":
                     pattern.last.extend_duration(1)
         elif token == ",":
-            time -= pattern.last.duration
+            pattern.t -= pattern.last.duration
         elif token in ARTICULATIONS:
-            articulation = Articulation(ARTICULATIONS[token], time)
+            articulation = Articulation(ARTICULATIONS[token], pattern.t)
             pattern.append(articulation)
         elif token in DYNAMICS:
-            dynamic = Dynamic(DYNAMICS[token], time)
+            dynamic = Dynamic(DYNAMICS[token], pattern.t)
             pattern.append(dynamic)
         elif token == "T":
-            timestamp = time
+            timestamp = pattern.t
         elif token == "@T":
-            time = timestamp
+            pattern.t = timestamp
         elif token == "\n":
-            pattern.append(NewLine(token, time))
+            pattern.append(NewLine(token, pattern.t))
         elif token == "|":
-            pattern.append(BarLine(token, time))
+            pattern.append(BarLine(token, pattern.t))
         elif token == "|>":
-            pattern.append(Playhead(token, time))
+            pattern.append(Playhead(token, pattern.t))
         elif token == ">|":
-            pattern.append(Playstop(token, time))
+            pattern.append(Playstop(token, pattern.t))
         elif token.startswith('"'):
-            message = UserMessage(token[1:], time)
+            message = UserMessage(token[1:], pattern.t)
             pattern.append(message)
         elif current_notation == "percussion":
             if token in PERCUSSION_SHORTHANDS:
                 index, name = PERCUSSION_SHORTHANDS[token]
-                percussion = Percussion(name, index, time)
+                percussion = Percussion(name, index, time=pattern.t)
                 pattern.append(percussion)
-                time += percussion.duration
+                pattern.t += percussion.duration
             else:
                 for mini_token in token:
                     if mini_token in PERCUSSION_SHORTHANDS:
                         index, name = PERCUSSION_SHORTHANDS[mini_token]
-                        percussion = Percussion(name, index, time)
+                        percussion = Percussion(name, index, time=pattern.t)
                         pattern.append(percussion)
-                        time += percussion.duration
+                        pattern.t += percussion.duration
                     elif mini_token == "%":
-                        repeated_pattern = pattern.last_voiced.retime(time, 1)
+                        repeated_pattern = pattern.last_voiced.retime(pattern.t, 1)
                         pattern.append(repeated_pattern)
-                        time += pattern.last.duration
+                        pattern.t += pattern.last.duration
                     elif mini_token == ".":
-                        pattern.append(Rest(time))
-                        time += pattern.last.duration
+                        pattern.append(Rest(pattern.t))
+                        pattern.t += pattern.last.duration
                     elif mini_token == "!":
                         pattern.last.extend_duration(1)
-                        time += 1
+                        pattern.t += 1
                     elif mini_token == "~":
                         pattern.last.extend_duration(1)
 
         elif current_notation == "hewmp":
             if token.startswith("=") or ":" in token or ";" in token:
                 if token_obj.whitespace or not token.startswith("=") or not pattern or isinstance(pattern[-1], NewLine):
-                    subpattern_time = time
+                    subpattern_time = pattern.t
                     subpattern_duration = Fraction(1)
-                    time += subpattern_duration
+                    pattern.t += subpattern_duration
                     pitch = current_pitch
                 else:
                     replaced = pattern.pop()
@@ -863,20 +949,20 @@ def parse_track(lexer, default_config, max_repeats=None):
                 pattern.append(subpattern)
                 if concatenated_pattern:
                     subpattern = pattern.pop()
-                    time -= subpattern.duration
+                    pattern.t -= subpattern.duration
                     subpattern = concatenated_pattern.concatenate(subpattern, add_concatenated_durations)
                     concatenated_pattern = None
                     pattern.append(subpattern)
-                    time += subpattern.duration
+                    pattern.t += subpattern.duration
             else:
                 moves_root = False
                 if token.startswith("~"):
                     moves_root = True
                     token = token[1:]
-                interval, absolute = interval_parser.parse(token)
+                interval = interval_parser.parse(token).value()
 
                 if transposed_pattern:
-                    if absolute:
+                    if interval.absolute:
                         raise ParsingError("Absolute transposition")
                     transposed_pattern.transpose(interval)
                     pattern.append(transposed_pattern)
@@ -884,27 +970,28 @@ def parse_track(lexer, default_config, max_repeats=None):
                     if moves_root:
                         current_pitch += interval
                 else:
-                    if absolute:
+                    if interval.absolute:
                         if moves_root:
                             raise ParsingError("Superfluous root move (~) with an absolute pitch")
-                        current_pitch = zero_pitch()
-                        moves_root = True
-                    pitch = current_pitch + interval
-                    if moves_root:
-                        current_pitch = pitch
-                    note = Note(pitch, time)
+                        current_pitch = interval
+                        pitch = current_pitch
+                    else:
+                        pitch = current_pitch + interval
+                        if moves_root:
+                            current_pitch = pitch
+                    note = Note(pitch, time=pattern.t)
                     pattern.append(note)
-                    time += note.duration
-                if "comma_reduction_cache" in config:
-                    current_pitch = comma_reduce(current_pitch, config["tuning"].comma_list, persistence=config["CRD"], cache=config["comma_reduction_cache"])
+                    if "comma_reduction_cache" in config:  # TODO: Convert to Fractions
+                        current_pitch.monzo.vector = comma_reduce(current_pitch.monzo.vector, config["tuning"].comma_list, persistence=config["CRD"], cache=config["comma_reduction_cache"])
+                    pattern.t += note.duration
 
                 if concatenated_pattern:
                     subpattern = patternify(pattern.pop())
-                    time -= subpattern.duration
+                    pattern.t -= subpattern.duration
                     subpattern = concatenated_pattern.concatenate(subpattern, add_concatenated_durations)
                     concatenated_pattern = None
                     pattern.append(subpattern)
-                    time += subpattern.duration
+                    pattern.t += subpattern.duration
 
     pattern.insert(0, Articulation(ARTICULATIONS[";"]))
     pattern.insert(0, Dynamic(DYNAMICS["mf"]))
@@ -942,16 +1029,14 @@ def parse_text(text, max_repeats=None):
 
 
 def simplify_tracks(data):
-    used = array([False] * len(SEMANTIC))
+    used = array([False] * len(PRIMES))
 
     for track in data["tracks"]:
         for event in track["events"]:
             if event["type"] == "note":
-                for i, coord in enumerate(event["pitch"]):
+                for i, coord in enumerate(event["monzo"]):
                     if coord != 0:
                         used[i] = True
-
-    data["semantic"] = list(array(SEMANTIC)[used])
 
     def simplify(pitch):
         result = []
@@ -964,7 +1049,7 @@ def simplify_tracks(data):
     for track in data["tracks"]:
         for event in track["events"]:
             if event["type"] == "note":
-                event["pitch"] = simplify(event["pitch"])
+                event["monzo"] = simplify(event["monzo"])
 
             if event["type"] == "tuning":
                 event["suggestedMapping"] = simplify(event["suggestedMapping"])
@@ -1117,6 +1202,10 @@ def freq_to_midi_et(frequency, et_divisions, et_divided=2):
     return index, bend
 
 
+def midi_velocity(velocity):
+    return int(round(float(127 * Fraction(velocity))))
+
+
 def tracks_to_midi(tracks, freq_to_midi=freq_to_midi_12, reserve_channel_10=True, transpose=0, resolution=960):
     """
     Save tracks as a midi file with per-channel pitch-bend for microtones.
@@ -1133,24 +1222,15 @@ def tracks_to_midi(tracks, freq_to_midi=freq_to_midi_12, reserve_channel_10=True
         midi.tracks.append(track)
 
         data = pattern.realize(start_time=start_time, end_time=end_time).to_json()
-        base_frequency = None
-        mapping = None
-        velocity = 85
         events = []
         time_offset = 0
         for event in data["events"]:
-            if event["type"] == "tuning":
-                base_frequency = event["baseFrequency"]
-                mapping = event["suggestedMapping"]
-            if event["type"] == "dynamic":
-                velocity = int(round(float(127 * Fraction(event["velocity"]))))
             if event["type"] in ("note", "percussion", "programChange", "contextChange") or event.get("subtype") == "controlChange":
                 time = int(round(resolution * event["realTime"]))
             if event["type"] == "note":
-                frequency = base_frequency*exp(dot(mapping, event["pitch"])) + event["pitch"][HZ_INDEX]
-                events.append((time, event, frequency, velocity))
+                events.append((time, event, event["realFrequency"], midi_velocity(event["velocity"])))
             if event["type"] == "percussion":
-                events.append((time, event, None, velocity))
+                events.append((time, event, None, midi_velocity(event["velocity"])))
             if event["type"] == "programChange" or event.get("subtype") == "controlChange":
                 change_time = time - 1
                 if change_time < 0:
@@ -1309,13 +1389,11 @@ if __name__ == "__main__":
         midi = tracks_to_midi(patterns, freq_to_midi, not args.override_channel_10, args.midi_transpose)
         midi.save(file=outfile)
     else:
-        semantic = SEMANTIC
         result = {
-            "semantic": SEMANTIC,
             "tracks": [],
         }
         for pattern, (start_time, end_time) in zip(patterns, sync_playheads(patterns)):
-            result["tracks"].append(pattern.realize(semantic, start_time, end_time).to_json())
+            result["tracks"].append(pattern.realize(start_time, end_time).to_json())
         if args.simplify:
             simplify_tracks(result)
         json.dump(result, args.outfile)

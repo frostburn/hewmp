@@ -24,6 +24,7 @@ from .monzo import Interval as SemiInterval
 from .monzo import Pitch as SemiPitch
 from . import ups_and_downs
 from .arrow import SignedArrow, SIGN_BY_ARROW
+from . import orgone
 
 
 DEFAULT_INFLECTIONS = {
@@ -64,7 +65,7 @@ for arrow in SignedArrow:
 
 class Interval:
     absolute = False
-    def __init__(self, spine, arrows, inflections=None):
+    def __init__(self, spine, arrows, inflections):
         self.spine = spine
         self.arrows = arrows
         self.inflections = inflections
@@ -82,7 +83,7 @@ class Interval:
 
 class Pitch:
     absolute = True
-    def __init__(self, spine, arrows, inflections=None):
+    def __init__(self, spine, arrows, inflections):
         self.spine = spine
         self.arrows = arrows
         self.inflections = inflections
@@ -239,20 +240,25 @@ def parse_signed_arrows(token):
     return arrows
 
 
-def parse_interval(token):
-    token, spine = pythagoras.Interval.parse(token)
+def parse_interval(token, inflections, parse_spine=pythagoras.Interval.parse):
+    token, spine = parse_spine(token)
     arrows = parse_signed_arrows(token)
-    return Interval(spine, arrows)
+    return Interval(spine, arrows, inflections)
 
 
-def parse_pitch(token):
-    token, spine = pythagoras.Pitch.parse(token)
+def parse_pitch(token, inflections, parse_spine=pythagoras.Pitch.parse):
+    token, spine = parse_spine(token)
     arrows = parse_signed_arrows(token)
-    return Pitch(spine, arrows)
+    return Pitch(spine, arrows, inflections)
 
 
 class IntervalParser:
-    def __init__(self, inflections=DEFAULT_SIGNED_INFLECTIONS, et_divisions=Fraction(12), et_divided=Fraction(2), warts=""):
+    def __init__(self, inflections=None, et_divisions=Fraction(12), et_divided=Fraction(2), warts=""):
+        if inflections is None:
+            inflections = {
+                "hewmp": DEFAULT_SIGNED_INFLECTIONS,
+                "orgone": orgone.INFLECTIONS
+            }
         self.inflections = inflections
         self.et_divisions = et_divisions
         self.et_divided = et_divided
@@ -262,6 +268,16 @@ class IntervalParser:
         self.persistence = 5
         self.up_down_inflection = SemiInterval()
         self.up_down_inflection.monzo.vector[0] = Fraction(1, 2)  # Default to half-octave
+
+    interval_spines = {
+        "hewmp": pythagoras.Interval.parse,
+        "orgone": orgone.Interval.parse,
+    }
+
+    pitch_spines = {
+        "hewmp": pythagoras.Pitch.parse,
+        "orgone": orgone.Pitch.parse,
+    }
 
     def calculate_up_down(self):
         wart_str = "{}{}ED{}".format(self.et_divisions, self.warts, self.et_divided)
@@ -285,7 +301,7 @@ class IntervalParser:
             else:
                 raise ParsingError("Unrecognized absolute pitch {}".format(token))
 
-    def parse(self, token):
+    def parse(self, token, notation="hewmp"):
         absolute = False
         if token.startswith("@"):
             absolute = True
@@ -366,14 +382,12 @@ class IntervalParser:
                 interval.monzo = SemiMonzo(Fraction(token))
             result.base = interval
         elif token[0] in INTERVAL_QUALITIES:
-            interval = parse_interval(token)
-            interval.inflections = self.inflections
+            interval = parse_interval(token, self.inflections[notation], self.interval_spines[notation])
             result.base = interval
         elif token[0] in PITCH_LETTERS:
             if direction is not None:
                 raise ParsingError("Signed absolute pitch")
-            pitch = parse_pitch(token)
-            pitch.inflections = self.inflections
+            pitch = parse_pitch(token, self.inflections[notation], self.pitch_spines[notation])
             result.base = pitch
             result.offset = -self.base_pitch
         else:
@@ -414,6 +428,7 @@ def parse_utonal(token, interval_parser):
 
 
 def parse_chord(token, transposition, interval_parser):
+    notation = "hewmp"
     inversion = 0
     voicing = None
     interval_classes = []
@@ -455,13 +470,16 @@ def parse_chord(token, transposition, interval_parser):
     else:
         if token in EXTRA_CHORDS:
             subtokens = EXTRA_CHORDS[token]
+        elif token in orgone.EXTRA_CHORDS:
+            subtokens = orgone.EXTRA_CHORDS[token]
+            notation = "orgone"
         else:
             subtokens = expand_color_chord(token)
             if subtokens is None:
-                subtokens = expand_chord(token)
+                subtokens, notation = expand_chord(token)
         result = Pattern(logical_duration=1)
         for subtoken in subtokens:
-            interval = interval_parser.parse(subtoken)
+            interval = interval_parser.parse(subtoken, notation)
             pitch = interval.value()
             if pitch.absolute:
                 result.append(Note(pitch))
@@ -682,7 +700,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 interval_parser.calculate_up_down()
             if config_key == "N":
                 current_notation = token.strip()
-                if current_notation not in ["hewmp", "HEWMP", "percussion"]:
+                if current_notation not in ["hewmp", "HEWMP", "orgone", "percussion"]:
                     raise ParsingError("Unknown notation '{}'".format(current_notation))
                 current_notation = current_notation.lower()
                 config[config_key] = current_notation
@@ -890,7 +908,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                     elif mini_token == "?":
                         pattern.last.extend_duration(1)
 
-        elif current_notation == "hewmp":
+        elif current_notation in ("hewmp", "orgone"):
             if token.startswith("=") or ":" in token or ";" in token:
                 if token_obj.whitespace or not token.startswith("=") or not pattern or isinstance(pattern[-1], NewLine):
                     subpattern_time = pattern.t
@@ -920,7 +938,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 if token.startswith("~"):
                     moves_root = True
                     token = token[1:]
-                interval = interval_parser.parse(token).value()
+                interval = interval_parser.parse(token, current_notation).value()
 
                 if transposed_pattern:
                     if interval.absolute:

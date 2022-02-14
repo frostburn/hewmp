@@ -793,6 +793,39 @@ def test_fractional_monzo_accuracy():
     assert (notes[-1].pitch.monzo.vector == 0).all()
 
 
+def test_orgone_intervals():
+    text = "N:orgone\nP1 P3 M4 m7<"
+    notes = get_notes(text)
+    pitches = [[0], [2, 0, 0, 0, -0.5], [-3, 0, 0, 0, 1], [-2, 0, 0, 1]]
+    expect_pitches(notes, pitches)
+
+
+def test_orgone_pitches():
+    text = "N:orgone\nA5 C5 D5 G5<"
+    notes = get_notes(text)
+    pitches = [[0], [2, 0, 0, 0, -0.5], [-3, 0, 0, 0, 1], [-2, 0, 0, 1]]
+    expect_pitches(notes, pitches)
+
+
+def test_orgone_basic_chords():
+    text = "=O<"
+    notes = get_notes(text)
+    pitches = [[0], [-3, 0, 0, 0, 1], [-2, 0, 0, 1]]
+    expect_pitches(notes, pitches)
+
+    text = "=u<"
+    notes = get_notes(text)
+    pitches = [[0], [1, 0, 0, 1, -1], [-2, 0, 0, 1]]
+    expect_pitches(notes, pitches)
+
+
+def test_orgone_extra_chords():
+    text = "=oaug"
+    notes = get_notes(text)
+    pitches = [[0], [-3, 0, 0, 0, 1], [-6, 0, 0, 0, 2]]
+    expect_pitches(notes, pitches)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -807,7 +840,7 @@ if __name__ == '__main__':
     test_interval_translation()
     test_chords()
     # test_smitonic_pitch_translation()  # TODO: Respell
-    # test_smitonic_interval_translation()
+    # test_smitonic_interval_translation()  # TODO: Implement orgone tokenization
     test_playhead()
     test_split_fifth()
     test_double_tone()
@@ -855,3 +888,7 @@ if __name__ == '__main__':
     test_flavor_chord_ups_and_downs()
     test_percussion_chaining()
     test_fractional_monzo_accuracy()
+    test_orgone_intervals()
+    test_orgone_pitches()
+    test_orgone_basic_chords()
+    test_orgone_extra_chords()

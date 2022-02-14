@@ -255,29 +255,22 @@ def get_inflections():
 if __name__ == "__main__":
     import argparse
     from hewmp.parser import IntervalParser
-    from hewmp.smitonic import smitonic_tokenize_interval, SMITONIC_INFLECTIONS, smitonic_tokenize_pitch
 
     parser = argparse.ArgumentParser(description='Display the HEWMP notation for the given fraction')
     parser.add_argument('input', type=str)
     parser.add_argument('--absolute', action="store_true")
-    parser.add_argument('--smitonic', action="store_true")
     parser.add_argument('--color', action="store_true")
     args = parser.parse_args()
 
     inflections = get_inflections()
-    smitonic_inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
     pitch = IntervalParser().parse(args.input).value().monzo.vector.astype(int)
     if args.absolute:
-        if args.smitonic:
-            print(smitonic_tokenize_pitch(pitch, smitonic_inflections))
-        elif args.color:
+        if args.color:
             raise NotImplementedError("Absolute color notation not implemented yet")
         else:
             print(tokenize_pitch(pitch, inflections))
     else:
-        if args.smitonic:
-            print(smitonic_tokenize_interval(pitch, smitonic_inflections))
-        elif args.color:
+        if args.color:
             print(monzo_to_color(pitch))
         else:
             print(tokenize_interval(pitch, inflections))

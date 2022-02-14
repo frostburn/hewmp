@@ -826,6 +826,23 @@ def test_orgone_extra_chords():
     expect_pitches(notes, pitches)
 
 
+def test_barbados_scale():
+    text = "T:barbados\nN:semaphore\nBF:1000\nA5 B5 C5 D5 E5 F5 G5 H5 J5 A6"
+    notes = get_real_notes(text)
+    just_scale = [1/1, 169/150, 15/13, 13/10, 4/3, 3/2, 20/13, 26/15, 300/169, 2/1]
+    max_error = 0
+    for ji, note in zip(just_scale, notes):
+        max_error = max(max_error, abs(log(note.real_frequency) - log(ji*1000)))
+    assert max_error/log(2)*1200 < 1.04
+
+
+def test_barbados_tetrad():
+    text = "=m3+!"
+    notes = get_notes(text)
+    pitches = [[0], [-1, 0, -1, 0, 0, 1], [-1, 1]]
+    expect_pitches(notes, pitches)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -892,3 +909,5 @@ if __name__ == '__main__':
     test_orgone_pitches()
     test_orgone_basic_chords()
     test_orgone_extra_chords()
+    test_barbados_scale()
+    test_barbados_tetrad()

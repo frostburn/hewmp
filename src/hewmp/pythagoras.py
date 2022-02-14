@@ -26,6 +26,17 @@ class Letter(Enum):
     E = "E"
     F = "F"
     G = "G"
+    # Extensions
+    H = "H"
+    # I reserved: One chord in color notation
+    J = "J"  # "I" is skipped so that it's not confused with the one (chord) in color notation.
+    K = "K"
+    # L reserved: Large
+    # M reserved: Major
+    # N reserved: Neutral
+    # O is available
+    # P reserved: Perfect
+    # Q is available
 
 
 BASIC_PITCHES = {
@@ -64,7 +75,7 @@ class Interval:
     def basic_part(self):
         octaves = (self.interval_class - 1)//7
         basic_class = self.interval_class - octaves*7
-        return Interval(self.quality, basic_class), octaves
+        return self.__class__(self.quality, basic_class), octaves
 
     def monzo(self):
         basic, octaves = self.basic_part()
@@ -219,6 +230,10 @@ for token, exponents in items:
 
 INTERVAL_QUALITIES = "dmPNMha"
 
-PITCH_LETTERS = "ABCDEFG"
+PITCH_LETTERS = ""
+
+for letter in Letter:
+    PITCH_LETTERS += letter.value
+
 
 ACCIDENTALS = "#xbtd" + "♮♯𝄪♭𝄫𝄲𝄳"

@@ -56,7 +56,7 @@ def temper_subgroup(just_mapping, comma_list, constraints, subgroup, num_iterati
     else:
         constraint = None
     if metric is not None:
-        metric = array([dot(basis_vector, metric) for basis_vector in subgroup])
+        metric = array([dot(abs(basis_vector), metric) for basis_vector in subgroup])
 
     if not isclose(array([dot(subgroup_just_mapping, comma) for comma in comma_list]), comma_sizes).all():
         raise ValueError("Non-orthogonal subgroup or comma outside subgroup")

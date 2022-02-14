@@ -81,6 +81,7 @@ YA_TEMPERAMENTS = {
 
 ZA = "2.3.7"
 ZA_TEMPERAMENTS = {
+    "semaphore": ["49/48"],
     "archy": ["64/63"],
     "slendric": ["1029/1024"],
     "blacksmith": ["28/27", "49/48"],  # 5tet
@@ -92,7 +93,7 @@ YAZA_TEMPERAMENTS = {
     "dominant": ['36/35', '64/63'],
     "august": ['36/35', '128/125'],
     "pajara": ['50/49', '64/63'],
-    "semaphore": ['49/48', '81/80'],
+    "godzilla": ['49/48', '81/80'],
     "meantonesept": ['81/80', '126/125'],
     "injera": ['50/49', '81/80'],
     "negrisept": ['49/48', '225/224'],

@@ -3,7 +3,8 @@ from collections import defaultdict
 from roman import fromRoman, InvalidRomanNumeralError
 from numpy import dot, zeros, sign, array
 from .util import Splitter
-from .pythagoras import parse_pitch, PITCH_LETTERS
+from .pythagoras import PITCH_LETTERS
+from . import pythagoras
 from .monzo import PRIMES, fraction_to_monzo
 
 
@@ -147,8 +148,7 @@ class Pitch:
         self.off_white_monzo = off_white_monzo
 
     def monzo(self):
-        result = self.off_white_monzo + 0
-        result[:2] = self.spine.exponents()
+        result = self.off_white_monzo + self.spine.monzo()
         for piece in decompose(self.off_white_monzo):
             # TODO: Optimize into plain lookups
             span_prime = dot(piece, PSEUDO_EDO_MAPPING)
@@ -270,8 +270,8 @@ def parse_interval(token):
     if token[0] in PITCH_LETTERS:
         if monzo[0] or monzo[1] or magnitude:
             raise ColorParsingError("Only pythagorean absolute pitches supported")
-        token, pitch = parse_pitch(token)
-        return Pitch(pitch, monzo)
+        token, spine = pythagoras.Pitch.parse(token)
+        return Pitch(spine, monzo)
     else:
         try:
             stepspan = fromRoman(token)

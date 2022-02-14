@@ -3,6 +3,7 @@ Tools for reversing parsed notation back into a standard form.
 In other words in combination with parsing translate relative intervals like M3- to ratio notation such as 5/4 or (absolute) pitch notation like C5#-
 """
 from collections import Counter
+from fractions import Fraction
 from numpy import array, log, pi, maximum, isclose, around
 from .color import monzo_to_color
 from .monzo import PRIMES
@@ -12,45 +13,38 @@ from .monzo import PRIMES
 # TODO: Notate neutral intervals
 
 
-def tokenize_extras(pitch, e_index=None, hz_index=None, rad_index=None):
-    """
-    Tokenize extra bits like cents, Hz and phase offsets as transpositions
-    """
-    result = []
-    if e_index is not None:
-        nats = pitch[e_index]
-        if nats != 0:
-            result.append("{}c".format(nats*1200/log(2)))
-    if hz_index is not None:
-        hz = pitch[hz_index]
-        if hz != 0:
-            result.append("{}Hz".format(hz))
-    if rad_index is not None:
-        rads = pitch[rad_index]
-        if rads != 0:
-            result.append("{}deg".format(180*rads/pi))
-    if result:
-        return "&" + "&".join(result)
-    return ""
-
-
 def extract_root(pitch):
     """
     Try to extract an integer root from a non-integral pitch
     """
+    if isinstance(pitch[0], Fraction):
+        pitch = pitch + 0
+        root = 1
+        while True:
+            d = 1
+            for coord in pitch:
+                if coord.denominator > 1:
+                    d = coord.denominator
+                    break
+            else:
+                return pitch, root
+            for i in range(len(pitch)):
+                pitch[i] *= d
+            root *= d
+
     for root in range(1, 101):
         if isclose(pitch*root, around(pitch*root)).all():
             return pitch*root, root
     raise ValueError("Failed to extract root from Non-integral pitch")
 
 
-def tokenize_fraction(pitch, primes, *extra_indices):
+def tokenize_fraction(pitch, primes):
     """
     Tokenize pitch monzo defined by the primes as a fraction p/q
     """
     numerator = 1
     denominator = 1
-    derooted, root = extract_root(pitch[:len(primes)])
+    derooted, root = extract_root(pitch)
     for coord, prime in zip(derooted, primes):
         if coord != int(coord):
             raise ValueError("Non-integral monzo")
@@ -61,12 +55,11 @@ def tokenize_fraction(pitch, primes, *extra_indices):
             denominator *= prime**(-coord)
     if root == 1:
         if denominator == 1:
-            result = str(numerator)
+            return str(numerator)
         else:
-            result = "{}/{}".format(numerator, denominator)
+            return "{}/{}".format(numerator, denominator)
     else:
-        result = "{}/{}/{}".format(numerator, denominator, root)
-    return "{}{}".format(result, tokenize_extras(pitch, *extra_indices))
+        return "{}/{}/{}".format(numerator, denominator, root)
 
 
 def tokenize_otonal_utonal(pitches, primes):
@@ -197,11 +190,6 @@ def tokenize_interval(pitch, inflections):
     return "{}{}{}{}{}".format(sign, quality, value, arrow_str, root_str)
 
 
-def tokenize_color_interval(pitch, *extra_indices):
-    token = monzo_to_color(pitch[:len(PRIMES)])
-    return "{}{}".format(token, tokenize_extras(pitch, *extra_indices))
-
-
 LYDIAN = ("F", "C", "G", "D", "A", "E", "B")
 LYDIAN_INDEX_A = 4
 REFERENCE_OCTAVE = 4
@@ -252,17 +240,11 @@ def tokenize_pitch(pitch, inflections):
 
     Assumes that the first two coordinates form the pythagorean basis
     """
-    fractional_pitch = pitch - around(pitch)
-    pitch = pitch - fractional_pitch
     letter, octave, arrow_counts = notate_pitch(pitch, inflections)
     accidental = "b" * arrow_counts.pop("b", 0) + "#" * arrow_counts.pop("#", 0) + "x" * arrow_counts.pop("x", 0)
     arrow_str = tokenize_arrows(arrow_counts)
 
-    fractional_transposition = ""
-    if fractional_pitch.any():
-        fractional_transposition = "&" + tokenize_interval(fractional_pitch, inflections)
-
-    return "{}{}{}{}{}".format(letter, octave, accidental, arrow_str, fractional_transposition)
+    return "{}{}{}{}".format(letter, octave, accidental, arrow_str)
 
 
 def get_inflections():
@@ -272,7 +254,7 @@ def get_inflections():
 
 if __name__ == "__main__":
     import argparse
-    from hewmp.parser import IntervalParser, E_INDEX, HZ_INDEX, RAD_INDEX
+    from hewmp.parser import IntervalParser
     from hewmp.smitonic import smitonic_tokenize_interval, SMITONIC_INFLECTIONS, smitonic_tokenize_pitch
 
     parser = argparse.ArgumentParser(description='Display the HEWMP notation for the given fraction')
@@ -284,18 +266,18 @@ if __name__ == "__main__":
 
     inflections = get_inflections()
     smitonic_inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
-    pitch = IntervalParser().parse(args.input)[0]
+    pitch = IntervalParser().parse(args.input).value().monzo.vector.astype(int)
     if args.absolute:
         if args.smitonic:
-            print(smitonic_tokenize_pitch(pitch, smitonic_inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+            print(smitonic_tokenize_pitch(pitch, smitonic_inflections))
         elif args.color:
             raise NotImplementedError("Absolute color notation not implemented yet")
         else:
-            print(tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+            print(tokenize_pitch(pitch, inflections))
     else:
         if args.smitonic:
-            print(smitonic_tokenize_interval(pitch, smitonic_inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+            print(smitonic_tokenize_interval(pitch, smitonic_inflections))
         elif args.color:
-            print(tokenize_color_interval(pitch, E_INDEX, HZ_INDEX, RAD_INDEX))
+            print(monzo_to_color(pitch))
         else:
-            print(tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX))
+            print(tokenize_interval(pitch, inflections))

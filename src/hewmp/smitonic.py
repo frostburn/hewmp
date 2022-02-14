@@ -1,6 +1,6 @@
 from numpy import array
 from .chord_parser import separate_by_arrows
-from .notation import tokenize_extras, basis_and_arrows, tokenize_arrows
+from .notation import basis_and_arrows, tokenize_arrows
 
 SMITONIC_INFLECTIONS = {
     "+": [-4, 0, 1, 0, 0.5],
@@ -167,7 +167,7 @@ SMITONIC_QUALITIES = ("s", "s", "s", "s", "p", "p", "p", "L", "L", "L", "L")
 SMITONIC_INDEX_P1 = 5
 
 
-def smitonic_tokenize_interval(pitch, inflections, *extra_indices):
+def smitonic_tokenize_interval(pitch, inflections):
     """
     Tokenize (relative) pitch monzo using the inflections provided
     """
@@ -193,7 +193,7 @@ def smitonic_tokenize_interval(pitch, inflections, *extra_indices):
     sign = "-" if value < 0 else ""
     value = abs(value) + 1
 
-    return "{}{}{}{}{}".format(sign, quality, value, arrow_str, tokenize_extras(pitch, *extra_indices))
+    return "{}{}{}{}".format(sign, quality, value, arrow_str)
 
 
 NEREVARINE = ("Y", "S", "O", "J", "U", "Q", "K")
@@ -238,7 +238,7 @@ def smitonic_notate_pitch(pitch, inflections):
     return letter, octave, arrow_counts
 
 
-def smitonic_tokenize_pitch(pitch, inflections, *extra_indices):
+def smitonic_tokenize_pitch(pitch, inflections):
     """
     Tokenize (absolute) pitch monzo using the inflections provided
     """
@@ -246,7 +246,7 @@ def smitonic_tokenize_pitch(pitch, inflections, *extra_indices):
     accidental = "b" * arrow_counts.pop("b", 0) + "#" * arrow_counts.pop("#", 0) + "x" * arrow_counts.pop("x", 0)
     arrow_str = tokenize_arrows(arrow_counts)
 
-    return "{}{}{}{}{}".format(letter, octave, accidental, arrow_str, tokenize_extras(pitch, *extra_indices))
+    return "{}{}{}{}".format(letter, octave, accidental, arrow_str)
 
 
 SMITONIC_BASIC_CHORDS = {

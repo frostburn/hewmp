@@ -1058,26 +1058,23 @@ def simplify_tracks(data):
 def _tokenize_fractions_chord(pattern):
     pitches = []
     for note in pattern:
-        pitches.append(note.pitch)
-    root_fraction = tokenize_fraction(pattern[0].pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX)
+        pitches.append(note.pitch.monzo.vector)
+    root_fraction = tokenize_fraction(pattern[0].pitch.monzo.vector, PRIMES)
     chord = tokenize_otonal_utonal(pitches, PRIMES)
     return "{}={}".format(root_fraction, chord)
 
 
 def _tokenize_fractions_pitch(pitch):
-    return "{}".format(tokenize_fraction(pitch, PRIMES, E_INDEX, HZ_INDEX, RAD_INDEX))
+    return "{}".format(tokenize_fraction(pitch.monzo.vector, PRIMES))
 
 
 def _tokenize_absolute_chord(pattern, inflections):
-    pitches = []
-    for note in pattern:
-        pitches.append(note.pitch)
-    pitches = [tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX) for pitch in pitches]
+    pitches = [tokenize_pitch(note.pitch.monzo.vector.astype(int), inflections) for note in pattern]
     return "({})".format(",".join(pitches))
 
 
 def _tokenize_absolute_pitch(pitch, inflections):
-    return tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
+    return tokenize_pitch(pitch.monzo.vector.astype(int), inflections)
 
 
 def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, absolute_time=False):

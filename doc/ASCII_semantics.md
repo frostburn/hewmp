@@ -21,7 +21,7 @@
 | <     | 7 down inflection, time rotation |
 | =     | chord symbol, tuplet concatenation (preserve duration) |
 | >     | 7 up inflection, time rotation |
-| ?     | time expansion |
+| ?     | extend duration but don't take up time, hold arpeggio |
 | @     | absolute pitch, absolute time |
 | A     | pitch symbol, 19 up inflection |
 | B     | pitch symbol |
@@ -84,4 +84,4 @@
 | {     | (open properties) |
 | \|    | barline |
 | }     | (close properties) |
-| ~     | move root note, extend duration only |
+| ~     | move root note |

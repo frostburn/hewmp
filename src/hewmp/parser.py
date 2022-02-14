@@ -55,7 +55,7 @@ for key, value in list(DEFAULT_INFLECTIONS.items()):
     DEFAULT_INFLECTIONS[key] = array(value + [0] * (len(PRIMES) - len(value)))
 
 
-TEMPORAL_MINI_LANGUAGE = ".!~%"  # Chainable tokens
+TEMPORAL_MINI_LANGUAGE = ".!?%"  # Chainable tokens
 
 
 class SignedArrow(Enum):
@@ -750,7 +750,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 pattern.t -= pattern.last.duration
                 pattern.last.duration *= parse_time(duration_token)
                 pattern.t += pattern.last.duration
-            elif token == "?":
+            elif token == "~":
                 pattern.t -= pattern.last.duration
                 pattern.last.duration = pattern.last.logical_duration  # TODO: Better error for Notes
                 pattern.t += pattern.last.duration
@@ -759,7 +759,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 extension = parse_time(token[1:])
                 pattern.last.extend_duration(extension)
                 pattern.t += pattern.last.duration
-            elif token.startswith("~") and len(token) > 1:
+            elif token.startswith("?") and len(token) > 1:
                 extension = parse_time(token[1:])
                 pattern.last.extend_duration(extension)
             elif token.startswith("@"):
@@ -787,7 +787,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                     pattern.last.rotate_rhythm(token.count("v"))
                 elif "^" in token:
                     pattern.last.rotate_rhythm(-token.count("^"))
-                elif token == "~":
+                elif token == "?":
                     pattern.last.stretch_subpatterns()
                 elif token == "a" or "CG" in token or "CA" in token or "CH" in token or "E" in token or "PG" in token:
                     num_onsets = len(pattern.last)
@@ -878,7 +878,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 elif mini_token == "!":
                     pattern.last.extend_duration(1)
                     pattern.t += 1
-                elif mini_token == "~":
+                elif mini_token == "?":
                     pattern.last.extend_duration(1)
         elif token == ",":
             pattern.t -= pattern.last.duration
@@ -926,7 +926,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                     elif mini_token == "!":
                         pattern.last.extend_duration(1)
                         pattern.t += 1
-                    elif mini_token == "~":
+                    elif mini_token == "?":
                         pattern.last.extend_duration(1)
 
         elif current_notation == "hewmp":

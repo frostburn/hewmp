@@ -85,12 +85,12 @@ To extend the duration of the last played note (or rest) by one use the pedal sy
 Pedals chain so `!!` extends duration by two. Pedals also chain with rests so `1 !.!.` is a note of duration two followed by a rest of duration two followed by a rest. Consider it bad practice to extend rests with `!`. The proper spelling is `1 !...`.
 
 ## Soft pedal
-To only extend the playing duration of the last played note use the soft pedal symbol `~`.
+To only extend the playing duration of the last played note use the soft pedal symbol `?`.
 ```
-1 ~~  5/4 3/2  $ The root note rings throughout the whole arpeggio
-1[~2] 5/4 3/2  $ The same
+1 ??  5/4 3/2  $ The root note rings throughout the whole arpeggio
+1[?2] 5/4 3/2  $ The same
 ```
-Soft pedal chains with plain pedals so `1 !~` is a note of duration three that takes up two units of time.
+Soft pedal chains with plain pedals so `1 !?` is a note of duration three that takes up two units of time.
 
 ## Repeats
 To repeat the last note or tuplet (useful with chords) use `%`. The pitch(es) will be the same but duration is reset to one.
@@ -436,10 +436,10 @@ $ Funky second voice
 ```
 
 ## Arpeggiate and Hold
-A bare soft pedal `~` inside square brackets extends the durations of notes inside the tuplets so that they end at the same time.
+A bare soft pedal `?` inside square brackets extends the durations of notes inside the tuplets so that they end at the same time.
 ```
-(1 5/4 3/2 15/8)[~]     $ All notes of the tetrad hold until the end.
-(1 5/4 3/2 15/8)[~ !3]  $ Notes arpeggiate within one beat of time and
+(1 5/4 3/2 15/8)[?]     $ All notes of the tetrad hold until the end.
+(1 5/4 3/2 15/8)[? !3]  $ Notes arpeggiate within one beat of time and
                         $ hold together for 3 additional beats.
 ```
 
@@ -723,9 +723,9 @@ A pattern can be repeated using `x` followed by a number inside square brackets.
 P8[x5]     $ followed by the root note repeated five times over one beat an octave above.
 ```
 ### Stretch to Logical Duration
-Patterns keep internal time separate from song time. You can equalize those using a `?`.
+Patterns keep internal time separate from song time. You can equalize those using a `~`.
 ```
-=dom-[a x3 ?]  $ Dominant arpeggio that takes up 12 beats because of internal reasons
+=dom-[a x3 ~]  $ Dominant arpeggio that takes up 12 beats because of internal reasons
 ```
 ### Rhythm Rotation
 Arrows in different directions shuffle around the logic and rhythm in various ways.

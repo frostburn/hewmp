@@ -1,0 +1,108 @@
+$ Smithereens
+$ by Lumi Pakkanen
+T:orgone
+Q:1/4=130
+G:3/8=2 3 3
+---
+N:orgone
+L:1/8
+I:Dulcimer
+MP:4
+
+f
+|: P1 M4 P1 m5 :|x5
+   P1 P8 !  m7
+ff
+|: P1 M4 P1 m5 :|x5
+   P1 P8 !  m7
+
+|: P1 `m7 P1 P3 :|x5
+   P1 m7 !  P8
+|: P1 `m7 P1 P3 :|x5
+   P1 m7 !  P8
+
+.[6]
+
+|: P1 M4 P1 m5 :|x5
+   P1 P8 !  m7
+|: P1 M4 P1 m5 :|x5
+   P1 P8 !  m7
+
+.[12]
+
+mf
+|: P1 M2 P3 M4 m5 :| x2
+.[6]
+f
+|: P1 M2 P3 M4 m5 :| x2
+.[6]
+ff
+|: P8 m7 P6 m5 M4 P3 :| x2
+.[6]
+ff
+|: P8 m7 P6 m5 M4 P3 M2 P1 :| x2
+.[6]
+fff
+P8 ! m7 P6 ! m5 M4 P3 ! M2 P1 ! ! ! !
+
+---
+N:orgone
+L:1/8
+I:Synth Bass 1
+MP:4
+
+A1[0]
+
+.[4*6]
+
+|: P8 ! m7 :|x24
+   P8 ! m7
+   P6 ! m7
+|: P8 ! m7 :|x16
+   P8 ! m7
+   P6 ! m7
+
+|: P8 M4 P8 m5 :|x23
+   P8 m7 P8 !
+
+---
+N:orgone
+L:1/2
+I:Synth Brass 2
+MP:6
+_ .[26]
+|:
+    =O
+    M4=u_2
+    ..
+:|x3
+
+.[4]
+
+|:
+    =O
+    .
+    M4=u_1
+    .
+:|x4
+
+---
+N:percussion
+L:1/8
+|: hH.(hH) :| x6
+|: khs(hH) :| x6
+|: k(Hh)sH :| x6
+|: k(hH)sh :| x6
+
+y....(.H)
+
+|: khs(hH) :| x6
+|: khs(hH) :| x6
+
+C....(.H)
+
+|: khhshh :| x15
+
+54321c
+
+.............................

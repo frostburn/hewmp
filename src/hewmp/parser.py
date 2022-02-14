@@ -651,19 +651,19 @@ def parse_track(lexer, default_config, max_repeats=None):
                 if tuning_name in TEMPERAMENTS:
                     comma_list, subgroup = TEMPERAMENTS[tuning_name]
                     subgroup = subgroup.split(".")
-                    config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.vector.astype("float") for basis_vector in subgroup]
-                    config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.vector.astype("float") for comma in comma_list]
+                    config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.float_vector() for basis_vector in subgroup]
+                    config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.float_vector() for comma in comma_list]
                 else:
                     raise ParsingError("Unrecognized tuning '{}'".format(tuning_name))
             if config_key == "CL":
                 comma_list = [comma.strip() for comma in token.split(",")]
-                config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.vector.astype("float") for comma in comma_list]
+                config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.float_vector() for comma in comma_list]
             if config_key == "SG":
                 subgroup = [basis_fraction.strip() for basis_fraction in token.split(".")]
-                config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.vector.astype("float") for basis_vector in subgroup]
+                config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.float_vector() for basis_vector in subgroup]
             if config_key == "C":
                 constraints = [constraint.strip() for constraint in token.split(",")]
-                config["tuning"].constraints = [interval_parser.parse(constraint).value().monzo.vector.astype("float") for constraint in constraints]
+                config["tuning"].constraints = [interval_parser.parse(constraint).value().monzo.float_vector() for constraint in constraints]
             if config_key == "CRD":
                 config[config_key] = int(token)
                 interval_parser.persistence = int(token)

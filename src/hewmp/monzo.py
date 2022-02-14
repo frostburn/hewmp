@@ -107,6 +107,9 @@ class SemiMonzo:
     def __repr__(self):
         return "{}({!r}, {!r}, {!r})".format(self.__class__.__name__, self.vector, self.residual, self.nats)
 
+    def float_vector(self):
+        return array([float(component) for component in self.vector])
+
 
 def et_to_semimonzo(num_steps, et_divisions, et_divided):
     num_steps = Fraction(num_steps)

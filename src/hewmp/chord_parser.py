@@ -182,8 +182,6 @@ TONE_SPLITTER = Splitter(("add", "no", "sus"))
 
 
 def expand_chord(token):
-    from .smitonic import SMITONIC_BASIC_CHORDS
-
     ups_and_downs = ""
     while token[0] in "^v":
         ups_and_downs += token[0]
@@ -218,8 +216,6 @@ def expand_chord(token):
         chord = make_flavor_chord(base, separated, ups_and_downs)
     if base in BASIC_CHORDS:
         chord = make_basic_chord(base, separated, ups_and_downs)
-    if base in SMITONIC_BASIC_CHORDS:
-        chord = make_basic_chord(base, separated, ups_and_downs, chords=SMITONIC_BASIC_CHORDS)
     if sus_replacement is not None:
         if chord is None:
             raise ValueError("Sus replacement on an incompatible chord")

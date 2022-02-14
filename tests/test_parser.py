@@ -2,7 +2,6 @@ from fractions import Fraction
 from numpy import array, dot, isclose, exp, log
 from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, sync_playheads, Percussion, Tuning
 from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interval
-from hewmp.smitonic import smitonic_tokenize_interval, SMITONIC_INFLECTIONS, smitonic_tokenize_pitch
 
 
 def get_notes(text):
@@ -159,32 +158,32 @@ def test_chords():
     expect_pitches(notes, pitches)
 
 
-def test_smitonic_pitch_translation():
-    inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
-    for letter in "JKOQSUY":
-        for octave in ("3", "4"):
-            for accidental in ("" ,"b", "#", "x"):
-                for arrow in ("", "-", "<2", "+2^3"):
-                    token = letter + octave + accidental + arrow
-                    pitch = IntervalParser().parse(token).monzo()
-                    retoken = smitonic_tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
-                    assert token == retoken
+# def test_smitonic_pitch_translation():
+#     inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
+#     for letter in "JKOQSUY":
+#         for octave in ("3", "4"):
+#             for accidental in ("" ,"b", "#", "x"):
+#                 for arrow in ("", "-", "<2", "+2^3"):
+#                     token = letter + octave + accidental + arrow
+#                     pitch = IntervalParser().parse(token).monzo()
+#                     retoken = smitonic_tokenize_pitch(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
+#                     assert token == retoken
 
 
-def test_smitonic_interval_translation():
-    inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
-    for value in range(1, 12):
-        qualities = ["nn", "n", "W", "WW"]
-        if value in (1, 3, 6, 8, 10):
-            qualities.append("p")
-        else:
-            qualities.extend(["s", "L"])
-        for quality in qualities:
-            for arrow in ("", "-", "<2", "+2^3"):
-                token = "{}{}{}".format(quality, value, arrow)
-                pitch = IntervalParser().parse(token).monzo()
-                retoken = smitonic_tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
-                assert token == retoken
+# def test_smitonic_interval_translation():
+#     inflections = reverse_inflections(SMITONIC_INFLECTIONS, basis_indices=(0, 4))
+#     for value in range(1, 12):
+#         qualities = ["nn", "n", "W", "WW"]
+#         if value in (1, 3, 6, 8, 10):
+#             qualities.append("p")
+#         else:
+#             qualities.extend(["s", "L"])
+#         for quality in qualities:
+#             for arrow in ("", "-", "<2", "+2^3"):
+#                 token = "{}{}{}".format(quality, value, arrow)
+#                 pitch = IntervalParser().parse(token).monzo()
+#                 retoken = smitonic_tokenize_interval(pitch, inflections, E_INDEX, HZ_INDEX, RAD_INDEX)
+#                 assert token == retoken
 
 
 def test_playhead():
@@ -317,7 +316,7 @@ def test_extended_duration():
 
 
 def test_extend_duration_without_advancing_time():
-    text = "P1[~1] P8"
+    text = "P1[?1] P8"
     notes = get_notes(text)
     assert notes[0].duration == 2
     assert notes[0].time == 0
@@ -326,7 +325,7 @@ def test_extend_duration_without_advancing_time():
 
 
 def test_stretch_to_logical_duration():
-    text = "(P1 M2 M2)[?] P1"
+    text = "(P1 M2 M2)[~] P1"
     notes = get_notes(text)
     assert notes[0].duration == 1
     assert notes[0].time == 0
@@ -339,7 +338,7 @@ def test_stretch_to_logical_duration():
 
 
 def test_tuplet_hold():
-    text = "(P1 ~M3- ~P5 ~P8)[2 ~ !1] P1"
+    text = "(P1 ~M3- ~P5 ~P8)[2 ? !1] P1"
     notes = get_notes(text)
     assert notes[0].duration == 3
     assert notes[0].time == 0
@@ -372,7 +371,7 @@ def test_absolute_time():
 
 
 def test_rotate_time():
-    text = "(P1 ~P8[2] ~P8[3] ~P8[4])[? >]"
+    text = "(P1 ~P8[2] ~P8[3] ~P8[4])[~ >]"
     notes = get_notes(text)
     times_durations = []
     for i in range(4):
@@ -382,7 +381,7 @@ def test_rotate_time():
 
 
 def test_rotate_rhythm():
-    text = "(P1 ~P8[2] ~P8[3] ~P8[4])[? ^]"
+    text = "(P1 ~P8[2] ~P8[3] ~P8[4])[~ ^]"
     notes = get_notes(text)
     times_durations = []
     for i in range(4):
@@ -401,7 +400,7 @@ def test_exponential_rhythm():
 
 
 def test_euclidean_rhythm():
-    text = "(P1 ~P8 ~P8 ~P8)[E6 ?]"
+    text = "(P1 ~P8 ~P8 ~P8)[E6 ~]"
     notes = get_notes(text)
     times_durations = []
     for i in range(4):
@@ -409,19 +408,19 @@ def test_euclidean_rhythm():
         times_durations.append((notes[i].time, notes[i].duration))
     assert times_durations == [(0, 2), (2, 1), (3, 2), (5, 1)]
 
-    text = "(P1 P8)[E5 ?]"
+    text = "(P1 P8)[E5 ~]"
     notes = get_notes(text)
     assert notes[0].time == 0
     assert notes[1].time == 2
 
-    text = "(P1 P8)[1E5 ?]"
+    text = "(P1 P8)[1E5 ~]"
     notes = get_notes(text)
     assert notes[0].time == 0
     assert notes[1].time == 3
 
 
 def test_mos_rhythm():
-    text = "(P1 ~P8 ~P8 ~P8)[7PG5 ?]"
+    text = "(P1 ~P8 ~P8 ~P8)[7PG5 ~]"
     notes = get_notes(text)
     times_durations = []
     for i in range(4):

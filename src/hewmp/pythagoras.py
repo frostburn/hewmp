@@ -1,5 +1,7 @@
 # coding: utf-8
 from enum import Enum
+from .monzo import PRIMES
+from numpy import zeros
 
 
 AUGMENTED_INFLECTION = (-11, 7)
@@ -14,12 +16,6 @@ class Quality(Enum):
     NEUTRAL = "N"
     HALF_AUGMENTED = "ha"
     HALF_DIMINISHED = "hd"
-
-    # Quarters not implemented yet
-    # QUARTER_AUGMENTED = "qa"
-    # QUARTER_DIMINISHED = "qd"
-    # THREE_QUARTERS_AUGMENTED = "hqa"
-    # THREE_QUARTERS_DIMINISHED = "hqd"
 
 
 class Letter(Enum):
@@ -44,65 +40,6 @@ BASIC_PITCHES = {
 REFERENCE_OCTAVE = 4
 
 
-class Interval:
-    def __init__(self, quality, interval_class, augmentations=0):
-        self.quality = quality
-        self.interval_class = interval_class
-        self.augmentations = augmentations
-
-    def basic_part(self):
-        octaves = (self.interval_class - 1)//7
-        basic_class = self.interval_class - octaves*7
-        return Interval(self.quality, basic_class), octaves
-
-    def exponents(self):
-        """
-        Monzo components of two and three
-        """
-        basic, octaves = self.basic_part()
-        twos, threes = BASIC_INTERVALS[basic]
-        twos += octaves
-        twos += self.augmentations * AUGMENTED_INFLECTION[0]
-        threes += self.augmentations * AUGMENTED_INFLECTION[1]
-        return twos, threes
-
-    def __hash__(self):
-        return hash((self.quality, self.interval_class, self.augmentations))
-
-    def __eq__(self, other):
-        return self.quality == other.quality and self.interval_class == other.interval_class and self.augmentations == other.augmentations
-
-    def __repr__(self):
-        return "{}({}, {!r}, {!r})".format(self.__class__.__name__, self.quality, self.interval_class, self.augmentations)
-
-
-class Pitch:
-    def __init__(self, letter, sharps, octave):
-        self.letter = letter
-        self.sharps = sharps
-        self.octave = octave
-
-    def exponents(self):
-        """
-        Monzo components of two and three
-        """
-        twos, threes = BASIC_PITCHES[self.letter]
-        twos += self.octave - REFERENCE_OCTAVE
-        twos += self.sharps * AUGMENTED_INFLECTION[0]
-        threes += self.sharps * AUGMENTED_INFLECTION[1]
-
-        return twos, threes
-
-    def __hash__(self):
-        return hash((self.letter, self.sharps, self.octave))
-
-    def __eq__(self, other):
-        return self.letter == other.letter and self.sharps == other.sharps and self.octave == other.octave
-
-    def __repr__(self):
-        "{}({}, {!r}, {!r})".format(self.__class__.__name__, self.sharps, self.octave)
-
-
 def read_number(token):
     if token and token[0] in "-+":
         num = token[0]
@@ -117,23 +54,110 @@ def read_number(token):
     return token, None
 
 
-def parse_interval(token):
-    quality = token[0]
-    token = token[1:]
-    if quality == "h":
-        quality += token[0]
-        token = token[1:]
-    augmentations = 0
-    while token[0] == "a":
-        augmentations += 1
-        token = token[1:]
-    while token[0] == "d":
-        augmentations -= 1
-        token = token[1:]
+class Interval:
+    absolute = False
+    def __init__(self, quality, interval_class, augmentations=0):
+        self.quality = quality
+        self.interval_class = interval_class
+        self.augmentations = augmentations
 
-    token, interval_class = read_number(token)
+    def basic_part(self):
+        octaves = (self.interval_class - 1)//7
+        basic_class = self.interval_class - octaves*7
+        return Interval(self.quality, basic_class), octaves
 
-    return token, Interval(Quality(quality), interval_class, augmentations)
+    def monzo(self):
+        basic, octaves = self.basic_part()
+        twos, threes = BASIC_INTERVALS[basic]
+        twos += octaves
+        twos += self.augmentations * AUGMENTED_INFLECTION[0]
+        threes += self.augmentations * AUGMENTED_INFLECTION[1]
+        result = zeros(len(PRIMES))
+        result[0] = twos
+        result[1] = threes
+        return result
+
+    def __hash__(self):
+        return hash((self.quality, self.interval_class, self.augmentations))
+
+    def __eq__(self, other):
+        return self.quality == other.quality and self.interval_class == other.interval_class and self.augmentations == other.augmentations
+
+    def __repr__(self):
+        return "{}({}, {!r}, {!r})".format(self.__class__.__name__, self.quality, self.interval_class, self.augmentations)
+
+    @classmethod
+    def parse(cls, token):
+        quality = token[0]
+        token = token[1:]
+        if quality == "h":
+            quality += token[0]
+            token = token[1:]
+        augmentations = 0
+        while token[0] == "a":
+            augmentations += 1
+            token = token[1:]
+        while token[0] == "d":
+            augmentations -= 1
+            token = token[1:]
+
+        token, interval_class = read_number(token)
+
+        return token, cls(Quality(quality), interval_class, augmentations)
+
+
+class Pitch:
+    absolute = True
+    def __init__(self, letter, sharps, octave):
+        self.letter = letter
+        self.sharps = sharps
+        self.octave = octave
+
+    def monzo(self):
+        twos, threes = BASIC_PITCHES[self.letter]
+        twos += self.octave - REFERENCE_OCTAVE
+        twos += self.sharps * AUGMENTED_INFLECTION[0]
+        threes += self.sharps * AUGMENTED_INFLECTION[1]
+        result = zeros(len(PRIMES))
+        result[0] = twos
+        result[1] = threes
+        return result
+
+    def __hash__(self):
+        return hash((self.letter, self.sharps, self.octave))
+
+    def __eq__(self, other):
+        return self.letter == other.letter and self.sharps == other.sharps and self.octave == other.octave
+
+    def __repr__(self):
+        "{}({}, {!r}, {!r})".format(self.__class__.__name__, self.sharps, self.octave)
+
+
+    @classmethod
+    def parse(cls, token):
+        letter = Letter(token[0])
+        token = token[1:]
+        token, octave = read_number(token)
+        sharps = 0
+        while token and token[0] in ACCIDENTALS:
+            if token[0] in "#♯":
+                sharps += 1
+            elif token[0] in "x𝄪":
+                sharps += 2
+            elif token[0] in "b♭":
+                sharps -= 1
+            elif token[0] == "𝄫":
+                sharps -= 2
+            elif token[0] in "t𝄲":
+                sharps += 0.5
+            elif token[0] in "d𝄳":
+                sharps -= 0.5
+            token = token[1:]
+
+        if octave is None:
+            token, octave = read_number(token)
+
+        return token, cls(letter, sharps, octave)
 
 
 BASIC_INTERVALS = {
@@ -189,7 +213,7 @@ BASIC_INTERVALS = {
 items = list(BASIC_INTERVALS.items())
 BASIC_INTERVALS = {}
 for token, exponents in items:
-    _, interval = parse_interval(token)
+    _, interval = Interval.parse(token)
     BASIC_INTERVALS[interval] = exponents
 
 
@@ -198,29 +222,3 @@ INTERVAL_QUALITIES = "dmPNMha"
 PITCH_LETTERS = "ABCDEFG"
 
 ACCIDENTALS = "#xbtd" + "♮♯𝄪♭𝄫𝄲𝄳"
-
-
-def parse_pitch(token):
-    letter = Letter(token[0])
-    token = token[1:]
-    token, octave = read_number(token)
-    sharps = 0
-    while token and token[0] in ACCIDENTALS:
-        if token[0] in "#♯":
-            sharps += 1
-        elif token[0] in "x𝄪":
-            sharps += 2
-        elif token[0] in "b♭":
-            sharps -= 1
-        elif token[0] == "𝄫":
-            sharps -= 2
-        elif token[0] in "t𝄲":
-            sharps += 0.5
-        elif token[0] in "d𝄳":
-            sharps -= 0.5
-        token = token[1:]
-
-    if octave is None:
-        token, octave = read_number(token)
-
-    return token, Pitch(letter, sharps, octave)

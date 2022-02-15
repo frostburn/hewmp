@@ -864,6 +864,33 @@ def test_preed_harmonic_chord():
         max_error = max(max_error, abs(log(note.real_frequency) - log(ji*1000)))
     assert max_error/log(2)*1200 < 3.6
 
+    text = "T:preed\nN:preed\nBF:1000\n=ph35"
+    notes = get_real_notes(text)
+    max_error = 0
+    freqs = set()
+    for ji, note in zip(harmonics, notes):
+        max_error = max(max_error, abs(log(note.real_frequency) - log(ji*1000)))
+        freqs.add(note.real_frequency)
+    assert max_error/log(2)*1200 < 3.2
+
+    text = "T:preed\nBF:1000\n=h35"
+    notes = get_real_notes(text)
+    for note in notes:
+        for freq in set(freqs):
+            if isclose(freq, note.real_frequency):
+                freqs.remove(freq)
+    assert not freqs
+
+
+def test_breed_accuracy():
+    text = "T:breed\nN:preed\nP1 a5-2 M9 ha12- P15"
+    just_notes = [1/1, 5/4, 3/2, 7/4, 2/1]
+    notes = get_real_notes(text)
+    max_error = 0
+    for ji, note in zip(just_notes, notes):
+        max_error = max(max_error, abs(log(note.real_frequency) - log(ji*440)))
+    assert max_error/log(2)*1200 < 0.25
+
 
 if __name__ == '__main__':
     test_parse_interval()
@@ -936,3 +963,4 @@ if __name__ == '__main__':
     test_neutral_semaphore()
     test_neutral_orgone()
     test_preed_harmonic_chord()
+    test_breed_accuracy()

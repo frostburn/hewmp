@@ -13,6 +13,7 @@ INFLECTIONS = {
     SA("><"): [-2, -0.5, 0, 1],
     SA("^v"): [-9, 3.5, 0, 0, 1],
     SA("i!"): [-5, 5.5, 0, 0, 0, -1],
+    # SA("i!"): [-10, 4, 0, 0, 0, 1],  # Also an option, but doesn't combine nicely with the syntonic +-
     SA("*%"): [-8, 2.5, 0, 0, 0, 0, 1],
     # SA("*%"): [-3, 4.5, 0, 0, 0, 0, -1],  # Also an option
     SA("AV"): [-9, 3, 0, 0, 0, 0, 0, 1],
@@ -45,6 +46,22 @@ BASIC_INTERVALS = {
     "a3": (6, -3.5),
     "a4": (7, -4),
     "a5": (8, -4.5),
+
+    # Extra
+    "hd2": (-5, 3.25),
+    "hd3": (-4, 2.75),
+    "hd4": (-3, 2.25),
+    "hd5": (-2, 1.75),
+    "hd1": (-2, 1.25),
+    "N2": (-1, 0.75),
+    "N3": (0, 0.25),
+    "N4": (1, -0.25),
+    "N5": (2, -0.75),
+    "ha1": (2, -1.25),
+    "ha2": (3, -1.75),
+    "ha3": (4, -2.25),
+    "ha4": (5, -2.75),
+    "ha5": (6, -3.25),
 }
 
 
@@ -122,17 +139,20 @@ EXTRA_CHORDS = {
 if __name__ == '__main__':
     from numpy import *
     target = log(5/4)/log(2)*1200
-    print("target", target)
-    best_diff = float("inf")
-    best = None
+    by_error = []
+    by_cents = []
     for interval in BASIC_INTERVALS:
         m = interval.monzo()
         cents = (m[0] + m[1] * log(3)/log(2))*1200
+        by_cents.append((cents, interval))
+        by_error.append((abs(cents-target), interval))
+    by_cents.sort()
+    for cents, interval in by_cents:
         print(interval, cents)
-        if abs(cents-target) < best_diff:
-            best_diff = abs(cents-target)
-            best = interval, cents
-    print(best)
+    print("target", target)
+    by_error.sort()
+    for error, interval in by_error[:3]:
+        print(error, interval)
 
     JI = log(PRIMES)
     for arrow, inflection in INFLECTIONS.items():

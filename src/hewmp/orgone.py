@@ -50,6 +50,26 @@ BASIC_INTERVALS = {
     "a2": (-17, 5),
     "a7": (-18, 5.5),
     "a5": (-20, 6),
+
+    # Extra
+    "hd4": (15, -4.25),
+    "hd2": (13, -3.75),
+    "hd7": (12, -3.25),
+    "hd5": (10, -2.75),
+    "hd3": (8, -2.25),
+    "hd1": (6, -1.75),
+    "hd6": (5, -1.25),
+    "N4": (3, -0.75),
+    "N2": (1, -0.25),
+    "N7": (0, 0.25),
+    "N5": (-2, 0.75),
+    "ha3": (-4, 1.25),
+    "ha1": (-6, 1.75),
+    "ha6": (-7, 2.25),
+    "ha4": (-9, 2.75),
+    "ha2": (-11, 3.25),
+    "ha7": (-12, 3.75),
+    "ha5": (-14, 4.25),
 }
 
 BASIC_PITCHES = {
@@ -104,3 +124,19 @@ BASIC_CHORDS = {
 EXTRA_CHORDS = {
     "oaug": ("P1", "M4", "M7"),
 }
+
+
+if __name__ == '__main__':
+    from numpy import *
+    by_cents = []
+    for interval in BASIC_INTERVALS:
+        m = interval.monzo()
+        cents = (m[0] + m[4] * log(11)/log(2))*1200
+        by_cents.append((cents, interval))
+    by_cents.sort()
+    for cents, interval in by_cents:
+        print(interval, cents)
+
+    JI = log(PRIMES)
+    for arrow, inflection in INFLECTIONS.items():
+        print(arrow, dot(JI, inflection)/log(2)*1200)

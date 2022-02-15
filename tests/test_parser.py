@@ -843,6 +843,18 @@ def test_barbados_tetrad():
     expect_pitches(notes, pitches)
 
 
+def test_neutral_semaphore():
+    text = "N:semaphore\nN3 Dt5"
+    notes = get_notes(text)
+    assert notes[0].pitch == notes[1].pitch
+
+
+def test_neutral_orgone():
+    text = "N:orgone\nN7 G5t"
+    notes = get_notes(text)
+    assert notes[0].pitch == notes[1].pitch
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -911,3 +923,5 @@ if __name__ == '__main__':
     test_orgone_extra_chords()
     test_barbados_scale()
     test_barbados_tetrad()
+    test_neutral_semaphore()
+    test_neutral_orgone()

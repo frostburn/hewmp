@@ -855,6 +855,16 @@ def test_neutral_orgone():
     assert notes[0].pitch == notes[1].pitch
 
 
+def test_preed_harmonic_chord():
+    text = "N:preed\nBF:1000\n=ph35"
+    notes = get_real_notes(text)
+    harmonics = [4/4, 5/4, 6/4, 7/4, 9/4, 11/4, 13/4, 15/4, 17/4, 19/4, 21/4, 23/4, 25/4, 27/4, 29/4, 31/4, 33/4, 35/4]
+    max_error = 0
+    for ji, note in zip(harmonics, notes):
+        max_error = max(max_error, abs(log(note.real_frequency) - log(ji*1000)))
+    assert max_error/log(2)*1200 < 3.6
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -925,3 +935,4 @@ if __name__ == '__main__':
     test_barbados_tetrad()
     test_neutral_semaphore()
     test_neutral_orgone()
+    test_preed_harmonic_chord()

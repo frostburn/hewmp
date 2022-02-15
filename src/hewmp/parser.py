@@ -26,6 +26,7 @@ from . import ups_and_downs
 from .arrow import SignedArrow, SIGN_BY_ARROW
 from . import orgone
 from . import semaphore
+from . import preed
 
 
 DEFAULT_INFLECTIONS = {
@@ -260,6 +261,7 @@ class IntervalParser:
                 "hewmp": DEFAULT_SIGNED_INFLECTIONS,
                 "orgone": orgone.INFLECTIONS,
                 "semaphore": semaphore.INFLECTIONS,
+                "preed": preed.INFLECTIONS,
             }
         self.inflections = inflections
         self.et_divisions = et_divisions
@@ -275,12 +277,14 @@ class IntervalParser:
         "hewmp": pythagoras.Interval.parse,
         "orgone": orgone.Interval.parse,
         "semaphore": semaphore.Interval.parse,
+        "preed": preed.Interval.parse,
     }
 
     pitch_spines = {
         "hewmp": pythagoras.Pitch.parse,
         "orgone": orgone.Pitch.parse,
         "semaphore": semaphore.Pitch.parse,
+        "preed": preed.Pitch.parse,
     }
 
     def calculate_up_down(self):
@@ -480,6 +484,9 @@ def parse_chord(token, transposition, interval_parser):
         elif token in semaphore.EXTRA_CHORDS:
             subtokens = semaphore.EXTRA_CHORDS[token]
             notation = "semaphore"
+        elif token in preed.EXTRA_CHORDS:
+            subtokens = preed.EXTRA_CHORDS[token]
+            notation = "preed"
         else:
             subtokens = expand_color_chord(token)
             if subtokens is None:
@@ -707,7 +714,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 interval_parser.calculate_up_down()
             if config_key == "N":
                 current_notation = token.strip()
-                if current_notation not in ["hewmp", "HEWMP", "orgone", "semaphore", "percussion"]:
+                if current_notation not in ["hewmp", "HEWMP", "orgone", "semaphore", "preed", "percussion"]:
                     raise ParsingError("Unknown notation '{}'".format(current_notation))
                 current_notation = current_notation.lower()
                 config[config_key] = current_notation
@@ -915,7 +922,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                     elif mini_token == "?":
                         pattern.last.extend_duration(1)
 
-        elif current_notation in ("hewmp", "orgone", "semaphore"):
+        elif current_notation in ("hewmp", "orgone", "semaphore", "preed"):
             if token.startswith("=") or ":" in token or ";" in token:
                 if token_obj.whitespace or not token.startswith("=") or not pattern or isinstance(pattern[-1], NewLine):
                     subpattern_time = pattern.t

@@ -29,7 +29,7 @@ class Letter(Enum):
     # Extensions
     H = "H"
     # I reserved: One chord in color notation
-    J = "J"  # "I" is skipped so that it's not confused with the one (chord) in color notation.
+    J = "J"
     K = "K"
     # L reserved: Large
     # M reserved: Major
@@ -37,6 +37,8 @@ class Letter(Enum):
     # O is available
     # P reserved: Perfect
     # Q is available
+    # R is available
+    # S is available
 
 
 BASIC_PITCHES = {
@@ -63,6 +65,15 @@ def read_number(token):
     if num:
         return token, int(num)
     return token, None
+
+
+PYTHAGOREAN_QUALITIES = ("m", "m", "m", "m", "P", "P", "P", "M", "M", "M", "M")
+PYTHAGOREAN_QUALITIES = tuple(Quality(q) for q in PYTHAGOREAN_QUALITIES)
+PYTHAGOREAN_INDEX_P1 = 5
+
+NEUTRAL_QUALITIES = ("hd", "hd", "hd", "hd", "hd", "hd", "hd", "N", "N", "N", "N", "ha", "ha", "ha", "ha", "ha", "ha", "ha")
+NEUTRAL_QUALITIES = tuple(Quality(q) for q in NEUTRAL_QUALITIES)
+NEUTRAL_INDEX_N6 = 8
 
 
 class Interval:
@@ -99,6 +110,7 @@ class Interval:
 
     @classmethod
     def parse(cls, token):
+        # TODO: Parse augmented half-augmented "aha" (possibly in addition to the currently accepted "haa")
         quality = token[0]
         token = token[1:]
         if quality == "h":
@@ -115,6 +127,53 @@ class Interval:
         token, interval_class = read_number(token)
 
         return token, cls(Quality(quality), interval_class, augmentations)
+
+    @classmethod
+    def from_exponents(cls, twos, threes):
+        if threes % 1 == 0.5:
+            index = int(threes + 0.5 + NEUTRAL_INDEX_N6)
+            augmentations = 0
+            if index >= 0 and index < len(NEUTRAL_QUALITIES):
+                quality = NEUTRAL_QUALITIES[index]
+            elif index < 0:
+                while index < 0:
+                    augmentations -= 1
+                    index += 7
+                quality = NEUTRAL_QUALITIES[index]
+            else:
+                while index >= len(NEUTRAL_QUALITIES):
+                    augmentations += 1
+                    index -= 7
+                quality = NEUTRAL_QUALITIES[index]
+        elif threes % 1 == 0.0:
+            index = int(threes + PYTHAGOREAN_INDEX_P1)
+            augmentations = 0
+            if index >= 0 and index < len(PYTHAGOREAN_QUALITIES):
+                quality = PYTHAGOREAN_QUALITIES[index]
+            elif index < 0:
+                quality = Quality.DIMINISHED
+                index += 7
+                while index < 0:
+                    augmentations -= 1
+                    index += 7
+            else:
+                index -= len(PYTHAGOREAN_QUALITIES)
+                quality = Quality.AUGMENTED
+                index -= 7
+                while index >= 0:
+                    augmentations += 1
+                    index -= 7
+        else:
+            raise ValueError("Unable to interpret fractional exponents")
+
+        value = 7*twos + 11*threes
+        if value != int(value):
+            raise ValueError("Unable to interpret fractional exponents")
+        value = int(value)
+        sign = -1 if value < 0 else 1
+        interval_class = abs(value) + 1
+
+        return cls(quality, interval_class, augmentations), sign
 
 
 class Pitch:
@@ -169,6 +228,8 @@ class Pitch:
             token, octave = read_number(token)
 
         return token, cls(letter, sharps, octave)
+
+    # TODO: from_exponents
 
 
 BASIC_INTERVALS = {

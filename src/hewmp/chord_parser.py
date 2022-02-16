@@ -1,6 +1,7 @@
 from .util import Splitter
 from . import orgone
 from . import semaphore
+from . import runic
 
 
 ARROWS = "+-><^vunUDAVMWi!*%"
@@ -225,6 +226,9 @@ def expand_chord(token):
     if base in semaphore.BASIC_CHORDS:
         chord = make_basic_chord(base, separated, ups_and_downs, chords=semaphore.BASIC_CHORDS)
         notation = "semaphore"
+    if base in runic.BASIC_CHORDS:
+        chord = make_basic_chord(base, separated, ups_and_downs, chords=runic.BASIC_CHORDS)
+        notation = "runic"
     if sus_replacement is not None:
         if chord is None:
             raise ValueError("Sus replacement on an incompatible chord")

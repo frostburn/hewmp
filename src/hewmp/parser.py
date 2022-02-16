@@ -27,6 +27,7 @@ from .arrow import SignedArrow, SIGN_BY_ARROW
 from . import orgone
 from . import semaphore
 from . import preed
+from . import runic
 
 
 DEFAULT_INFLECTIONS = {
@@ -262,6 +263,7 @@ class IntervalParser:
                 "orgone": orgone.INFLECTIONS,
                 "semaphore": semaphore.INFLECTIONS,
                 "preed": preed.INFLECTIONS,
+                "runic": runic.INFLECTIONS,
             }
         self.inflections = inflections
         self.et_divisions = et_divisions
@@ -278,6 +280,7 @@ class IntervalParser:
         "orgone": orgone.Interval.parse,
         "semaphore": semaphore.Interval.parse,
         "preed": preed.Interval.parse,
+        "runic": runic.Interval.parse,
     }
 
     pitch_spines = {
@@ -285,6 +288,7 @@ class IntervalParser:
         "orgone": orgone.Pitch.parse,
         "semaphore": semaphore.Pitch.parse,
         "preed": preed.Pitch.parse,
+        "runic": runic.Pitch.parse,
     }
 
     def calculate_up_down(self):
@@ -487,6 +491,9 @@ def parse_chord(token, transposition, interval_parser):
         elif token in preed.EXTRA_CHORDS:
             subtokens = preed.EXTRA_CHORDS[token]
             notation = "preed"
+        elif token in runic.EXTRA_CHORDS:
+            subtokens = runic.EXTRA_CHORDS[token]
+            notation = "runic"
         else:
             subtokens = expand_color_chord(token)
             if subtokens is None:
@@ -714,7 +721,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 interval_parser.calculate_up_down()
             if config_key == "N":
                 current_notation = token.strip()
-                if current_notation not in ["hewmp", "HEWMP", "orgone", "semaphore", "preed", "percussion"]:
+                if current_notation not in ["hewmp", "HEWMP", "orgone", "semaphore", "preed", "runic", "percussion"]:
                     raise ParsingError("Unknown notation '{}'".format(current_notation))
                 current_notation = current_notation.lower()
                 config[config_key] = current_notation

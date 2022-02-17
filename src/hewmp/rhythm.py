@@ -155,7 +155,7 @@ if __name__ == "__main__":
                         for _ in range(len(s)):
                             seen.add(s)
                             s = rotate_string(s)
-                    mos = "{}PG{}".format(period, generator)
+                    mos = "{}PG{}".format(generator, period)
                     x = "x{}".format(num_onsets)
                     print("[{} {}] =".format(x.ljust(3), mos.center(5)), string)
     else:

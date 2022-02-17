@@ -764,12 +764,12 @@ See the first few patterns [here](/doc/euclidean_rhythms.md).
 ### Pergen
 All of the Euclidean rhythms are MOS or Multi-MOS rhythms meaning that they only have gaps of two sizes between onsets. All MOS rhythms can be produced with a period (size of the pattern) and a generator (a fixed distance between two onsets, not necessarily adjacent) that wraps around the period. Multi-MOS patterns are simply repeated MOS patterns. You can specify the period and the generator using `PG`.
 ```
-P1[x5 12PG7 4]  $ Rhythmic pattern inspired by the layout of the white keys on a piano
+P1[x5 7PG12 4]  $ Rhythmic pattern inspired by the layout of the white keys on a piano
 ```
 The default period is one and fractional generators are supported.
 ```
 $ Quartal arpeggio in a rhythm based on the golden ratio
-(P1 P4 m7 cm3 cm6)[x11 PG.618033988749895 13]
+(P1 P4 m7 cm3 cm6)[x11 .618033988749895PG 13]
 ```
 See some patterns with integer parameters [here](/doc/pergen_rhythms.md).
 

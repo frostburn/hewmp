@@ -822,8 +822,8 @@ def parse_track(lexer, default_config, max_repeats=None):
                             rhythm = rotate_sequence(rhythm, int(rotation_token))
                         times_durations = sequence_to_time_duration(rhythm)
                     elif "PG" in token:
-                        generator = Fraction(token[token.index("G")+1:])
-                        period_token = token[:token.index("P")]
+                        period_token = token[token.index("G")+1:]
+                        generator = Fraction(token[:token.index("P")])
                         if period_token:
                             period = Fraction(period_token)
                         else:

@@ -924,6 +924,24 @@ def test_runic_basic_chords():
     expect_pitches(notes, pitches)
 
 
+def test_lambda_bp():
+    text = "ET:BP\nN:lambda\nC4 C#4 D4 E4 F4 F#4 G4 H4 Jb4 J4 A4 Bb4 B4 C5"
+    notes = get_real_notes(text)
+    for i, note in enumerate(notes):
+        assert isclose(note.real_frequency, 440*3**((i-10)/13))
+
+
+def test_lambda_ji():
+    text = (
+        "N:lambda\n"
+        "P1  m2--  M2++  P3  m4- M4++  M5+ m6- m7--  M7+  P8  m9--  M9++ P10\n"
+        "1/1 27/25 25/21 9/7 7/5 75/49 5/3 9/5 49/25 15/7 7/3 63/25 25/9 3/1"
+    )
+    notes = get_notes(text)
+    for i in range(14):
+        assert notes[i].pitch == notes[i+14].pitch
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -998,3 +1016,5 @@ if __name__ == '__main__':
     test_preed_harmonic_chord()
     test_breed_accuracy()
     test_runic_basic_chords()
+    test_lambda_bp()
+    test_lambda_ji()

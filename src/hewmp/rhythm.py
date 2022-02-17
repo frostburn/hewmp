@@ -81,11 +81,30 @@ def pergen_rhythm(num_onsets, generator, period=1):
     return list(zip(times, durations))
 
 
+def geometric_rhythm(num_onsets, initial, factor):
+    """
+    Onsets in a geometric progression
+    """
+    time = initial
+    times = []
+    for _ in range(num_onsets+1):
+        times.append(time)
+        time *= factor
+    times.sort()
+    result = []
+    time = Fraction(0)
+    for duration in diff(times):
+        result.append((time, duration))
+        time += duration
+    return result
+
+
 def concatenated_geometric_rhythm(num_onsets, initial, factor):
     """
     Concatenated geometric progression
     """
-    time = 0
+    # Basically the same as geometric rhythm due how the math pans out.
+    time = Fraction(0)
     duration = initial
     result = []
     for _ in range(num_onsets):
@@ -99,7 +118,7 @@ def concatenated_arithmetic_rhythm(num_onsets, initial, delta):
     """
     Concatenated arithmetic progression
     """
-    time = 0
+    time = Fraction(0)
     duration = initial
     result = []
     for _ in range(num_onsets):
@@ -108,6 +127,22 @@ def concatenated_arithmetic_rhythm(num_onsets, initial, delta):
         duration += delta
         if duration < 0:
             raise ValueError("Negative durations produced with delta = {}".format(delta))
+    return result
+
+
+def harmonic_rhythm(num_onsets, initial, delta):
+    """
+    Onsets in a harmonic progression
+    """
+    times = []
+    for n in range(num_onsets+1):
+        times.append(Fraction(1, initial + n*delta))
+    times.sort()
+    time = Fraction(0)
+    result = []
+    for duration in diff(times):
+        result.append((time, duration))
+        time += duration
     return result
 
 
@@ -121,6 +156,20 @@ def concatenated_harmonic_rhythm(num_onsets, initial, delta):
         duration = Fraction(1, initial + n*delta)
         if duration < 0:
             raise ValueError("Negative durations produced with delta = {}".format(delta))
+        result.append((time, duration))
+        time += duration
+    return result
+
+
+def sigmoid_rhythm(num_onsets, bias, scale):
+    """
+    Concatenated bell-shaped progression
+    """
+    time = Fraction(0)
+    bias = Fraction(num_onsets, 2) - bias
+    result = []
+    for n in range(num_onsets):
+        duration = Fraction(1, 1 + ((n-bias)*scale)**2)
         result.append((time, duration))
         time += duration
     return result

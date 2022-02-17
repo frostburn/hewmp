@@ -734,12 +734,12 @@ TODO: Actually explain what these do.
 ## Advanced Rhythms
 Text2Music has a few rhythm families that do different things based on how many notes there are in the manipulated pattern.
 ### Geometric
-Some natural rhythms such as bouncing balls can be hard to notate using integer multiples and tuplets alone. This is where the Concatenated Geometric rhythm family comes in. As the name implies the durations are in a geometric progression and the notes are concatenated together in time. You could also call this the Exponential rhythm family due to the way it sounds, but `CG` is more precise in meaning.
+Some natural rhythms such as bouncing balls can be hard to notate using integer multiples and tuplets alone. This is where the Geometric rhythm family comes in. As the name implies the durations are in a geometric progression. You could also call this the Exponential rhythm family due to the way it sounds, but `G` is more precise in meaning.
 ```
-P1[x22 CG0.9 ?]  $ Note played in a bouncing ball rhythm of 22 bounces such that
-$ the first bounce takes one beat of time and each bounce is 90% of the duration of the last one.
+P1[x22 G0.9 10]  $ Note played in a bouncing ball rhythm of 22 bounces over 10 beats such that
+                 $ each bounce is 90% of the duration of the last one.
 ```
-### Arithmetic
+### Concatenated Arithmetic
 An arithmetic progression starts with an initial duration and progressively adds a fixed duration to it. The initial duration is to the left of `CA` and the fixed duration is to the right. Concatenated arithmetic rhythms align with a grid while geometric rhythms generally do not.
 ```
 =M-[x2 6CA-1 4]  $ Notes of a major chord with relative durations
@@ -750,6 +750,17 @@ Geometric rhythms can get pretty fast pretty quickly to the point that they prod
 ```
 N:percussion
 (k h s h)[x8 3CH2 6]  $ A drum pattern gettin progressively faster over 6 beats.
+```
+On the other hand setting the onset times themselves into a harmonic progression produces an extreme ritardando. (The parameters default to 1)
+```
+N:percussion
+X[x100 H 6]  $ Claves in a pattern that resembles a Geiger counter being pulled away from a radioactive source
+```
+### Sigmoid
+The rhythm families introduced so far produce either accelerating or deccelerating patterns. A sigmoid patterns slows down and speeds up with controls for biasing the onsets towards the beginning or the end and scaling the intensity of the overall effect.
+```
+N:percussion
+x[x50 10S.1 6]  $ Hand claps in a pattern that slows down only to speed up even more towards the end
 ```
 ### Euclidean
 The Euclidean rhythms are produced in a way analoguous to Euclid's algorithm for finding the greatest common divisor of two numbers and are common in traditional world music. For example two notes in `E5` produce a Persian rhythm called *Khafif-e-ramal* `x.x..` while three notes in `E8` creates the Cuban *tresillo* `x..x..x.`. You can rotate the pattern to the left using numbers on the left side of `E`. Three notes in `1E8` is `x..x.x..` and in `2E8` it is `x.x..x..`.

@@ -14,6 +14,7 @@ from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch,
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
 from .rhythm import sequence_to_time_duration, euclidean_rhythm, pergen_rhythm, rotate_sequence, concatenated_geometric_rhythm, concatenated_arithmetic_rhythm, concatenated_harmonic_rhythm
+from .rhythm import geometric_rhythm, harmonic_rhythm, sigmoid_rhythm
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
@@ -793,7 +794,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                     pattern.last.rotate_rhythm(-token.count("^"))
                 elif token == "?":
                     pattern.last.stretch_subpatterns()
-                elif token == "a" or "CG" in token or "CA" in token or "CH" in token or "E" in token or "PG" in token:
+                elif token == "a" or "G" in token or "CA" in token or "H" in token or "E" in token or "S" in token:
                     num_onsets = len(pattern.last)
 
                     if "C" in token:
@@ -805,15 +806,6 @@ def parse_track(lexer, default_config, max_repeats=None):
 
                     if token == "a":
                         times_durations = [(i, 1) for i in range(num_onsets)]
-                    elif "CG" in token:
-                        factor = Fraction(token[token.index("G")+1:])
-                        times_durations = concatenated_geometric_rhythm(num_onsets, initial, factor)
-                    elif "CA" in token:
-                        delta = Fraction(token[token.index("A")+1:])
-                        times_durations = concatenated_arithmetic_rhythm(num_onsets, initial, delta)
-                    elif "CH" in token:
-                        delta = Fraction(token[token.index("H")+1:])
-                        times_durations = concatenated_harmonic_rhythm(num_onsets, initial, delta)
                     elif "E" in token:
                         rotation_token = token[:token.index("E")]
                         num_beats = int(token[token.index("E")+1:])
@@ -829,6 +821,55 @@ def parse_track(lexer, default_config, max_repeats=None):
                         else:
                             period = Fraction(1)
                         times_durations = pergen_rhythm(num_onsets, generator, period)
+                    elif "CG" in token:
+                        factor = Fraction(token[token.index("G")+1:])
+                        times_durations = concatenated_geometric_rhythm(num_onsets, initial, factor)
+                    elif "G" in token:
+                        factor = Fraction(token[token.index("G")+1:])
+                        initial_token = token[:token.index("G")]
+                        if initial_token:
+                            initial = Fraction(initial_token)
+                        else:
+                            initial = Fraction(1)
+                        times_durations = geometric_rhythm(num_onsets, initial, factor)
+                    elif "CA" in token:
+                        delta_token = token[token.index("A")+1:]
+                        if delta_token:
+                            delta = Fraction(delta_token)
+                        else:
+                            delta = Fraction(1)
+                        times_durations = concatenated_arithmetic_rhythm(num_onsets, initial, delta)
+                    elif "CH" in token:
+                        delta_token = token[token.index("H")+1:]
+                        if delta_token:
+                            delta = Fraction(delta_token)
+                        else:
+                            delta = Fraction(1)
+                        times_durations = concatenated_harmonic_rhythm(num_onsets, initial, delta)
+                    elif "H" in token:
+                        delta_token = token[token.index("H")+1:]
+                        initial_token = token[:token.index("H")]
+                        if delta_token:
+                            delta = Fraction(delta_token)
+                        else:
+                            delta = Fraction(1)
+                        if initial_token:
+                            initial = Fraction(initial_token)
+                        else:
+                            initial = Fraction(1)
+                        times_durations = harmonic_rhythm(num_onsets, initial, delta)
+                    elif "S" in token:
+                        scale_token = token[token.index("S")+1:]
+                        if scale_token:
+                            scale = Fraction(scale_token)
+                        else:
+                            scale = Fraction(1)
+                        bias_token = token[:token.index("S")]
+                        if bias_token:
+                            bias = Fraction(bias_token)
+                        else:
+                            bias = Fraction(0)
+                        times_durations = sigmoid_rhythm(num_onsets, bias, scale)
 
                     for subpattern, td in zip(pattern.last, times_durations):
                         subpattern.time, subpattern.duration = td

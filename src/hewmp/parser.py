@@ -726,7 +726,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 interval_parser.calculate_up_down()
             if config_key == "N":
                 current_notation = token.strip()
-                if current_notation not in ["hewmp", "HEWMP", "orgone", "semaphore", "preed", "runic", "percussion"]:
+                if current_notation not in ["hewmp", "HEWMP", "orgone", "semaphore", "preed", "runic", "percussion", "percussion!"]:
                     raise ParsingError("Unknown notation '{}'".format(current_notation))
                 current_notation = current_notation.lower()
                 config[config_key] = current_notation
@@ -948,8 +948,8 @@ def parse_track(lexer, default_config, max_repeats=None):
         elif token.startswith('"'):
             message = UserMessage(token[1:], pattern.t)
             pattern.append(message)
-        elif current_notation == "percussion":
-            if token in PERCUSSION_SHORTHANDS:
+        elif current_notation in ("percussion", "percussion!"):
+            if token in PERCUSSION_SHORTHANDS and current_notation == "percussion":
                 index, name = PERCUSSION_SHORTHANDS[token]
                 percussion = Percussion(name, index, time=pattern.t)
                 pattern.append(percussion)

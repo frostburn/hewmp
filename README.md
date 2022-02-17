@@ -557,7 +557,16 @@ $ 3 against 4 against 5 polyrhythm
 @T (hhhhh)(hhhhh)(hhhhh)(hhhhh)
 ```
 Warning: Some two letter names look like chains. `hc` is one Hand Clap instead of a Closed Hi-hat followed by Crash Cymbal 1. Only use chaining for patterns longer than three beats to be safe.
-
+To disable two letter names altogether use `N:percussion!`.
+```
+N:percussion!
+hc  $ Hi-hat followed by a crash cymbal
+```
+You can even try "speaking" in percussion as most letters correspond to a sound and unrecognized letters are skipped.
+```
+N:percussion!
+You are now speaking in percussion!
+```
 ### Instrument
 Use `I:` to select an instrument. If the name corresponds to General MIDI the matching program is selected as well.
 ```

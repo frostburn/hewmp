@@ -765,7 +765,7 @@ def test_flavor_chord_ups_and_downs():
 
 
 def test_percussion_chaining():
-    text = "N:percussion\nkh.sh%kh!sho"
+    text = "N:percussion\nkh.sh%kh!sho hc"
     pattern = parse_text(text)[0][0]
     expected = [
         ("Acoustic Bass Drum", 0, 1),
@@ -778,6 +778,7 @@ def test_percussion_chaining():
         ("Acoustic Snare", 9, 1),
         ("Closed Hi-hat", 10, 1),
         ("Open Hi-hat", 11, 1),
+        ("Hand Clap", 12, 1),
     ]
 
     for event in pattern:
@@ -786,6 +787,24 @@ def test_percussion_chaining():
             assert event.name == name
             assert event.time == time
             assert event.duration == duration
+    assert not expected
+
+
+def test_short_percussion_syntax():
+    text = "N:percussion!\nhc"
+    pattern = parse_text(text)[0][0]
+    expected = [
+        ("Closed Hi-hat", 0, 1),
+        ("Crash Cymbal 1", 1, 1),
+    ]
+
+    for event in pattern:
+        if isinstance(event, Percussion):
+            name, time, duration = expected.pop(0)
+            assert event.name == name
+            assert event.time == time
+            assert event.duration == duration
+    assert not expected
 
 
 def test_fractional_monzo_accuracy():
@@ -966,6 +985,7 @@ if __name__ == '__main__':
     test_complex_voicing()
     test_flavor_chord_ups_and_downs()
     test_percussion_chaining()
+    test_short_percussion_syntax()
     test_fractional_monzo_accuracy()
     test_orgone_intervals()
     test_orgone_pitches()

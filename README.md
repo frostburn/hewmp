@@ -569,11 +569,6 @@ Text2Music uses per-channel pitch-bends to achieve microtones. Use `MP:` to rese
 ```
 MP:2
 ```
-### Subgroup
-To use Text2Music's tuning capabilities you need to tell it which mappings of primes should be affected. You can also use fractions like `2.3.13/5` or multiples of primes like `2.15.7`.
-```
-SG:2.3.5
-```
 ### Comma List
 The main reason HEWMP notation is based on relative intervals is to be able to write comma pumps of arbitrary length in just intonation with a finite number of symbols.
 ```
@@ -591,6 +586,12 @@ $ but the overall pitch doesn't change.
 $ Chord progression that pumps the diesis without changing the overall pitch.
 |: ~1/2=M- ~5/4=M- ~5/4=M-_2 ~5/4=7-_3 :|x4
 ```
+### Subgroup
+To make full use of Text2Music's tuning capabilities you need to tell it which mappings of primes should be affected. You can also use fractions like `2.3.13/5` or multiples of primes like `2.15.7`.
+```
+SG:2.3.5
+```
+By default the correct subgroup is inferred from the comma list.
 ### Temperament
 Text2Music comes with a few named presets so that you don't have to type out specific subgroups and comma lists.
 ```

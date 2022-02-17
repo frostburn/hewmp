@@ -28,6 +28,7 @@ from . import orgone
 from . import semaphore
 from . import preed
 from . import runic
+from .temperament import infer_subgroup
 
 
 DEFAULT_INFLECTIONS = {
@@ -222,6 +223,7 @@ DEFAULT_CONFIG = {
     "CRD": 5,
     "N": "hewmp",
     "flags": ("unmapET",),  # default to just intonation
+    "SG": "auto",
 }
 
 DEFAULT_CONFIG["tuning"].suggest_mapping()
@@ -679,6 +681,8 @@ def parse_track(lexer, default_config, max_repeats=None):
             if config_key == "CL":
                 comma_list = [comma.strip() for comma in token.split(",")]
                 config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.float_vector() for comma in comma_list]
+                if config["SG"] == "auto":
+                    config["tuning"].subgroup = infer_subgroup(config["tuning"].comma_list)
             if config_key == "SG":
                 subgroup = [basis_fraction.strip() for basis_fraction in token.split(".")]
                 config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.float_vector() for basis_vector in subgroup]

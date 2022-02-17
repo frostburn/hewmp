@@ -430,14 +430,15 @@ def test_mos_rhythm():
 
 
 def test_tuning_optimization():
-    text = "T:porcupine"
-    pattern = parse_text(text)[0][0]
-    for event in pattern:
-        if isinstance(event, Tuning):
-            tuning = event
-    assert(abs(log(16) - tuning.suggested_mapping.vector[0]*4) < 0.006)
-    assert(abs(log(9) - tuning.suggested_mapping.vector[1]*2) < 0.006)
-    assert(abs(log(5) - tuning.suggested_mapping.vector[2]) < 0.006)
+    texts = ["T:porcupine", "CL:250/243"]
+    for text in texts:
+        pattern = parse_text(text)[0][0]
+        for event in pattern:
+            if isinstance(event, Tuning):
+                tuning = event
+        assert(abs(log(16) - tuning.suggested_mapping.vector[0]*4) < 0.006)
+        assert(abs(log(9) - tuning.suggested_mapping.vector[1]*2) < 0.006)
+        assert(abs(log(5) - tuning.suggested_mapping.vector[2]) < 0.006)
 
 
 def test_constraints():

@@ -857,14 +857,14 @@ def test_barbados_scale():
 
 
 def test_barbados_tetrad():
-    text = "=m3+!"
+    text = "=M4+!"
     notes = get_notes(text)
     pitches = [[0], [-1, 0, -1, 0, 0, 1], [-1, 1]]
     expect_pitches(notes, pitches)
 
 
 def test_neutral_semaphore():
-    text = "N:semaphore\nN3 Dt5"
+    text = "N:semaphore\nN2 Bd5"
     notes = get_notes(text)
     assert notes[0].pitch == notes[1].pitch
 

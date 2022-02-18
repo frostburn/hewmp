@@ -972,6 +972,30 @@ def test_literal_gate_ratio():
     assert not gate_lengths
 
 
+def test_pattern_accelerando_diminuendo():
+    text = "1[x12 CG.8]{ff _ . pp '}"
+    notes = get_real_notes(text)
+    duration = notes[0].duration
+    velocity = notes[0].velocity
+    gate_ratio = notes[0].gate_ratio
+    gate_length = notes[0].real_gate_length
+    for note in notes[1:]:
+        assert note.duration < duration
+        assert note.velocity < velocity
+        assert note.gate_ratio < gate_ratio
+        assert note.real_gate_length < gate_length
+        duration = note.duration
+        velocity = note.velocity
+        gate_ratio = note.gate_ratio
+        gate_length = note.real_gate_length
+
+
+def test_property_zero_duration():
+    text = "1[x5 E7]{p f}"
+    notes = get_real_notes(text)
+    assert notes[0].velocity < notes[-1].velocity
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1051,3 +1075,5 @@ if __name__ == '__main__':
     test_set_base_note()
     test_literal_dynamics()
     test_literal_gate_ratio()
+    test_pattern_accelerando_diminuendo()
+    test_property_zero_duration()

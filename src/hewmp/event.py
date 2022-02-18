@@ -6,6 +6,7 @@ from scipy.interpolate import interp1d
 from .temperament import temper_subgroup, comma_reduce, comma_equals, comma_root
 from .notation import tokenize_fraction
 from .monzo import PRIMES, Mapping
+from .util import interp_lin_const
 
 
 DEFAULT_METRIC = ones(len(PRIMES))
@@ -482,6 +483,7 @@ class Pattern(MusicBase, Transposable):
         else:
             self.subpatterns = subpatterns
         self.logical_duration = logical_duration
+        self.properties = None
 
     def __bool__(self):
         return bool(self.subpatterns)
@@ -633,14 +635,45 @@ class Pattern(MusicBase, Transposable):
             result.append(subpattern.retime(subpattern.time + offset, subpattern.duration))
         return result
 
+    def ensure_duration(self):
+        if not self.logical_duration:
+            for subpattern in self.subpatterns:
+                subpattern.time = self.logical_duration
+                self.logical_duration += 1
+        if not self.duration:
+            self.duration = 1
+
     def flatten(self):
         if self.logical_duration == 0:
             dilation = Fraction(0)
         else:
             dilation = self.duration/self.logical_duration
         result = []
+        dynamic_f = None
+        articulation_f = None
+        if self.properties is not None:
+            self.properties.ensure_duration()
+            dynamic_ts = []
+            dynamic_ys = []
+            articulation_ts = []
+            articulation_ys = []
+            for event in self.properties.flatten():
+                if isinstance(event, Dynamic):
+                    dynamic_ts.append(float(event.time / self.properties.duration * self.logical_duration))
+                    dynamic_ys.append(float(event.velocity))
+                if isinstance(event, Articulation):
+                    articulation_ts.append(float(event.time / self.properties.duration * self.logical_duration))
+                    articulation_ys.append(float(event.gate_ratio))
+            if dynamic_ts:
+                dynamic_f = interp_lin_const(dynamic_ts, dynamic_ys)
+            if articulation_ts:
+                articulation_f = interp_lin_const(articulation_ts, articulation_ys)
         for subpattern in self.subpatterns:
             for event in subpattern.flatten():
+                if dynamic_f:
+                    event.velocity = dynamic_f(float(event.time))
+                if articulation_f:
+                    event.gate_ratio = articulation_f(float(event.time))
                 result.append(event.retime(
                     self.time + event.time*dilation,
                     event.duration*dilation
@@ -690,9 +723,11 @@ class Pattern(MusicBase, Transposable):
                 dynamic = event
             real_time, real_duration = tempo.to_real_time(event.time, event.duration)
             if isinstance(event, GatedEvent):
-                event.gate_ratio = articulation.gate_ratio
-                event.velocity = dynamic.velocity
-                _, real_gate_length = tempo.to_real_time(event.time, event.duration * articulation.gate_ratio)
+                if event.gate_ratio is None:
+                    event.gate_ratio = articulation.gate_ratio
+                if event.velocity is None:
+                    event.velocity = dynamic.velocity
+                _, real_gate_length = tempo.to_real_time(event.time, event.duration * event.gate_ratio)
                 if real_gate_length <= 0:
                     continue
                 event.real_gate_length = real_gate_length

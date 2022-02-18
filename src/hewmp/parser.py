@@ -637,6 +637,7 @@ def parse_track(lexer, default_config, max_repeats=None):
     repeat_mode = False
     pattern = Pattern()
     stack = []
+    owner_pattern = None
     transposed_pattern = None
     concatenated_pattern = None
     add_concatenated_durations = None
@@ -904,6 +905,15 @@ def parse_track(lexer, default_config, max_repeats=None):
             time_mode = True
         elif token == "]":
             raise ParsingError('Unmatched "]"')
+        elif token == "{":
+            if owner_pattern is not None:
+                raise ParsingError('Nested "{"')
+            owner_pattern = pattern
+            pattern = Pattern()
+        elif token == "}":
+            owner_pattern.last.properties = pattern
+            pattern = owner_pattern
+            owner_pattern = None
         elif token == "&":
             transposed_pattern = pattern.pop()
         elif token == "+":
@@ -938,16 +948,16 @@ def parse_track(lexer, default_config, max_repeats=None):
             pattern.append(Articulation(value, pattern.t))
         elif token[0] in ("p", "f") or token.startswith("mp") or token.startswith("mf"):
             dynamic_token = ""
-            while token[0] in ("p", "f"):
+            while token and token[0] in ("p", "f"):
                 dynamic_token += token[0]
                 token = token[1:]
-            if token[0] == "m":
+            if token and token[0] == "m":
                 dynamic_token = token[:2]
                 token = token[2:]
             if token:
                 value = Fraction(token)
             else:
-                value = DYNAMICS[token]
+                value = DYNAMICS[dynamic_token]
             pattern.append(Dynamic(value, pattern.t))
         elif token == "T":
             timestamp = pattern.t

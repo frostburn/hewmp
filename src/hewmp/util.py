@@ -1,5 +1,6 @@
 from collections import defaultdict
 import re
+from scipy.interpolate import interp1d
 
 
 class Splitter:
@@ -19,3 +20,7 @@ class Splitter:
 
     def __call__(self, text):
         return self.split(text)
+
+
+def interp_lin_const(xs, ys):
+    return interp1d(xs, ys, bounds_error=False, fill_value=(ys[0], ys[-1]))

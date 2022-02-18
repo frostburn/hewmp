@@ -930,9 +930,12 @@ def parse_track(lexer, default_config, max_repeats=None):
                     pattern.last.extend_duration(1)
         elif token == ",":
             pattern.t -= pattern.last.duration
-        elif token in ARTICULATIONS:
-            articulation = Articulation(ARTICULATIONS[token], pattern.t)
-            pattern.append(articulation)
+        elif token[0] in ARTICULATIONS:
+            if len(token) == 1:
+                value = ARTICULATIONS[token]
+            else:
+                value = Fraction(token[1:])
+            pattern.append(Articulation(value, pattern.t))
         elif token[0] in ("p", "f") or token.startswith("mp") or token.startswith("mf"):
             dynamic_token = ""
             while token[0] in ("p", "f"):
@@ -945,8 +948,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 value = Fraction(token)
             else:
                 value = DYNAMICS[token]
-            dynamic = Dynamic(value, pattern.t)
-            pattern.append(dynamic)
+            pattern.append(Dynamic(value, pattern.t))
         elif token == "T":
             timestamp = pattern.t
         elif token == "@T":
@@ -1151,12 +1153,12 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
         for symbol, value in ARTICULATIONS.items():
             if value == pattern.gate_ratio:
                 return symbol
-        raise ValueError("Innotable articulation")
+        return "'{}".format(pattern.gate_ratio)
     if isinstance(pattern, Dynamic):
         for symbol, value in DYNAMICS.items():
             if value == pattern.velocity:
                 return symbol
-        raise ValueError("Innotable dynamic")
+        return "f{}".format(pattern.velocity)
     if pattern.duration == 0:
         return ""
     suffix = ""

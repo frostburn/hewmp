@@ -961,6 +961,17 @@ def test_literal_dynamics():
     assert not velocities
 
 
+def test_literal_gate_ratio():
+    text = "'.1 P1 ;2/3 P1 _1 P1"
+    notes = get_real_notes(text)
+    gate_lengths = [Fraction(1, 10), Fraction(2, 3), Fraction(1)]
+    for note in notes:
+        g = gate_lengths.pop(0)
+        assert isclose(note.real_gate_length, note.real_duration * g)
+        assert note.gate_ratio == g
+    assert not gate_lengths
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1039,3 +1050,4 @@ if __name__ == '__main__':
     test_lambda_ji()
     test_set_base_note()
     test_literal_dynamics()
+    test_literal_gate_ratio()

@@ -660,6 +660,16 @@ ffff1
 ```
 ## Articulation
 To change the gate length of notes played use articulations `'` (staccato), `;` (normale) or `_` (tenuto).
+```
+' P1 P5  $ Two notes played for 50% of their nominal duration
+```
+You can manually specify the gate ratio after the articulation, but here are the defaults.
+```
+'.5
+;.9
+_1
+```
+Warning: `;` and `_` can look like utonal chords or chord inversions so the best practice is to only use `'` with literal gate ratios.
 ## User Messages
 You can add custom messages to the JSON output by using double quotes `"`.
 ```

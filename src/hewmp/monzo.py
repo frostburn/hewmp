@@ -124,6 +124,8 @@ class Pitch:
     def __init__(self, monzo=None, frequency_offset=0, phase=0):
         if monzo is None:
             monzo = SemiMonzo()
+        elif not isinstance(monzo, SemiMonzo):
+            monzo = SemiMonzo(monzo)
         self.monzo = monzo
         self.frequency_offset = frequency_offset
         self.phase = phase
@@ -155,6 +157,8 @@ class Interval:
     def __init__(self, monzo=None, frequency_delta=0, phase_delta=0):
         if monzo is None:
             monzo = SemiMonzo()
+        elif not isinstance(monzo, SemiMonzo):
+            monzo = SemiMonzo(monzo)
         self.monzo = monzo
         self.frequency_delta = frequency_delta
         self.phase_delta = phase_delta

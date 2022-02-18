@@ -274,7 +274,7 @@ class IntervalParser:
         self.et_divisions = et_divisions
         self.et_divided = et_divided
         self.warts = warts
-        self.base_pitch = SemiInterval()
+        self.offset = SemiInterval()
         self.comma_list = None
         self.persistence = 5
         self.up_down_inflection = SemiInterval()
@@ -307,16 +307,14 @@ class IntervalParser:
         else:
             self.up_down_inflection = SemiInterval(et_to_semimonzo(1, self.et_divisions, self.et_divided))
 
-    def set_base_pitch(self, token):
+    def set_base_pitch(self, token, notation="hewmp"):
         if token[0] in PITCH_LETTERS:
-            pitch = parse_pitch(token)
-            pitch.inflections = self.inflections
-            self.base_pitch = pitch.monzo()
+            pitch = parse_pitch(token, self.inflections[notation], self.pitch_spines[notation])
+            self.offset = SemiInterval(-pitch.monzo())
         else:
             color = parse_color_interval(token)
-            color_monzo = color.monzo()
             if color.absolute:
-                self.base_pitch = color_monzo
+                self.offset = SemiInterval(-color.monzo())
             else:
                 raise ParsingError("Unrecognized absolute pitch {}".format(token))
 
@@ -408,11 +406,11 @@ class IntervalParser:
                 raise ParsingError("Signed absolute pitch")
             pitch = parse_pitch(token, self.inflections[notation], self.pitch_spines[notation])
             result.base = pitch
-            result.offset = -self.base_pitch
+            result.offset = self.offset
         else:
             color = parse_color_interval(token)
             if color.absolute:
-                result.offset = -self.base_pitch
+                result.offset = self.offset
             result.base = color
 
         return result
@@ -674,7 +672,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 config["tuning"].base_frequency = float(token)
             if config_key == "BN":
                 for subtoken in token.split(","):
-                    interval_parser.set_base_pitch(subtoken.strip())
+                    interval_parser.set_base_pitch(subtoken.strip(), current_notation)
             if config_key == "T":
                 tuning_name = token.strip()
                 if tuning_name in TEMPERAMENTS:

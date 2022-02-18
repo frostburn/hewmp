@@ -942,6 +942,16 @@ def test_lambda_ji():
         assert notes[i].pitch == notes[i+14].pitch
 
 
+def test_set_base_note():
+    text = "BN:C4\nC4 D4"
+    notes = get_notes(text)
+    expect_pitches(notes, [[0], [-3, 2]])
+
+    text = "BN:yC4\nyC4 yD4"
+    notes = get_notes(text)
+    expect_pitches(notes, [[0], [-3, 2]])
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1018,3 +1028,4 @@ if __name__ == '__main__':
     test_runic_basic_chords()
     test_lambda_bp()
     test_lambda_ji()
+    test_set_base_note()

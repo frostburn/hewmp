@@ -952,6 +952,15 @@ def test_set_base_note():
     expect_pitches(notes, [[0], [-3, 2]])
 
 
+def test_literal_dynamics():
+    text = "p.1 P1 mp.4 P1 mf2/3 P1 f1 P1"
+    notes = get_real_notes(text)
+    velocities = [Fraction(1, 10), Fraction(4, 10), Fraction(2, 3), Fraction(1)]
+    for note in notes:
+        assert note.velocity == velocities.pop(0)
+    assert not velocities
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1029,3 +1038,4 @@ if __name__ == '__main__':
     test_lambda_bp()
     test_lambda_ji()
     test_set_base_note()
+    test_literal_dynamics()

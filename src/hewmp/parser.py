@@ -933,8 +933,19 @@ def parse_track(lexer, default_config, max_repeats=None):
         elif token in ARTICULATIONS:
             articulation = Articulation(ARTICULATIONS[token], pattern.t)
             pattern.append(articulation)
-        elif token in DYNAMICS:
-            dynamic = Dynamic(DYNAMICS[token], pattern.t)
+        elif token[0] in ("p", "f") or token.startswith("mp") or token.startswith("mf"):
+            dynamic_token = ""
+            while token[0] in ("p", "f"):
+                dynamic_token += token[0]
+                token = token[1:]
+            if token[0] == "m":
+                dynamic_token = token[:2]
+                token = token[2:]
+            if token:
+                value = Fraction(token)
+            else:
+                value = DYNAMICS[token]
+            dynamic = Dynamic(value, pattern.t)
             pattern.append(dynamic)
         elif token == "T":
             timestamp = pattern.t

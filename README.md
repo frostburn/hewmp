@@ -641,7 +641,23 @@ Sometimes the algorithm fails to find the simplest representation. You can incre
 CRD:6
 ```
 ## Dynamics
-To change the velocity of notes played use dynamics `ppp`, `pp`, `p`, `mp`, `mf`, `f`, `ff` or `fff`.
+To change the velocity of notes played use dynamics `pppp`, `ppp`, `pp`, `p`, `mp`, `mf`, `f`, `ff`, `fff` or `ffff`.
+```
+pp P1 P5  $ Two notes played at 25% of maximum velocity
+```
+You can manually specify the fraction of maximum velocity after the dynamic, but here are the defaults.
+```
+pppp1/16
+ppp1/8
+pp.25
+p1/3
+mp.5
+mf2/3
+f.75
+ff7/8
+fff.9
+ffff1
+```
 ## Articulation
 To change the gate length of notes played use articulations `'` (staccato), `;` (normale) or `_` (tenuto).
 ## User Messages

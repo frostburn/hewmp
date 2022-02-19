@@ -91,8 +91,8 @@ def test_transposition():
 
 
 def test_transposition_persistence():
-    pattern_a = parse_text("M2&M2 M2&M2")[0][0]
-    pattern_b = parse_text("M3 M3")[0][0]
+    pattern_a = parse_text("~M2&~M2 ~M2&~M2")[0][0]
+    pattern_b = parse_text("~M3 ~M3")[0][0]
 
     for event in pattern_a:
         if isinstance(event, Note):
@@ -996,6 +996,24 @@ def test_property_zero_duration():
     assert notes[0].velocity < notes[-1].velocity
 
 
+def test_beyond_prime_limit():
+    text = "131/128"
+    notes = get_real_notes(text)
+    assert notes[0].pitch.monzo.vector[0] == -7
+    assert notes[0].pitch.monzo.residual == 131
+    assert notes[0].real_frequency == 440 * 131/128
+
+
+def test_cents():
+    text = "A4 A#4 @100c"
+    notes = get_real_notes(text)
+    pitches = [[0], [-11, 7], [0]]
+    expect_pitches(notes, pitches)
+    freqs = [[440], [440*3**7/2**11], [440*2**(1/12)]]
+    for freq, note in zip(freqs, notes):
+        assert isclose(note.real_frequency, freq)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1077,3 +1095,5 @@ if __name__ == '__main__':
     test_literal_gate_ratio()
     test_pattern_accelerando_diminuendo()
     test_property_zero_duration()
+    test_beyond_prime_limit()
+    test_cents()

@@ -380,7 +380,7 @@ class IntervalParser:
         if token[0].isdigit() and not is_colored:
             interval = SemiInterval()
             if token.endswith("c"):
-                interval.nats = float(token[:-1])/1200*log(2)
+                interval.monzo.nats = float(token[:-1])/1200*log(2)
             elif token.endswith("Hz"):
                 interval.frequency_delta = float(token[:-2])
             elif token.endswith("deg"):

@@ -205,6 +205,7 @@ if __name__ == "__main__":
     from numpy import log, exp
     from .monzo import fraction_to_monzo, PRIMES
     from .event import DEFAULT_METRIC
+    from .temperaments import TEMPERAMENTS
 
     parser = argparse.ArgumentParser(description='Display the mapping for the given comma list')
     parser.add_argument('commas', nargs="+", type=str)
@@ -212,31 +213,38 @@ if __name__ == "__main__":
     parser.add_argument('--subgroup', type=str)
     args = parser.parse_args()
 
+    if args.commas[0] in TEMPERAMENTS:
+        commas, subgroup = TEMPERAMENTS[args.commas[0]]
+        print(commas, subgroup)
+    else:
+        commas, subgroup = args.commas, args.subgroup
+
+
     comma_list = []
-    for comma in args.commas:
+    for comma in commas:
         monzo, unrepresentable = fraction_to_monzo(comma)
         if unrepresentable != 1:
             raise ValueError("Comma beyond supported {} limit".format(PRIMES[-1]))
         comma_list.append(monzo)
+    if subgroup:
+        basis_vectors = []
+        for basis in subgroup.split("."):
+            monzo, unrepresentable = fraction_to_monzo(basis)
+            if unrepresentable != 1:
+                raise ValueError("Subgroup beyond supported {} limit".format(PRIMES[-1]))
+            basis_vectors.append(monzo)
+    else:
+        basis_vectors = infer_subgroup(comma_list)
     constraints = []
     for constraint in args.constraints or []:
         monzo, unrepresentable = fraction_to_monzo(constraint)
         if unrepresentable != 1:
             raise ValueError("Constraint beyond supported {} limit".format(PRIMES[-1]))
         constraints.append(monzo)
-    if args.subgroup:
-        subgroup = []
-        for basis in args.subgroup.spit("."):
-            monzo, unrepresentable = fraction_to_monzo(basis)
-            if unrepresentable != 1:
-                raise ValueError("Subgroup beyond supported {} limit".format(PRIMES[-1]))
-            subgroup.append(monzo)
-    else:
-        subgroup = infer_subgroup(comma_list)
 
     JI = log(array(PRIMES))
 
-    mapping = temper_subgroup(JI, comma_list, constraints, subgroup, metric=DEFAULT_METRIC)
+    mapping = temper_subgroup(JI, comma_list, constraints, basis_vectors, metric=DEFAULT_METRIC)
 
     for m, p in zip(mapping, PRIMES):
         if not isclose(m, log(p)):

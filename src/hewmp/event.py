@@ -671,9 +671,9 @@ class Pattern(MusicBase, Transposable):
         for subpattern in self.subpatterns:
             for event in subpattern.flatten():
                 if dynamic_f:
-                    event.velocity = dynamic_f(float(event.time))
+                    event.velocity = float(dynamic_f(float(event.time)))
                 if articulation_f:
-                    event.gate_ratio = articulation_f(float(event.time))
+                    event.gate_ratio = float(articulation_f(float(event.time)))
                 result.append(event.retime(
                     self.time + event.time*dilation,
                     event.duration*dilation

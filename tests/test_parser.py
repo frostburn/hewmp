@@ -413,7 +413,7 @@ def test_euclidean_rhythm():
     assert notes[0].time == 0
     assert notes[1].time == 2
 
-    text = "(P1 P8)[1E5 ~]"
+    text = "(P1 P8)[2E5 ~]"
     notes = get_notes(text)
     assert notes[0].time == 0
     assert notes[1].time == 3

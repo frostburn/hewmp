@@ -815,7 +815,8 @@ def parse_track(lexer, default_config, max_repeats=None):
                         num_beats = int(token[token.index("E")+1:])
                         rhythm = euclidean_rhythm(num_onsets, num_beats)
                         if rotation_token:
-                            rhythm = rotate_sequence(rhythm, int(rotation_token))
+                            for _ in range(int(rotation_token)):
+                                rhythm = rotate_sequence(rhythm)
                         times_durations = sequence_to_time_duration(rhythm)
                     elif "PG" in token:
                         period_token = token[token.index("G")+1:]

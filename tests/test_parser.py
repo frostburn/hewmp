@@ -1014,6 +1014,16 @@ def test_cents():
         assert isclose(note.real_frequency, freq)
 
 
+def test_freq_from_zero():
+    text = "440Hz 0&123Hz @0[0] 4Hz P8 @P1"
+    notes = get_real_notes(text)
+    assert isclose(notes[0].real_frequency, 880)
+    assert isclose(notes[1].real_frequency, 123)
+    assert isclose(notes[2].real_frequency, 4)
+    assert isclose(notes[3].real_frequency, 0)
+    assert isclose(notes[4].real_frequency, 440)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1097,3 +1107,4 @@ if __name__ == '__main__':
     test_property_zero_duration()
     test_beyond_prime_limit()
     test_cents()
+    test_freq_from_zero()

@@ -31,7 +31,11 @@ class SemiMonzo:
         if isinstance(value, Fraction):
             if residual is not None:
                 raise ValueError("Residual already given when converting fraction to monzo")
-            value, residual = fraction_to_monzo(value)
+            if value == 0:
+                value = None
+                residual = Fraction(0)
+            else:
+                value, residual = fraction_to_monzo(value)
         if residual is None:
             residual = Fraction(1)
         if nats is None:
@@ -48,6 +52,8 @@ class SemiMonzo:
 
     @property
     def total_nats(self):
+        if self.residual == 0:
+            return float("-inf")
         return log(float(self.residual)) + self.nats
 
     def __neg__(self):

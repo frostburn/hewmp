@@ -694,11 +694,14 @@ Beating of similarly tuned notes is a musical phenomenon that is often perceived
 ```
 1,1 . 1,1Hz . 1,2Hz  $ Three unisons with different amounts of beating
 ```
-
 ## Transposing
 To combine two intervals use the `&` symbol. This is mainly useful for specifying `Hz` offset alongside a pitch.
 ```
 1/1 3/2&1Hz
+```
+Transposing also allows you to enter absolute frequencies.
+```
+0&123Hz
 ```
 
 ## EDN Steps

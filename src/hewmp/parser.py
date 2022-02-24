@@ -1100,6 +1100,13 @@ def parse_text(text, max_repeats=None):
     return parse_file(StringIO(text), max_repeats=max_repeats)
 
 
+def realize(patterns):
+    result = []
+    for pattern, (start_time, end_time) in zip(patterns, sync_playheads(patterns)):
+        result.append(pattern.realize(start_time=start_time, end_time=end_time))
+    return result
+
+
 def simplify_tracks(data):
     used = array([False] * len(PRIMES))
 
@@ -1125,6 +1132,32 @@ def simplify_tracks(data):
 
             if event["type"] == "tuning":
                 event["suggestedMapping"] = simplify(event["suggestedMapping"])
+
+
+def prune(patterns):
+    result = []
+    for pattern in realize(patterns):
+        track = []
+        for event in pattern.to_json()["events"]:
+            if event["type"] == "note":
+                track.append({
+                    "type": "n",
+                    "t": event["realTime"],
+                    "d": event["realGateLength"],
+                    "v": float(Fraction(event["velocity"])),
+                    "f": event["realFrequency"],
+                    "p": event["phase"],
+                })
+            if event["type"] == "percussion":
+                track.append({
+                    "type": "p",
+                    "t": event["realTime"],
+                    "d": event["realGateLength"],
+                    "v": float(Fraction(event["velocity"])),
+                    "i": event["index"],
+                })
+        result.append(track)
+    return result
 
 
 def _tokenize_fractions_chord(pattern):
@@ -1283,14 +1316,14 @@ def tracks_to_midi(tracks, freq_to_midi=freq_to_midi_12, reserve_channel_10=True
     """
     midi = mido.MidiFile()
     channel_offset = 0
-    for pattern, (start_time, end_time) in zip(tracks, sync_playheads(tracks)):
+    for pattern in realize(tracks):
         max_polyphony = getattr(pattern, "max_polyphony", 15)
         if pattern.duration <= 0:
             continue
         track = mido.MidiTrack()
         midi.tracks.append(track)
 
-        data = pattern.realize(start_time=start_time, end_time=end_time).to_json()
+        data = pattern.to_json()
         events = []
         time_offset = 0
         for event in data["events"]:
@@ -1461,8 +1494,8 @@ if __name__ == "__main__":
         result = {
             "tracks": [],
         }
-        for pattern, (start_time, end_time) in zip(patterns, sync_playheads(patterns)):
-            result["tracks"].append(pattern.realize(start_time, end_time).to_json())
+        for pattern in realize(patterns):
+            result["tracks"].append(pattern.to_json())
         if args.simplify:
             simplify_tracks(result)
         json.dump(result, args.outfile)

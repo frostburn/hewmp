@@ -437,7 +437,7 @@ class Note(GatedEvent, Transposable):
             "frequencyOffset": self.pitch.frequency_offset,
             "phase": self.pitch.phase * 360 / (2*pi),
             "velocity": str(self.velocity),
-            "gate_ratio": str(self.gate_ratio),
+            "gateRatio": str(self.gate_ratio),
             "realFrequency": self.real_frequency,
         })
         return result
@@ -466,8 +466,8 @@ class Percussion(GatedEvent):
             "type": "percussion",
             "name": self.name,
             "index": self.index,
-            "velocity": self.velocity,
-            "gate_ratio": self.gate_ratio,
+            "velocity": str(self.velocity),
+            "gateRatio": str(self.gate_ratio),
         })
         return result
 

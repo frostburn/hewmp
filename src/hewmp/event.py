@@ -395,6 +395,43 @@ class ProgramChange(Event):
         return result
 
 
+class Waveform(Event):
+    def __init__(self, name, time, duration=0, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
+        self.name = name
+
+    def retime(self, time, duration):
+        return self.__class__(self.name, time, duration)
+
+    def to_json(self):
+        result = super().to_json()
+        result["type"] = "waveform"
+        result["name"] = self.name
+        return result
+
+
+class Envelope(Event):
+    def __init__(self, attackDuration, decayDuration, sustainLevel, releaseDuration, time, duration=0, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
+        self.attackDuration = attackDuration
+        self.decayDuration = decayDuration
+        self.sustainLevel = sustainLevel
+        self.releaseDuration = releaseDuration
+
+    def retime(self, time, duration):
+        return self.__class__(self.attackDuration, self.decayDuration, self.sustainLevel, self.releaseDuration, time, duration)
+
+    def to_json(self):
+        result = super().to_json()
+        result["type"] = "envelope"
+        result["subtype"] = "ADSR"
+        result["attack"] = str(self.attackDuration)
+        result["decay"] = str(self.decayDuration)
+        result["sustain"] = str(self.sustainLevel)
+        result["release"] = str(self.releaseDuration)
+        return result
+
+
 class Transposable:
     def transpose(self, interval):
         raise ValueError("Sub-classes should implement transposing")
@@ -711,6 +748,8 @@ class Pattern(MusicBase, Transposable):
             ProgramChange: None,
             TrackVolume: None,
             ContextChange: None,
+            Waveform: None,
+            Envelope: None,
         }
         if start_time is not None:
             start_real_time, _ = tempo.to_real_time(start_time, 0)

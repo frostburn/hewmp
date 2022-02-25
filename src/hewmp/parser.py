@@ -741,6 +741,18 @@ def parse_track(lexer, default_config, max_repeats=None):
                 program_change = ProgramChange(name, program, pattern.t)
                 pattern.append(program_change)
                 config[config_key] = name
+            if config_key == "WF":
+                name = token.strip()
+                pattern.append(Waveform(name, pattern.t))
+                config[config_key] = name
+            if config_key == "ADSR":
+                a, d, s, r = token.split(" ")
+                a = Fraction(a)/1000
+                d = Fraction(d)/1000
+                s = Fraction(s)/100
+                r = Fraction(r)/1000
+                pattern.append(Envelope(a, d, s, r, pattern.t))
+                config[config_key] = (a, d, s, r)
             if config_key == "MP":
                 max_polyphony = int(token)
             if config_key == "F":
@@ -1137,10 +1149,12 @@ def simplify_tracks(data):
 def prune(patterns):
     result = []
     for pattern in realize(patterns):
-        track = []
+        events = []
+        trackVolume = 1.0
+        waveform = None
         for event in pattern.to_json()["events"]:
             if event["type"] == "note":
-                track.append({
+                events.append({
                     "type": "n",
                     "t": event["realTime"],
                     "d": event["realGateLength"],
@@ -1149,14 +1163,32 @@ def prune(patterns):
                     "p": event["phase"],
                 })
             if event["type"] == "percussion":
-                track.append({
+                events.append({
                     "type": "p",
                     "t": event["realTime"],
                     "d": event["realGateLength"],
                     "v": float(Fraction(event["velocity"])),
                     "i": event["index"],
                 })
-        result.append(track)
+            if event["type"] == "trackVolume":
+                trackVolume = float(Fraction(event["volume"]));
+            if event["type"] == "waveform":
+                waveform = event["name"]
+            if event["type"] == "envelope":
+                events.append({
+                    "type": "envelope",
+                    "t": event["realTime"],
+                    "attack": float(Fraction(event["attack"])),
+                    "decay": float(Fraction(event["decay"])),
+                    "sustain": float(Fraction(event["sustain"])),
+                    "release": float(Fraction(event["release"])),
+                })
+        result.append({
+            "events": events,
+            "maxPolyphony": getattr(pattern, "max_polyphony", 15),
+            "volume": trackVolume,
+            "waveform": waveform,
+        })
     return result
 
 
@@ -1217,7 +1249,10 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
     if isinstance(pattern, Pattern):
         pattern.simplify()
         if pattern.is_chord():
-            return _tokenize_chord(pattern) + suffix
+            try:
+                return _tokenize_chord(pattern) + suffix
+            except ValueError:
+                pass
         subnotations = []
         previous_time = None
         local_time = Fraction(0)

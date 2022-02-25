@@ -14,7 +14,7 @@ TRACK_START = "---"
 
 CONFIGS = [
     "BF:",  # Frequency of base note and @P1
-    "BN:",  # Base note, default a4 and J4
+    "BN:",  # Base note, default A4
     "T:",  # Temperament
     "ET:",  # Equal temperament
     "CL:",  # Comma-list
@@ -27,6 +27,8 @@ CONFIGS = [
     "V:",  # Volume
     "N:",  # Notation
     "I:",  # Instrument (Program Change)
+    "WF:",  # Waveform (WebAudio OscillatorNode.type)
+    "ADSR:",  # Envelope (WebAudio)
     "MP:",  # Max polyphony
     "F:",  # Flags
 ]

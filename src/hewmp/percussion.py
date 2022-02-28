@@ -31,7 +31,7 @@ PERCUSSION_SHORTHANDS = {
     "rb": (53, "Ride Bell"),
     "d": (53, "Ride Bell"),
     "tr": (54, "Tambourine"),
-    "j": (54, "Tambourine"),
+    "E": (54, "Tambourine"),
     "sc": (55, "Splash Cymbal"),
     "Y": (55, "Splash Cymbal"),
     "cb": (56, "Cowbell"),
@@ -75,6 +75,33 @@ PERCUSSION_SHORTHANDS = {
     "n": (80, "Mute Triangle"),
     "ot": (81, "Open Triangle"),
     "N": (81, "Open Triangle"),
+    # Roland GS
+    "F": (27, "Filter Snap"),
+    "sn": (28, "Slap Noise"),
+    "O": (28, "Slap Noise"),
+    "s1": (29, "Scratch Push"),
+    "9": (29, "Scratch Push"),
+    "s0": (30, "Scratch Pull"),
+    "8": (30, "Scratch Pull"),
+    "ds": (31, "Drum Sticks"),
+    "D": (31, "Drum Sticks"),
+    "sq": (32, "Square Click"),
+    "P": (32, "Square Click"),
+    "MC": (33, "Metronome Click"),
+    "t": (33, "Metronome Click"),
+    "MB": (34, "Metronome Bell"),
+    "#": (34, "Metronome Bell"),
+    "sh": (82, "Shaker"),
+    "*": (82, "Shaker"),
+    "j": (83, "Jingle Bell"),
+    "bt": (84, "Belltree"),
+    "J": (84, "Belltree"),
+    "CS": (85, "Castanets"),
+    "V": (85, "Castanets"),
+    "S1": (86, "Mute Surdo"),
+    "7": (86, "Mute Surdo"),
+    "S0": (87, "Open Surdo"),
+    "6": (87, "Open Surdo"),
 }
 
 
@@ -84,7 +111,7 @@ if __name__ == "__main__":
         if len(key) == 1:
             by_index[index] = key
 
-    for i in range(35, 82):
+    for i in range(27, 88):
         if i not in by_index:
             print(i, "missing")
 

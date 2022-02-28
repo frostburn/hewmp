@@ -23,7 +23,7 @@
 | d | Ride Bell | 53 |
 | y | Chinese Cymbal | 52 |
 | Y | Splash Cymbal | 55 |
-| j | Tambourine | 54 |
+| E | Tambourine | 54 |
 | e | Cowbell | 56 |
 | v | Vibraslap | 58 |
 | B | High Bongo | 60 |
@@ -47,6 +47,22 @@
 | U | Open Cuica | 79 |
 | n | Mute Triangle | 80 |
 | N | Open Triangle | 81 |
+||
+| F | Filter Snap | 27 |
+| O | Slap Noise  | 28 |
+| 9 | Scratch Push | 29 |
+| 8 | Scratch Pull | 30 |
+| D | Drum Sticks | 31 |
+| P | Square Click | 32 |
+| t | Metronome Click | 33 |
+| # | Metronome Bell | 34 |
+| * | Shaker | 82 |
+| j | Jingle Bell | 83 |
+| J | Belltree | 84 |
+| V | Castanets | 85 |
+| 7 | Mute Surdo | 86 |
+| 6 | Open Surdo | 87 |
+
 
 ## Longer Forms
 | shorthand | name | index |
@@ -78,3 +94,16 @@
 | oc | Open Cuica | 79 |
 | mt | Mute Triangle | 80 |
 | ot | Open Triangle | 81 |
+||
+| sn | Slap Noise | 28 |
+| s1 | Scratch Push | 29 |
+| s0 | Scratch Pull | 30 |
+| ds | Drum Sticks | 31 |
+| sq | Square Click | 32 |
+| MC | Metronome Click | 33 |
+| MB | Metronome Bell | 34 |
+| sh | Shaker | 82 |
+| bt | Belltree | 84 |
+| CS | Castanets | 85 |
+| S1 | Mute Surdo | 86 |
+| S0 | Open Surdo | 87 |

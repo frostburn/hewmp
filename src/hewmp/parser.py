@@ -976,6 +976,8 @@ def parse_track(lexer, default_config, max_repeats=None):
             timestamp = pattern.t
         elif token == "@T":
             pattern.t = timestamp
+        elif token.startswith("@T"):
+            pattern.t = parse_time(token[2:])
         elif token == "\n":
             pattern.append(NewLine(token, pattern.t))
         elif token == "|":

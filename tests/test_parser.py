@@ -1024,6 +1024,24 @@ def test_freq_from_zero():
     assert isclose(notes[4].real_frequency, 440)
 
 
+def test_timestamp():
+    text = "P1 T ~P8 ~P8 @T ~P8"
+    notes = get_notes(text)
+    times = [0, 1, 2, 1]
+    for i, (time, note) in enumerate(zip(times, notes)):
+        assert note.pitch.monzo.vector[0] == i
+        assert time == note.time
+
+
+def test_timejump():
+    text = "P1 @T9 ~P8 @T6*5/7 ~P8"
+    notes = get_notes(text)
+    times = [0, 9, Fraction(30, 7)]
+    for i, (time, note) in enumerate(zip(times, notes)):
+        assert note.pitch.monzo.vector[0] == i
+        assert time == note.time
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1108,3 +1126,5 @@ if __name__ == '__main__':
     test_beyond_prime_limit()
     test_cents()
     test_freq_from_zero()
+    test_timestamp()
+    test_timejump()

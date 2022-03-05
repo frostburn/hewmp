@@ -34,11 +34,11 @@ class Letter(Enum):
     # L reserved: Large
     # M reserved: Major
     # N reserved: Neutral
-    # O is available
+    O = "O"
     # P reserved: Perfect
-    # Q is available
-    # R is available
-    # S is available
+    Q = "Q"
+    R = "R"
+    S = "S"
 
 
 BASIC_PITCHES = {

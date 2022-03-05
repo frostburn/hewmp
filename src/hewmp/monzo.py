@@ -116,6 +116,12 @@ class SemiMonzo:
     def float_vector(self):
         return array([float(component) for component in self.vector])
 
+    def fraction(self):
+        result = self.residual
+        for prime, component in zip(PRIMES, self.vector):
+            result *= Fraction(prime) ** component
+        return result
+
 
 def et_to_semimonzo(num_steps, et_divisions, et_divided):
     num_steps = Fraction(num_steps)
@@ -205,12 +211,24 @@ class Interval:
 
 
 class Mapping:
-    def __init__(self, vector, base_frequency):
+    def __init__(self, vector, base_frequency=None):
         self.vector = vector
         self.base_frequency = base_frequency
 
     def __call__(self, pitch):
+        if self.base_frequency is None:
+            raise ValueError("Base frequency not set")
         if not isinstance(pitch, Pitch):
             raise TypeError("Only pitches can be mapped to frequency")
         nats = dot(self.vector, pitch.monzo.vector) + pitch.monzo.total_nats
         return self.base_frequency * exp(nats) + pitch.frequency_offset
+
+    def itor(self, interval):
+        return exp(self.nats(interval))
+
+    def nats(self, interval):
+        if not isinstance(interval, Interval):
+            raise TypeError("Only intervals can be converted")
+        if interval.frequency_delta:
+            raise ValueError("Non-zero frequency delta")
+        return dot(self.vector, interval.monzo.vector) + interval.monzo.total_nats

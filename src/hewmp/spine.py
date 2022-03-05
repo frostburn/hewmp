@@ -201,6 +201,7 @@ if __name__ == '__main__':
     parser.add_argument('--up', type=int)
     parser.add_argument('--octave', type=int, default=5)
     parser.add_argument('--base-frequency', type=float, default=440.0)
+    parser.add_argument('--verbose', action='store_true')
     args = parser.parse_args()
 
     interval_parser = IntervalParser()
@@ -212,12 +213,22 @@ if __name__ == '__main__':
 
     intervalCls, pitchCls, inflections = erect_spine(period, generator, cardinality, up=args.up, reference_octave=args.octave)
 
+    mstr = lambda interval: " ".join([str(c) for c in interval.monzo()])
+
+    def print_intervals(intervals):
+        for cents, interval in intervals:
+            print("{} {}{}".format(cents, interval.quality.value, interval.interval_class))
+            if args.verbose:
+                print(mstr(interval))
+
     print("Basic pitches")
     for letter in list(Letter)[:cardinality]:
         octave = 5
         pitch = pitchCls(letter, 0, octave)
         frequency = JI(Pitch(pitch.monzo()))
         print("{}Hz {}{}".format(frequency, letter.value, octave))
+        if args.verbose:
+            print(mstr(pitch))
 
     intervals = []
     for quality in [Quality("P"), Quality("m"), Quality("M")]:
@@ -230,8 +241,7 @@ if __name__ == '__main__':
                 pass
     intervals.sort()
     print("Basic intervals")
-    for cents, interval in intervals:
-        print("{} {}{}".format(cents, interval.quality.value, interval.interval_class))
+    print_intervals(intervals)
 
     intervals = []
     for quality in [Quality("a"), Quality("d")]:
@@ -241,8 +251,7 @@ if __name__ == '__main__':
             intervals.append((cents, interval))
     intervals.sort()
     print("Augmented intervals")
-    for cents, interval in intervals:
-        print("{} {}{}".format(cents, interval.quality.value, interval.interval_class))
+    print_intervals(intervals)
 
     intervals = []
     for interval_class in range(1, 1 + cardinality):
@@ -254,8 +263,7 @@ if __name__ == '__main__':
             pass
     intervals.sort()
     print("Neutral intervals")
-    for cents, interval in intervals:
-        print("{} {}{}".format(cents, interval.quality.value, interval.interval_class))
+    print_intervals(intervals)
 
     intervals = []
     for quality in [Quality("ha"), Quality("hd")]:
@@ -265,8 +273,7 @@ if __name__ == '__main__':
             intervals.append((cents, interval))
     intervals.sort()
     print("Half-augmented intervals")
-    for cents, interval in intervals:
-        print("{} {}{}".format(cents, interval.quality.value, interval.interval_class))
+    print_intervals(intervals)
 
     print("Inflections")
     inflections = calculate_inflections(period, generator, cardinality)

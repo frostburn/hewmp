@@ -30,6 +30,7 @@ CONFIGS = [
     "WF:",  # Waveform (WebAudio OscillatorNode.type)
     "ADSR:",  # Envelope (WebAudio)
     "MP:",  # Max polyphony
+    "S:",  # Spine
     "F:",  # Flags
 ]
 

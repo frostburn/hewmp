@@ -1,5 +1,6 @@
+from fractions import Fraction
 from numpy import log, isclose
-from .monzo import PRIMES, Mapping, Pitch, Interval
+from .monzo import PRIMES, Mapping, Pitch, Interval, SemiMonzo
 from .pythagoras import Letter, Quality
 from .pythagoras import Interval as PythInterval
 from .pythagoras import Pitch as PythPitch
@@ -191,8 +192,6 @@ def erect_spine(period, generator, cardinality, up=None, reference_octave=5):
 if __name__ == '__main__':
     import argparse
     from .parser import IntervalParser
-    from .monzo import SemiMonzo
-    from fractions import Fraction
 
     parser = argparse.ArgumentParser(description='Display information about the given spine')
     parser.add_argument('period', type=str)

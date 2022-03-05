@@ -912,13 +912,13 @@ def test_breed_accuracy():
     assert max_error/log(2)*1200 < 0.25
 
 
-def test_runic_basic_chords():
-    text = "=Mr+"
+def test_runic():
+    text = "S:4 5 6\nP1 a2+ M3+"
     notes = get_notes(text)
     pitches = [[0], [2, -1], [0, -1, 1]]
     expect_pitches(notes, pitches)
 
-    text = "=mr+"
+    text = "S:4 5 6\nP1 P2 M3+"
     notes = get_notes(text)
     pitches = [[0], [-2, 0, 1], [0, -1, 1]]
     expect_pitches(notes, pitches)
@@ -1115,7 +1115,7 @@ if __name__ == '__main__':
     test_neutral_orgone()
     test_preed_harmonic_chord()
     test_breed_accuracy()
-    test_runic_basic_chords()
+    test_runic()
     test_lambda_bp()
     test_lambda_ji()
     test_set_base_note()

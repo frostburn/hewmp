@@ -28,9 +28,9 @@ from .arrow import SignedArrow, SIGN_BY_ARROW
 from . import orgone
 from . import semaphore
 from . import preed
-from . import runic
 from . import lambda_bp
 from .temperament import infer_subgroup
+from .spine import erect_spine
 
 
 DEFAULT_INFLECTIONS = {
@@ -267,8 +267,8 @@ class IntervalParser:
                 "orgone": orgone.INFLECTIONS,
                 "semaphore": semaphore.INFLECTIONS,
                 "preed": preed.INFLECTIONS,
-                "runic": runic.INFLECTIONS,
                 "lambda": lambda_bp.INFLECTIONS,
+                "_custom": None,
             }
         self.inflections = inflections
         self.et_divisions = et_divisions
@@ -285,8 +285,8 @@ class IntervalParser:
         "orgone": orgone.Interval.parse,
         "semaphore": semaphore.Interval.parse,
         "preed": preed.Interval.parse,
-        "runic": runic.Interval.parse,
         "lambda": lambda_bp.Interval.parse,
+        "_custom": None,
     }
 
     pitch_spines = {
@@ -294,8 +294,8 @@ class IntervalParser:
         "orgone": orgone.Pitch.parse,
         "semaphore": semaphore.Pitch.parse,
         "preed": preed.Pitch.parse,
-        "runic": runic.Pitch.parse,
         "lambda": lambda_bp.Pitch.parse,
+        "_custom": None,
     }
 
     def calculate_up_down(self):
@@ -496,9 +496,6 @@ def parse_chord(token, transposition, interval_parser):
         elif token in preed.EXTRA_CHORDS:
             subtokens = preed.EXTRA_CHORDS[token]
             notation = "preed"
-        elif token in runic.EXTRA_CHORDS:
-            subtokens = runic.EXTRA_CHORDS[token]
-            notation = "runic"
         # TODO: Lambda chords
         else:
             subtokens = expand_color_chord(token)
@@ -730,7 +727,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 interval_parser.calculate_up_down()
             if config_key == "N":
                 current_notation = token.strip()
-                if current_notation not in ["hewmp", "HEWMP", "orgone", "semaphore", "preed", "runic", "lambda", "percussion", "percussion!"]:
+                if current_notation not in ["hewmp", "HEWMP", "orgone", "semaphore", "preed", "lambda", "percussion", "percussion!"]:
                     raise ParsingError("Unknown notation '{}'".format(current_notation))
                 current_notation = current_notation.lower()
                 config[config_key] = current_notation
@@ -755,6 +752,30 @@ def parse_track(lexer, default_config, max_repeats=None):
                 config[config_key] = (a, d, s, r)
             if config_key == "MP":
                 max_polyphony = int(token)
+            if config_key == "S":
+                subtokens = token.strip().split(" ")
+                period_token, generator_token, cardinality_token = subtokens[:3]
+                if len(subtokens) > 3:
+                    up = int(subtokens[3])
+                else:
+                    up = None
+                if len(subtokens) > 4:
+                    reference_octave = int(subtokens[4])
+                else:
+                    reference_octave = 5
+                intervalCls, pitchCls, inflections = erect_spine(
+                    interval_parser.parse(period_token).value(),
+                    interval_parser.parse(generator_token).value(),
+                    int(cardinality_token),
+                    up,
+                    reference_octave
+                )
+                interval_parser.inflections["_custom"] = inflections
+                interval_parser.interval_spines["_custom"] = intervalCls.parse
+                interval_parser.pitch_spines["_custom"] = pitchCls.parse
+                current_notation = "_custom"
+                config["N"] = current_notation
+                pattern.append(ContextChange(current_notation, pattern.t))
             if config_key == "F":
                 config["flags"] = [flag.strip() for flag in token.split(",")]
                 if "CR" in config["flags"]:
@@ -1015,7 +1036,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                     elif mini_token == "?":
                         pattern.last.extend_duration(1)
 
-        elif current_notation in ("hewmp", "orgone", "semaphore", "preed", "runic", "lambda"):
+        elif current_notation in ("hewmp", "orgone", "semaphore", "preed", "lambda", "_custom"):
             if token.startswith("=") or ":" in token or ";" in token:
                 if token_obj.whitespace or not token.startswith("=") or not pattern or isinstance(pattern[-1], NewLine):
                     subpattern_time = pattern.t

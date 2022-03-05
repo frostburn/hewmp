@@ -81,8 +81,12 @@ def make_flavor_chord(base, arrow_tokens, ups_and_downs):
     for arrow in ups_and_downs:
         if arrow == "^":
             downs_and_ups += "v"
-        else:
+        if arrow == "v":
             downs_and_ups += "^"
+        if arrow == ">":
+            downs_and_ups += "<"
+        if arrow == "<":
+            downs_and_ups += ">"
 
     chord = []
     for interval, flavor in FLAVOR_CHORDS[base]:
@@ -156,11 +160,16 @@ def make_basic_chord(base, arrow_tokens, ups_and_downs, chords=BASIC_CHORDS_):
 
 def split_interval(token):
     ups_and_downs = 0
-    while token[0] in "^v":
+    lifts_and_drops = 0
+    while token[0] in "^v><":
         if token[0] == "^":
             ups_and_downs += 1
-        else:
+        if token[0] == "v":
             ups_and_downs -= 1
+        if token[0] == ">":
+            lifts_and_drops += 1
+        if token[0] == "<":
+            lifts_and_drops -= 1
         token = token[1:]
     quality = ""
     while not token[0].isdigit():
@@ -171,13 +180,13 @@ def split_interval(token):
         value += token[0]
         token = token[1:]
     value = int(value)
-    return quality, value, ups_and_downs, token
+    return quality, value, ups_and_downs, lifts_and_drops, token
 
 
 QUALITY_RANKING = ["nn", "dd", "n", "d", "s", "m", "P", "M", "L", "a", "W", "aa", "WW"]
 def interval_key(token):
-    quality, value, ups_and_downs, token = split_interval(token)
-    return (value, QUALITY_RANKING.index(quality), ups_and_downs, token)
+    quality, value, ups_and_downs, lifts_and_drops, token = split_interval(token)
+    return (value, QUALITY_RANKING.index(quality), ups_and_downs, lifts_and_drops, token)
 
 
 TONE_SPLITTER = Splitter(("add", "no", "sus"))
@@ -186,7 +195,7 @@ TONE_SPLITTER = Splitter(("add", "no", "sus"))
 def expand_chord(token):
     notation = "hewmp"
     ups_and_downs = ""
-    while token[0] in "^v":
+    while token[0] in "^v><":
         ups_and_downs += token[0]
         token = token[1:]
 
@@ -238,7 +247,7 @@ def expand_chord(token):
     result = sorted(chord + added_intervals, key=interval_key)
     for tone in removed_tones:
         for chord_tone in result[:]:
-            _, value, _, _ = split_interval(chord_tone)
+            _, value, _, _ , _ = split_interval(chord_tone)
             if value == tone:
                 result.remove(chord_tone)
     return result, notation

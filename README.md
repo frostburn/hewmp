@@ -293,7 +293,7 @@ C4 M3 P5 ^m7 P8
 See [equal temperaments](#equal_temperament) for more information.
 
 ## Half-octave (Tritone)
-When not in equal temperament mode the ups-and-downs arrows shift by half of an octave (&radic;2).
+When not in equal temperament mode the ups-and-downs arrows shift by half of an octave (&radic;2). TODO: Fix
 ```
 ^1 vP8  $ Two spellings for the half octave
 vhd5  $ Alternative meaning for "quartertone" as the half-diminished fifth reduced by a tritone

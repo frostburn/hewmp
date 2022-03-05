@@ -111,13 +111,15 @@ class MonzoInterval:
 
 
 class ParsedInterval:
-    def __init__(self, base, octaves=0, ups=0, root=1, exponent=1, absolute=False, up_inflection=None, offset=None):
+    def __init__(self, base, octaves=0, ups=0, lifts=0, root=1, exponent=1, absolute=False, up_inflection=None, lift_inflection=None, offset=None):
         self.base = base
         self.octaves = octaves
         self.ups = ups
+        self.lifts = lifts
         self.root = root
         self.exponent = exponent
         self.up_inflection = up_inflection
+        self.lift_inflection = lift_inflection
         self._absolute = absolute
         self.offset = offset
 
@@ -132,6 +134,7 @@ class ParsedInterval:
             result = self.base.copy()
         result.monzo.vector[0] += self.octaves
         result += self.up_inflection * self.ups
+        result += self.lift_inflection * self.lifts
         result = result / self.root * self.exponent
         if self.offset is not None:
             result += self.offset
@@ -278,7 +281,14 @@ class IntervalParser:
         self.comma_list = None
         self.persistence = 5
         self.up_down_inflection = SemiInterval()
-        self.up_down_inflection.monzo.vector[0] = Fraction(1, 2)  # Default to half-octave
+        # Default to half of the Pythagorean comma to spell P8/2 as va4 or ^d5
+        # Also gives us the semi-fourth as vha2 or ^hd3
+        self.up_down_inflection.monzo.vector[0] = Fraction(-19, 2)
+        self.up_down_inflection.monzo.vector[1] = Fraction(12, 2)
+        # Default to half of the Pythagorean limma to spell P4/2 as >M2 or <m3
+        self.lift_drop_inflection = SemiInterval()
+        self.lift_drop_inflection.monzo.vector[0] = Fraction(8, 2)
+        self.lift_drop_inflection.monzo.vector[1] = Fraction(-5, 2)
 
     interval_spines = {
         "hewmp": pythagoras.Interval.parse,
@@ -342,15 +352,20 @@ class IntervalParser:
             octaves -= 1
             token = token[1:]
 
-        has_up_down = (token[0] in "^v")
+        has_arrow_prefix = (token[0] in "^v><")
         ups = 0
-        while token[0] == "^":
-            ups += 1
+        lifts = 0
+        while token[0] in "^v><":
+            if token[0] == "^":
+                ups += 1
+            if token[0] == "v":
+                ups -= 1
+            if token[0] == ">":
+                lifts += 1
+            if token[0] == "<":
+                lifts -= 1
             token = token[1:]
-        while token[0] == "v":
-            ups -= 1
-            token = token[1:]
-        if has_up_down and token[0].isdigit():
+        if has_arrow_prefix and token[0].isdigit():
             token = "w" + token
 
         exponent_degree = 1
@@ -375,7 +390,7 @@ class IntervalParser:
 
         if direction is not None:
             exponent_degree *= direction
-        result = ParsedInterval(None, octaves, ups, root_degree, exponent_degree, absolute, self.up_down_inflection)
+        result = ParsedInterval(None, octaves, ups, lifts, root_degree, exponent_degree, absolute, self.up_down_inflection, self.lift_drop_inflection)
 
         if token[0].isdigit() and not is_colored:
             interval = SemiInterval()

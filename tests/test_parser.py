@@ -676,7 +676,7 @@ def test_color_roman():
 
 
 def test_ups_and_downs_tritone():
-    text = "^1 v8"
+    text = "va4 ^d5"
     notes = get_notes(text)
     pitches = [[0.5], [0.5]]
     expect_pitches(notes, pitches)

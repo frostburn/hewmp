@@ -34,6 +34,14 @@ CONFIGS = [
     "F:",  # Flags
 ]
 
+# Ups-and-downs, lifts-and-drops
+for arrow in "^v><":
+    CONFIGS.append("{}I:".format(arrow))
+
+# Prime inflections
+for arrow in "+-><^vi!*%AVunUDMW":
+    CONFIGS.append("I{}:".format(arrow))
+
 
 class Token:
     def __init__(self, value, whitespace, index, line, column):

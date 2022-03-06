@@ -1042,6 +1042,20 @@ def test_timejump():
         assert time == note.time
 
 
+def test_agnostic_porcupine():
+    text = "^I:a1/3\n~vM2 ~vM2 ~vM2 ~-^^m2 ~-^^m2 ~-^^m2"
+    notes = get_notes(text)
+    assert (notes[2].pitch.monzo.vector[:2] == [2, -1]).all()
+    assert (notes[5].pitch.monzo.vector[:2] == [0, 0]).all()
+
+
+def test_alternate_13():
+    text = "Ii:13/12\nP5i"
+    notes = get_notes(text)
+    pitches = [[-3, 0, 0, 0, 0, 1]]
+    expect_pitches(notes, pitches)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1128,3 +1142,5 @@ if __name__ == '__main__':
     test_freq_from_zero()
     test_timestamp()
     test_timejump()
+    test_agnostic_porcupine()
+    test_alternate_13()

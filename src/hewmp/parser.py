@@ -83,7 +83,7 @@ class Interval:
     def monzo(self):
         result = self.spine.monzo()
         for arrow, count in self.arrows.items():
-            result += self.inflections[arrow] * count
+            result = result + self.inflections[arrow] * count
         return result
 
 
@@ -97,7 +97,7 @@ class Pitch:
     def monzo(self):
         result = self.spine.monzo()
         for arrow, count in self.arrows.items():
-            result += self.inflections[arrow] * count
+            result = result + self.inflections[arrow] * count
         return result
 
 
@@ -266,11 +266,11 @@ class IntervalParser:
     def __init__(self, inflections=None, et_divisions=Fraction(12), et_divided=Fraction(2), warts=""):
         if inflections is None:
             inflections = {
-                "hewmp": DEFAULT_SIGNED_INFLECTIONS,
-                "orgone": orgone.INFLECTIONS,
-                "semaphore": semaphore.INFLECTIONS,
-                "preed": preed.INFLECTIONS,
-                "lambda": lambda_bp.INFLECTIONS,
+                "hewmp": DEFAULT_SIGNED_INFLECTIONS.copy(),
+                "orgone": orgone.INFLECTIONS.copy(),
+                "semaphore": semaphore.INFLECTIONS.copy(),
+                "preed": preed.INFLECTIONS.copy(),
+                "lambda": lambda_bp.INFLECTIONS.copy(),
                 "_custom": None,
             }
         self.inflections = inflections
@@ -753,6 +753,22 @@ def parse_track(lexer, default_config, max_repeats=None):
                 program_change = ProgramChange(name, program, pattern.t)
                 pattern.append(program_change)
                 config[config_key] = name
+            if "I" in config_key:
+                inflection = interval_parser.parse(token).value()
+                if config_key[0] == "^":
+                    interval_parser.up_down_inflection = inflection
+                if config_key[0] == "v":
+                    interval_parser.up_down_inflection = -inflection
+                if config_key[0] == ">":
+                    interval_parser.lift_drop_inflection = inflection
+                if config_key[0] == "<":
+                    interval_parser.lift_drop_inflection = -inflection
+                # TODO: Allow frequency offsets here as well (ref #78)
+                for arrow in SignedArrow:
+                    if config_key[1] == arrow.value[0]:
+                        interval_parser.inflections[current_notation][arrow] = inflection.monzo.vector
+                    if config_key[1] == arrow.value[1]:
+                        interval_parser.inflections[current_notation][arrow] = -inflection.monzo.vector
             if config_key == "WF":
                 name = token.strip()
                 pattern.append(Waveform(name, pattern.t))

@@ -31,6 +31,9 @@ CONFIGS = [
     "ADSR:",  # Envelope (WebAudio)
     "MP:",  # Max polyphony
     "S:",  # Spine
+    "Mzo:",  # Relative monzo
+    "@Mzo:",  # Absolute monzo
+    "~Mzo:",  # Root moving monzo
     "F:",  # Flags
 ]
 

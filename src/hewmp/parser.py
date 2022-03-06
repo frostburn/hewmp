@@ -807,6 +807,20 @@ def parse_track(lexer, default_config, max_repeats=None):
                 current_notation = "_custom"
                 config["N"] = current_notation
                 pattern.append(ContextChange(current_notation, pattern.t))
+            if config_key.endswith("Mzo"):
+                vector = [Fraction(subtoken) for subtoken in token.strip().split()]
+                while len(vector) < len(PRIMES):
+                    vector.append(Fraction(0))
+                if config_key[0] == "@":
+                    current_pitch = SemiPitch(SemiMonzo(vector))
+                    note = Note(current_pitch, time=pattern.t)
+                else:
+                    interval = SemiInterval(SemiMonzo(vector))
+                    note = Note(current_pitch + interval, time=pattern.t)
+                    if config_key[0] == "~":
+                        current_pitch += interval
+                pattern.append(note)
+                pattern.t += note.duration
             if config_key == "F":
                 config["flags"] = [flag.strip() for flag in token.split(",")]
                 if "CR" in config["flags"]:

@@ -1056,6 +1056,16 @@ def test_alternate_13():
     expect_pitches(notes, pitches)
 
 
+def test_explicit_monzo():
+    text = "~Mzo:-1 -2\n[3/7]\nMzo:1 2 3 4 5 6 7 8/9\n!\n@Mzo:3 2 1"
+    notes = get_notes(text)
+    pitches = [[-1, -2], [0, 0, 3, 4, 5, 6, 7, Fraction(8, 9)], [3, 2, 1]]
+    expect_pitches(notes, pitches)
+    assert notes[0].duration == Fraction(3, 7)
+    assert notes[1].duration == 2
+    assert notes[2].duration == 1
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1144,3 +1154,4 @@ if __name__ == '__main__':
     test_timejump()
     test_agnostic_porcupine()
     test_alternate_13()
+    test_explicit_monzo()

@@ -856,7 +856,7 @@ def test_orgone_extra_chords():
 
 
 def test_barbados_scale():
-    text = "T:barbados\nN:semaphore\nBF:1000\nA5 B5 C5 D5 E5 F5 G5 H5 J5 A6"
+    text = "T:barbados\nS:P8 P4/2 9\nBF:1000\nA5 B5 C5 D5 E5 F5 G5 H5 J5 A6"
     notes = get_real_notes(text)
     just_scale = [1/1, 169/150, 15/13, 13/10, 4/3, 3/2, 20/13, 26/15, 300/169, 2/1]
     max_error = 0
@@ -866,14 +866,14 @@ def test_barbados_scale():
 
 
 def test_barbados_tetrad():
-    text = "=M4+!"
+    text = "=Mi+"
     notes = get_notes(text)
     pitches = [[0], [-1, 0, -1, 0, 0, 1], [-1, 1]]
     expect_pitches(notes, pitches)
 
 
 def test_neutral_semaphore():
-    text = "N:semaphore\nN2 Bd5"
+    text = "S:P8 P4/2 9\nN2 Bd5"
     notes = get_notes(text)
     assert notes[0].pitch == notes[1].pitch
 

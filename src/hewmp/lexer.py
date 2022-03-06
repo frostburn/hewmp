@@ -34,6 +34,7 @@ CONFIGS = [
     "Mzo:",  # Relative monzo
     "@Mzo:",  # Absolute monzo
     "~Mzo:",  # Root moving monzo
+    "E:",  # Enharmonic
     "F:",  # Flags
 ]
 

@@ -821,6 +821,21 @@ def parse_track(lexer, default_config, max_repeats=None):
                         current_pitch += interval
                 pattern.append(note)
                 pattern.t += note.duration
+            if config_key == "E":
+                arrow = token[0]
+                count = 0
+                while token[0] == arrow:
+                    count += 1
+                    token = token[1:]
+                enharmonic = interval_parser.parse(token).value() / count
+                if arrow == "^":
+                    interval_parser.up_down_inflection = -enharmonic
+                if arrow == "v":
+                    interval_parser.up_down_inflection = enharmonic
+                if arrow == ">":
+                    interval_parser.lift_drop_inflection = -enharmonic
+                if arrow == "<":
+                    interval_parser.lift_drop_inflection = enharmonic
             if config_key == "F":
                 config["flags"] = [flag.strip() for flag in token.split(",")]
                 if "CR" in config["flags"]:

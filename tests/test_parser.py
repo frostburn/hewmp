@@ -22,6 +22,15 @@ def expect_pitches(notes, pitches):
         assert (pitch == 0).all()
 
 
+def expect_unison(note):
+    for component in note.pitch.monzo.vector:
+        assert not component
+    assert note.pitch.monzo.residual == 1
+    assert not note.pitch.monzo.nats
+    assert not note.pitch.frequency_offset
+    assert not note.pitch.phase
+
+
 def test_parse_interval():
     mapping = array([12, 19, 28])
     interval_parser = IntervalParser()
@@ -1066,6 +1075,65 @@ def test_explicit_monzo():
     assert notes[2].duration == 1
 
 
+def test_pergen_enharmonics():
+    # --- P8/2 P5 ---
+    # Srutal
+    text = "E:^^d2\n~-P8/2 va4 ^d5"
+    notes = get_notes(text)
+    expect_unison(notes[1])
+    expect_unison(notes[2])
+
+    # Injera
+    text = "E:vvd2\n~-P8/2 ^a4 vd5"
+    notes = get_notes(text)
+    expect_unison(notes[1])
+    expect_unison(notes[2])
+
+    # Thotho
+    text = "E:vvM2\n~-P8/2 ^4 v5"
+    notes = get_notes(text)
+    expect_unison(notes[1])
+    expect_unison(notes[2])
+
+    # --- P8 P4/2 ---
+    # Semaphore
+    text = "E:vvm2\n~-P4/2 ^M2 vm3"
+    notes = get_notes(text)
+    expect_unison(notes[1])
+    expect_unison(notes[2])
+
+    # Lala-yoyo
+    text = "E:^^dd2\n~-P4/2 va2 ^d3"
+    notes = get_notes(text)
+    expect_unison(notes[1])
+    expect_unison(notes[2])
+
+    # --- P8 P5/2 ---
+    # Mohajira
+    text = "E:vva1\n~-P5/2 ^m3 vM3 N3"
+    notes = get_notes(text)
+    expect_unison(notes[1])
+    expect_unison(notes[2])
+    expect_unison(notes[3])
+
+    # --- P8/2 P4/2 ---
+    # Sagugu & Zozo (Default)
+    text = "~-P8/2 va4 ^d5"
+    notes = get_notes(text)
+    expect_unison(notes[1])
+    expect_unison(notes[2])
+    text = "~-P4/2 >M2 <m3"
+    notes = get_notes(text)
+    expect_unison(notes[1])
+    expect_unison(notes[2])
+
+    # Sagugu & Lulu
+    text = "E:<<a1\nE:^^d2\n~-P4/2 v>M2 ^<m3"
+    notes = get_notes(text)
+    expect_unison(notes[1])
+    expect_unison(notes[2])
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1155,3 +1223,4 @@ if __name__ == '__main__':
     test_agnostic_porcupine()
     test_alternate_13()
     test_explicit_monzo()
+    test_pergen_enharmonics()

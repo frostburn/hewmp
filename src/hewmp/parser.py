@@ -753,7 +753,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 program_change = ProgramChange(name, program, pattern.t)
                 pattern.append(program_change)
                 config[config_key] = name
-            if "I" in config_key:
+            elif "I" in config_key:
                 inflection = interval_parser.parse(token).value()
                 if config_key[0] == "^":
                     interval_parser.up_down_inflection = inflection

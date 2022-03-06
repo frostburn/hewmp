@@ -1,6 +1,6 @@
 from fractions import Fraction
 from numpy import array, dot, isclose, exp, log
-from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, sync_playheads, Percussion, Tuning
+from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, sync_playheads, Percussion, Tuning, ProgramChange
 from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interval
 
 
@@ -1134,6 +1134,18 @@ def test_pergen_enharmonics():
     expect_unison(notes[2])
 
 
+def test_instrument():
+    text = "I:Steel Drums\nP1 P8"
+    pattern = parse_text(text)[0][0]
+    num_program_changes = 0
+    for event in pattern.flatten():
+        if isinstance(event, ProgramChange):
+            assert event.name == "Steel Drums"
+            assert event.program == 114
+            num_program_changes += 1
+    assert num_program_changes == 1
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1224,3 +1236,4 @@ if __name__ == '__main__':
     test_alternate_13()
     test_explicit_monzo()
     test_pergen_enharmonics()
+    test_instrument()

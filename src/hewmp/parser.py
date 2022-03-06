@@ -1273,6 +1273,14 @@ def _tokenize_fractions_pitch(pitch):
     return "{}".format(tokenize_fraction(pitch.monzo.vector, PRIMES))
 
 
+def _tokenize_monzos_pitch(pitch):
+    result = "@Mzo:"
+    vector = list(pitch.monzo.vector)
+    while vector[-1] == 0:
+        vector.pop()
+    return "@Mzo:{}\n".format(" ".join(map(str, vector)))
+
+
 def _tokenize_absolute_chord(pattern, inflections):
     pitches = [tokenize_pitch(note.pitch.monzo.vector.astype(int), inflections) for note in pattern]
     return "({})".format(",".join(pitches))
@@ -1316,7 +1324,7 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
             suffix = "[@{}]".format(pattern.time)
     if isinstance(pattern, Pattern):
         pattern.simplify()
-        if pattern.is_chord():
+        if pattern.is_chord() and _tokenize_chord is not None:
             try:
                 return _tokenize_chord(pattern) + suffix
             except ValueError:
@@ -1371,6 +1379,15 @@ def patterns_to_fractions(patterns, outfile):
             continue
         outfile.write("---\n")
         outfile.write(tokenize_pattern(pattern, _tokenize_fractions_chord, _tokenize_fractions_pitch, True))
+        outfile.write("\n")
+
+
+def patterns_to_monzos(patterns, outfile):
+    for pattern in patterns:
+        if pattern.duration <= 0:
+            continue
+        outfile.write("---\n")
+        outfile.write(tokenize_pattern(pattern, None, _tokenize_monzos_pitch, True))
         outfile.write("\n")
 
 
@@ -1536,6 +1553,7 @@ if __name__ == "__main__":
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     parser.add_argument('--simplify', action='store_true')
     parser.add_argument('--fractional', action='store_true')
+    parser.add_argument('--monzo', action='store_true')
     parser.add_argument('--absolute', action='store_true')
     parser.add_argument('--midi', action='store_true')
     parser.add_argument('--midi-et', action='store_true')
@@ -1563,6 +1581,8 @@ if __name__ == "__main__":
 
     if args.fractional:
         patterns_to_fractions(patterns, args.outfile)
+    elif args.monzo:
+        patterns_to_monzos(patterns, args.outfile)
     elif args.absolute:
         inflections = reverse_inflections(DEFAULT_INFLECTIONS)
         _chord = lambda pattern: _tokenize_absolute_chord(pattern, inflections)

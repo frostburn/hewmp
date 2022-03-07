@@ -9,7 +9,7 @@ from fractions import Fraction
 from .lexer import Lexer, CONFIGS, TRACK_START
 from .extra_chords import EXTRA_CHORDS
 from .chord_parser import expand_chord, separate_by_arrows
-from .temperaments import TEMPERAMENTS, EQUAL_TEMPERAMENTS
+from .temperaments import TEMPERAMENTS, EQUAL_TEMPERAMENTS, ENHARMONICS
 from .notation import tokenize_fraction, tokenize_otonal_utonal, tokenize_pitch, reverse_inflections
 from .percussion import PERCUSSION_SHORTHANDS
 from .gm_programs import GM_PROGRAMS
@@ -661,6 +661,22 @@ def parse_track(lexer, default_config, max_repeats=None):
     current_notation = "hewmp"
     max_polyphony = None
 
+    def parse_enharmonic(token):
+        arrow = token[0]
+        count = 0
+        while token[0] == arrow:
+            count += 1
+            token = token[1:]
+        inflection = interval_parser.parse(token).value() / count
+        if arrow == "^":
+            interval_parser.up_down_inflection = -inflection
+        if arrow == "v":
+            interval_parser.up_down_inflection = inflection
+        if arrow == ">":
+            interval_parser.lift_drop_inflection = -inflection
+        if arrow == "<":
+            interval_parser.lift_drop_inflection = inflection
+
     for token_obj in lexer:
         if token_obj.is_end():
             break
@@ -686,6 +702,10 @@ def parse_track(lexer, default_config, max_repeats=None):
                     subgroup = subgroup.split(".")
                     config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.float_vector() for basis_vector in subgroup]
                     config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.float_vector() for comma in comma_list]
+
+                    if tuning_name in ENHARMONICS:
+                        for enharmonic in ENHARMONICS[tuning_name]:
+                            parse_enharmonic(enharmonic)
                 else:
                     raise ParsingError("Unrecognized tuning '{}'".format(tuning_name))
             if config_key == "CL":
@@ -815,20 +835,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 pattern.append(note)
                 pattern.t += note.duration
             if config_key == "E":
-                arrow = token[0]
-                count = 0
-                while token[0] == arrow:
-                    count += 1
-                    token = token[1:]
-                enharmonic = interval_parser.parse(token).value() / count
-                if arrow == "^":
-                    interval_parser.up_down_inflection = -enharmonic
-                if arrow == "v":
-                    interval_parser.up_down_inflection = enharmonic
-                if arrow == ">":
-                    interval_parser.lift_drop_inflection = -enharmonic
-                if arrow == "<":
-                    interval_parser.lift_drop_inflection = enharmonic
+                parse_enharmonic(token)
             if config_key == "F":
                 config["flags"] = [flag.strip() for flag in token.split(",")]
                 if "CR" in config["flags"]:

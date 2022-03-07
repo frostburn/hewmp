@@ -190,3 +190,19 @@ EQUAL_TEMPERAMENTS = {
     "bohlen-pierce": (13, 3),
     "BP": (13, 3),
 }
+
+ENHARMONICS = {
+    "bug": ["vvm2"],
+    "dicot": ["^^a1"],
+    "augmented": ["^^^d2"],
+    "porcupine": ["vvva1"],
+    "blackwood": ["^P1-"],
+    "dimipent": ["^^^^d2"],
+    "diaschismic": ["^^d2"],
+    "magic": ["^^^^^dd2"],
+    "ripple": ["vvvvvddd3"],
+    "hanson": ["^^^^^^dd2"],
+    "negripent": ["^^^^dd2"],
+    "tetracot": ["vvvva1"],
+    "passion": ["^^^^^ddd3"],
+}

@@ -2,6 +2,7 @@ from fractions import Fraction
 from numpy import array, dot, isclose, exp, log
 from hewmp.parser import parse_text, IntervalParser, DEFAULT_INFLECTIONS, Note, sync_playheads, Percussion, Tuning, ProgramChange
 from hewmp.notation import tokenize_pitch, reverse_inflections, tokenize_interval
+from hewmp.temperaments import ENHARMONICS
 
 
 def get_notes(text):
@@ -1146,6 +1147,28 @@ def test_instrument():
     assert num_program_changes == 1
 
 
+def test_default_enharmonics():
+    for name, enharmonics in ENHARMONICS.items():
+        text = "T:{}\n{} ^1".format(name, enharmonics[0])
+        notes = get_real_notes(text)
+        assert isclose(notes[0].real_frequency, 440)
+        assert notes[1].real_frequency > 440
+
+    stuff = [
+        ("bug", "^"), ("dicot", "^"), ("augmented", "v"), ("porcupine", "v"),
+        ("dimipent", "v"), ("diaschismic", "v"), ("magic", "v"),
+        ("hanson", "v"), ("negripent", "v"), ("tetracot", "v"),
+    ]
+    for name, arrow in stuff:
+        text = "T:{}\n{}P1+".format(name, arrow)
+        notes = get_real_notes(text)
+        assert isclose(notes[0].real_frequency, 440)
+
+    text = "T:ripple\nm6+&-vvvvvvvvddddd9"
+    notes = get_real_notes(text)
+    assert isclose(notes[0].real_frequency, 440)
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1237,3 +1260,4 @@ if __name__ == '__main__':
     test_explicit_monzo()
     test_pergen_enharmonics()
     test_instrument()
+    test_default_enharmonics()

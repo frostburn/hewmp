@@ -1,7 +1,7 @@
 # coding: utf-8
 from collections import defaultdict
 from roman import fromRoman, InvalidRomanNumeralError
-from numpy import dot, zeros, sign, array
+from numpy import dot, zeros, sign, array, log
 from .util import Splitter
 from .pythagoras import PITCH_LETTERS
 from . import pythagoras
@@ -15,38 +15,57 @@ MAX_HARMONIC_CHORD = 36
 
 
 LONG_FORMS = {
-    "yo": (2, 1),
-    "gu": (2, -1),
+    "la": "L",
+    "sa": "s",
 
-    "zo": (3, 1),
-    "ru": (3, -1),
+    "wa": "w",
 
-    "lo": (4, 1),
-    "lu": (4, -1),
-    "ilo": (4, 1),
-    "ilu": (4, -1),
+    "yo": "y",
+    "gu": "g",
 
-    "tho": (5, 1),
-    "thu": (5, -1),
+    "zo": "z",
+    "ru": "r",
 
-    "so": (6, 1),
-    "su": (6, -1),
-    "iso": (6, 1),
-    "isu": (6, -1),
+    "lo": "1o",
+    "lu": "1u",
+    "ilo": "1o",
+    "ilu": "1u",
 
-    "no": (7, 1),
-    "nu": (7, -1),
-    "ino": (7, 1),
-    "inu": (7, -1),
+    "tho": "3o",
+    "thu": "3u",
 
-    "twetho": (8, 1),
-    "twethu": (8, -1),
+    "so": "17o",
+    "su": "17u",
+    "iso": "17o",
+    "isu": "17u",
 
-    "tweno": (9, 1),
-    "twenu": (9, -1),
+    "no": "19o",
+    "nu": "19u",
+    "ino": "19o",
+    "inu": "19u",
 
-    "thiwo": (10, 1),
-    "thiwu": (10, -1),
+    "twetho": "23o",
+    "twethu": "23u",
+
+    "tweno": "29o",
+    "twenu": "29u",
+
+    "thiwo": "31o",
+    "thiwu": "31u",
+}
+
+
+LONG_EXPONENTS = {
+    "bi": "²",
+    "tri": "³",
+    "quad": "⁴",
+    "quin": "⁵",
+    "sep": "⁷",
+    "le": "¹¹",
+    "the": "¹³",
+    "se": "¹⁷",
+    "ne": "¹⁹",
+    "twethe": "²³",
 }
 
 
@@ -98,6 +117,12 @@ UNICODE_EXPONENTS = {
     "⁷": 7,
     "⁸": 8,
     "⁹": 9,
+
+    "¹¹": 11,
+    "¹³": 13,
+    "¹⁷": 17,
+    "¹⁹": 19,
+    "²³": 23,
 }
 
 REVERSE_UNICODE_EXPONENTS = {"-": "⁻"}
@@ -463,3 +488,63 @@ def expand_chord(token):
     chord.sort(key=degree_key)
 
     return chord
+
+
+JI = log(PRIMES)
+
+
+def parse_comma(token):
+    token = token.lower().replace("-", "")
+    short_token = ""
+    exponent = None
+    modified = True
+    while modified:
+        modified = False
+        exponents = []
+        while True:
+            for name, exponent_ in LONG_EXPONENTS.items():
+                if token.startswith(name):
+                    exponents.append(exponent_)
+                    token = token[len(name):]
+                    break
+            else:
+                break
+        if exponents:
+            m = 1
+            for exponent_ in exponents:
+                m *= UNICODE_EXPONENTS[exponent_]
+            exponent = "".join(REVERSE_UNICODE_EXPONENTS[c] for c in str(m))
+        for long_form, short_form in LONG_FORMS.items():
+            if token.startswith(long_form):
+                short_token += short_form
+                token = token[len(long_form):]
+                modified = True
+                if exponent:
+                    short_token += exponent
+                    exponent = None
+    if exponent is None:
+        ordinal = 1
+    else:
+        ordinal = UNICODE_EXPONENTS[exponent]
+
+    token = short_token + token
+
+    segment = []
+    degree = -2
+    while True:
+        monzo = parse_interval("{}{}".format(token, degree)).monzo()
+        nats = dot(JI, monzo)
+        if nats < 0:
+            break
+        segment.append((nats, monzo))
+        degree -= 1
+    degree = 1
+    while len(segment) < 7:
+        monzo = parse_interval("{}{}".format(token, degree)).monzo()
+        nats = dot(JI, monzo)
+        if nats > 0:
+            segment.append((nats, monzo))
+        degree += 1
+
+    segment.sort()
+    return segment[ordinal - 1][1]

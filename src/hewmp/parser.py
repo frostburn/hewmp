@@ -18,6 +18,7 @@ from .rhythm import geometric_rhythm, harmonic_rhythm, sigmoid_rhythm
 from .event import *
 from .color import parse_interval as parse_color_interval, UNICODE_EXPONENTS
 from .color import expand_chord as expand_color_chord
+from .color import parse_comma as parse_color_comma
 from .pythagoras import INTERVAL_QUALITIES, PITCH_LETTERS
 from . import pythagoras
 from .monzo import PRIMES, SemiMonzo, et_to_semimonzo
@@ -703,11 +704,16 @@ def parse_track(lexer, default_config, max_repeats=None):
                     config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.float_vector() for basis_vector in subgroup]
                     config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.float_vector() for comma in comma_list]
 
+                    # TODO: Use comma lists and move down bellow
                     if tuning_name in ENHARMONICS:
                         for enharmonic in ENHARMONICS[tuning_name]:
                             parse_enharmonic(enharmonic)
                 else:
-                    raise ParsingError("Unrecognized tuning '{}'".format(tuning_name))
+                    config["tuning"].comma_list = []
+                    for name in tuning_name.split("&"):
+                        config["tuning"].comma_list.append(parse_color_comma(name.strip()))
+                    if not config["tuning"].subgroup:
+                        config["tuning"].subgroup = infer_subgroup(config["tuning"].comma_list)
             if config_key == "CL":
                 comma_list = [comma.strip() for comma in token.split(",")]
                 config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.float_vector() for comma in comma_list]

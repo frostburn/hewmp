@@ -191,6 +191,8 @@ EQUAL_TEMPERAMENTS = {
     "BP": (13, 3),
 }
 
+
+# TODO: Use comma lists instead
 ENHARMONICS = {
     "bug": ["vvm2"],
     "dicot": ["^^a1"],

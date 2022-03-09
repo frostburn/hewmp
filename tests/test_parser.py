@@ -1169,6 +1169,19 @@ def test_default_enharmonics():
     assert isclose(notes[0].real_frequency, 440)
 
 
+def test_color_temperament():
+    text = "T:Legu & Zotrigu"
+    pattern = parse_text(text)[0][0]
+    for event in pattern:
+        if isinstance(event, Tuning):
+            assert (event.comma_list[0][:3] == [5, 13, -11]).all()
+            assert (event.comma_list[1][:4] == [1, 2, -3, 1]).all()
+            assert len(event.subgroup) == 4
+            break
+    else:
+        assert False
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1261,3 +1274,4 @@ if __name__ == '__main__':
     test_pergen_enharmonics()
     test_instrument()
     test_default_enharmonics()
+    test_color_temperament()

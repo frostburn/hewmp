@@ -1284,16 +1284,19 @@ def _tokenize_fractions_chord(pattern):
     return "{}={}".format(root_fraction, chord)
 
 
-def _tokenize_fractions_pitch(pitch):
-    return "{}".format(tokenize_fraction(pitch.monzo.vector, PRIMES))
+def _tokenize_fractions_pitch(note):
+    return "{}".format(tokenize_fraction(note.pitch.monzo.vector, PRIMES))
 
 
-def _tokenize_monzos_pitch(pitch):
-    result = "@Mzo:"
-    vector = list(pitch.monzo.vector)
+def _tokenize_monzos_pitch(note):
+    vector = list(note.pitch.monzo.vector)
     while vector[-1] == 0:
         vector.pop()
     return "@Mzo:{}\n".format(" ".join(map(str, vector)))
+
+
+def _tokenize_cents_pitch(note, base_frequency):
+    return "{}c".format(log(note.real_frequency / base_frequency) / log(2) * 1200)
 
 
 def _tokenize_absolute_chord(pattern, inflections):
@@ -1301,8 +1304,8 @@ def _tokenize_absolute_chord(pattern, inflections):
     return "({})".format(",".join(pitches))
 
 
-def _tokenize_absolute_pitch(pitch, inflections):
-    return tokenize_pitch(pitch.monzo.vector.astype(int), inflections)
+def _tokenize_absolute_pitch(note, inflections):
+    return tokenize_pitch(note.pitch.monzo.vector.astype(int), inflections)
 
 
 def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, absolute_time=False):
@@ -1377,7 +1380,7 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
             return " ".join(filter(None, subnotations))
         return "(" + " ".join(filter(None, subnotations)) + ")" + suffix
     if isinstance(pattern, Note):
-        return _tokenize_pitch(pattern.pitch) + suffix
+        return _tokenize_pitch(pattern) + suffix
     if isinstance(pattern, Rest):
         return ".{}".format(suffix)
     if isinstance(pattern, Percussion):
@@ -1403,6 +1406,16 @@ def patterns_to_monzos(patterns, outfile):
             continue
         outfile.write("---\n")
         outfile.write(tokenize_pattern(pattern, None, _tokenize_monzos_pitch, True))
+        outfile.write("\n")
+
+
+def patterns_to_cents(patterns, outfile, base_frequency):
+    _tokenize = lambda n: _tokenize_cents_pitch(n, base_frequency)
+    for pattern in patterns:
+        if pattern.duration <= 0:
+            continue
+        outfile.write("---\n")
+        outfile.write(tokenize_pattern(pattern, None, _tokenize, True))
         outfile.write("\n")
 
 
@@ -1569,6 +1582,7 @@ if __name__ == "__main__":
     parser.add_argument('--simplify', action='store_true')
     parser.add_argument('--fractional', action='store_true')
     parser.add_argument('--monzo', action='store_true')
+    parser.add_argument('--cents', action='store_true')
     parser.add_argument('--absolute', action='store_true')
     parser.add_argument('--midi', action='store_true')
     parser.add_argument('--midi-et', action='store_true')
@@ -1598,6 +1612,8 @@ if __name__ == "__main__":
         patterns_to_fractions(patterns, args.outfile)
     elif args.monzo:
         patterns_to_monzos(patterns, args.outfile)
+    elif args.cents:
+        patterns_to_cents(realize(patterns), args.outfile, config["tuning"].base_frequency)
     elif args.absolute:
         inflections = reverse_inflections(DEFAULT_INFLECTIONS)
         _chord = lambda pattern: _tokenize_absolute_chord(pattern, inflections)

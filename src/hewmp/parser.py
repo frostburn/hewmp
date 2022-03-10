@@ -678,6 +678,18 @@ def parse_track(lexer, default_config, max_repeats=None):
         if arrow == "<":
             interval_parser.lift_drop_inflection = inflection
 
+    def assign_enharmonics():
+        comma_list = []
+        for monzo in config["tuning"].comma_list:
+            comma = Fraction(1)
+            for c, p in zip(monzo, PRIMES):
+                comma *= Fraction(p) ** int(c)
+            comma_list.append(comma)
+        key = frozenset(comma_list)
+        if key in ENHARMONICS:
+            for enharmonic in ENHARMONICS[key]:
+                parse_enharmonic(enharmonic)
+
     for token_obj in lexer:
         if token_obj.is_end():
             break
@@ -703,22 +715,19 @@ def parse_track(lexer, default_config, max_repeats=None):
                     subgroup = subgroup.split(".")
                     config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.float_vector() for basis_vector in subgroup]
                     config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.float_vector() for comma in comma_list]
-
-                    # TODO: Use comma lists and move down bellow
-                    if tuning_name in ENHARMONICS:
-                        for enharmonic in ENHARMONICS[tuning_name]:
-                            parse_enharmonic(enharmonic)
                 else:
                     config["tuning"].comma_list = []
                     for name in tuning_name.split("&"):
                         config["tuning"].comma_list.append(parse_color_comma(name.strip()))
-                    if not config["tuning"].subgroup:
+                    if config["SG"] == "auto":
                         config["tuning"].subgroup = infer_subgroup(config["tuning"].comma_list)
+                assign_enharmonics()
             if config_key == "CL":
                 comma_list = [comma.strip() for comma in token.split(",")]
                 config["tuning"].comma_list = [interval_parser.parse(comma).value().monzo.float_vector() for comma in comma_list]
                 if config["SG"] == "auto":
                     config["tuning"].subgroup = infer_subgroup(config["tuning"].comma_list)
+                assign_enharmonics()
             if config_key == "SG":
                 subgroup = [basis_fraction.strip() for basis_fraction in token.split(".")]
                 config["tuning"].subgroup = [interval_parser.parse(basis_vector).value().monzo.float_vector() for basis_vector in subgroup]

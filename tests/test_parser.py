@@ -1148,11 +1148,12 @@ def test_instrument():
 
 
 def test_default_enharmonics():
-    for name, enharmonics in ENHARMONICS.items():
-        text = "T:{}\n{} ^1".format(name, enharmonics[0])
+    for comma_list, enharmonics in ENHARMONICS.items():
+        text = "CL:{}\n{} ^1".format(",".join(map(str, comma_list)), " ".join(enharmonics))
         notes = get_real_notes(text)
-        assert isclose(notes[0].real_frequency, 440)
-        assert notes[1].real_frequency > 440
+        for i in range(len(enharmonics)):
+            assert isclose(notes[i].real_frequency, 440)
+        assert notes[-1].real_frequency > 440
 
     stuff = [
         ("bug", "^"), ("dicot", "^"), ("augmented", "v"), ("porcupine", "v"),
@@ -1167,6 +1168,11 @@ def test_default_enharmonics():
     text = "T:ripple\nm6+&-vvvvvvvvddddd9"
     notes = get_real_notes(text)
     assert isclose(notes[0].real_frequency, 440)
+
+    text = "T:Zozo & Lulu\n<P1> vP1^"
+    notes = get_real_notes(text)
+    assert isclose(notes[0].real_frequency, 440)
+    assert isclose(notes[1].real_frequency, 440)
 
 
 def test_color_temperament():

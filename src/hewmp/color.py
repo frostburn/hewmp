@@ -548,3 +548,15 @@ def parse_comma(token):
 
     segment.sort()
     return segment[ordinal - 1][1]
+
+
+if __name__ == "__main__":
+    import argparse
+    from .notation import tokenize_fraction
+
+    parser = argparse.ArgumentParser(description='Parse a color comma into a fraction')
+    parser.add_argument('name', type=str)
+    args = parser.parse_args()
+
+    monzo = parse_comma(args.name)
+    print(tokenize_fraction(monzo, PRIMES))

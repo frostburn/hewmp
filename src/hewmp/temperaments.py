@@ -69,11 +69,11 @@ YA_TEMPERAMENTS = {
     "29tet": ["250/243", "16875/16384"],  # porcupine | negripent
     "31tet": ["81/80", "393216/390625"],  # meantone | würschmidt
     "32tet": ["648/625", "20480/19683"],  # dimipent | superpyth
-    "34tet": ["2028/2025", "20000/19683"],  # diaschismic | tetracot
+    "34tet": ["2048/2025", "20000/19683"],  # diaschismic | tetracot
     "35tet": ["3125/3072", "6561/6250"],  # magic | ripple
     "37tet": ["250/243", "393216/390625"],  # porcupine | würschmidt
     "41tet": ["3125/3072", "20000/19683"],  # magic | tetracot
-    "46tet": ["2028/2025", "78732/78125"],  # diaschismic | sensipent
+    "46tet": ["2048/2025", "78732/78125"],  # diaschismic | sensipent
     "47tet": ["6561/6250", "16875/16384"],  # ripple | negripent
     "48tet": ["16875/16384", "20000/19683"],  # negripent | tetracot
     "49tet": ["20480/19683", "262144/253125"],  # superpyth | passion
@@ -86,10 +86,12 @@ ZA_TEMPERAMENTS = {
     "archy": ["64/63"],
     "slendric": ["1029/1024"],
     "blacksmith": ["28/27", "49/48"],  # 5tet
+    "squares": ["19683/19208"],
 }
 
 YAZA = "2.3.5.7"
 YAZA_TEMPERAMENTS = {
+    "triforce": ["49/48", "128/125"],
     "dimisept": ['36/35', '50/49'],
     "dominant": ['36/35', '64/63'],
     "august": ['36/35', '128/125'],
@@ -124,6 +126,7 @@ YAZA_TEMPERAMENTS = {
 
 LA = "2.3.11"
 LA_TEMPERAMENTS = {
+    "mohajira": ["33/32"],
     "alpharabian": ["131769/131072"],
     "betarabian": ["243/242", "131769/131072"],  # 24tet
 }
@@ -160,9 +163,9 @@ TEMPERAMENTS = {
     "boethius": [["513/512"], "2.3.19"],
     "hdiminished": [["131072/130321"], "2.19"],
     "haugmented": [["33698267/33554432"], "2.323"],
-    "12teth": [["131072/130321", "33698267/33554432"], "2.17.19"],  # No threes 12tet
+    "nowa12tet": [["131072/130321", "4913/4864"], "2.17.19"],
     "jovial": [["243/242", "364/363", "441/440"], "2.3.5.7.11.13"],
-    "preed": [["2401/2400", "243/242", "41067/40960", "289/288", "513/512", "279936/279841", "43059200/43046721", "961/960"], "2.3.5.7.11.13.17.19.23.29.31"],
+    "preed": [["2401/2400", "243/242", "1521/1520", "289/288", "513/512", "279936/279841", "710645/708588", "961/960"], "2.3.5.7.11.13.17.19.23.29.31"],
 }
 
 _ = [
@@ -224,6 +227,7 @@ _ENHARMONICS = {
     "143496441/134217728": ["vvvvvvM2"],
     "19683/19208": ["vvvvdd3"],
 
+    "81/80,405/392": ["vvd2"],
     "49/48,243/242": ["<<m2", "vva1"],
     "49/48,2048/2025": ["<<m2", "^^d2"],
     "243/242,2048/2025": ["^^d2", "<<a1"],
@@ -232,9 +236,128 @@ _ENHARMONICS = {
     "128/125,1029/1024": ["^^^d2", "<<<m2"],
     "250/243,1029/1024": ["vvva1", "<<<m2"],
     "405/392,1029/1024": ["vvd2", "<<<m2"],
+    "729/686,250/243": ["vvvd2", "<<<a1"],
 }
 
 ENHARMONICS = {}
 for key, value in _ENHARMONICS.items():
     key = frozenset(map(Fraction, key.split(",")))
     ENHARMONICS[key] = value
+
+
+if __name__ == "__main__":
+    from collections import defaultdict
+    from numpy import log, array
+    from .monzo import PRIMES
+    from .event import DEFAULT_METRIC
+    from .temperament import temper_subgroup, infer_subgroup
+    from .parser import IntervalParser
+    from .color import parse_comma
+
+    interval_parser = IntervalParser()
+
+    five_limit = [
+        "blackwood",
+        "whitewood",
+        "compton",
+        "augmented",
+        "father",
+        "bug",
+        "dicot",
+        "meantone",
+        "mavila",
+        "porcupine",
+        "dimipent",
+        "diaschismic",
+        "magic",
+        "ripple",
+        "hanson",
+        "negripent",
+        "tetracot",
+        "superpyth",
+        "helmholtz",
+        "sensipent",
+        "passion",
+        "würschmidt",
+        "wurschmidt",
+        "wuerschmidt",
+        "amity",
+        "orson",
+        "vulture",
+        "vishnu",
+        "luna",
+        "wronecki",
+    ]
+
+    JI = log(array(PRIMES))
+
+
+    by_rank = defaultdict(list)
+    for name, (comma_list, subgroup) in TEMPERAMENTS.items():
+        if name not in five_limit:
+            if name == "pinkan":  # TODO: Fix basis vector calculation
+                continue
+            basis = subgroup.split(".")
+            basis = [interval_parser.parse(basis_vector).value().monzo.float_vector() for basis_vector in basis]
+            commalist = [interval_parser.parse(comma).value().monzo.float_vector() for comma in comma_list]
+            mapping = temper_subgroup(JI, commalist, [], basis, metric=DEFAULT_METRIC)
+
+            rank = subgroup.count(".") - len(comma_list) + 1
+            by_rank[rank].append((name, comma_list, subgroup, mapping))
+    print("## Rank 1")
+    print()
+    print("|Name|Comma list|Subgroup|Octave size|")
+    print("|:---:|:---:|:---:|:---:|")
+    for name, comma_list, subgroup, mapping in by_rank[1]:
+        print("|{}|{}|{}|{:.1f}|".format(name, ", ".join(comma_list), subgroup, mapping[0]/log(2)*1200))
+
+    print("## Rank 2")
+    print()
+    print("|Name|Comma list|Subgroup|Octave size|Enharmonics|")
+    print("|:---:|:---:|:---:|:---:|:---:|")
+    for name, comma_list, subgroup, mapping in by_rank[2]:
+        key = frozenset(map(Fraction, comma_list))
+        if key in ENHARMONICS:
+            enhamonics = ", ".join(ENHARMONICS[key])
+        else:
+            enhamonics = "?"
+        print("|{}|{}|{}|{:.1f}|{}|".format(name, ", ".join(comma_list), subgroup, mapping[0]/log(2)*1200, enhamonics))
+
+    interesting_pergens = [
+        "Thotho",
+        "Lala-yoyo",
+        "Zozo & Lulu",
+        "Sagugu & Lulu",
+        "Satrilu",
+        "Tribilo",
+        "Satribizo",
+        "Latribiru",
+        "Latribiyo",
+        "Latrizo & Biruyo",
+        "Latribilo",
+        "Triyo & Triru",
+        "Trigu & Latrizo",
+        "Triyo & Latrizo",
+    ]
+    for name in interesting_pergens:
+        monzos = [parse_comma(subname.strip()) for subname in name.split("&")]
+        basis = infer_subgroup(monzos)
+        mapping = temper_subgroup(JI, monzos, [], basis, metric=DEFAULT_METRIC)
+
+        subgroup = []
+        for base in basis:
+            num = Fraction(1)
+            for c, p in zip(base, PRIMES):
+                num *= Fraction(p) ** int(c)
+            subgroup.append(str(num))
+        subgroup = ".".join(subgroup)
+
+        comma_list = []
+        for monzo in monzos:
+            comma = Fraction(1)
+            for c, p in zip(monzo, PRIMES):
+                comma *= Fraction(p) ** int(c)
+            comma_list.append(comma)
+        key = frozenset(comma_list)
+        enhamonics = ", ".join(ENHARMONICS[key])
+        print("|{}|{}|{}|{:.1f}|{}|".format(name, ", ".join(map(str, comma_list)), subgroup, mapping[0]/log(2)*1200, enhamonics))

@@ -709,7 +709,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 for subtoken in token.split(","):
                     interval_parser.set_base_pitch(subtoken.strip(), current_notation)
             if config_key == "T":
-                tuning_name = token.strip()
+                tuning_name = token.strip().lower()
                 if tuning_name in TEMPERAMENTS:
                     comma_list, subgroup = TEMPERAMENTS[tuning_name]
                     subgroup = subgroup.split(".")

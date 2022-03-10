@@ -190,9 +190,8 @@ EQUAL_TEMPERAMENTS = {
     "beta": (11*11 + 6*6 + 5*5, Fraction(3, 2)**11*Fraction(5, 4)**6*Fraction(6, 5)**5),
     "gamma": (20*20 + 11*11 + 9*9, Fraction(3, 2)**20*Fraction(5, 4)**11*Fraction(6, 5)**9),
     "delta": (50*50 + 28*28 + 23*23, Fraction(3, 2)**50*Fraction(5, 4)**28*Fraction(6, 5)**23),
-    "Bohlen-Pierce": (13, 3),
     "bohlen-pierce": (13, 3),
-    "BP": (13, 3),
+    "bp": (13, 3),
 }
 
 

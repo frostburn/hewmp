@@ -145,17 +145,6 @@ To play a note across a barline use pedal extension.
 1/1[2] 5/4[2]|[!4] | 3/2 2/1 1/1[2] ||
 ```
 
-## Absolute Pitches
-Using `@` before an interval measures the pitch from the base frequency.
-```
-$ Go up
-~9/8 ~9/8 ~9/8
-$ Reset back to 440Hz and go to 660Hz
-@1 @3/2
-$ Go up from there
-~9/8 ~9/8 ~9/8
-```
-
 ## Root Moving Intervals
 To play a note relative to the previous one and remember it use `~`. This can be used to play local scales by using moving intervals for root motion.
 ```
@@ -166,6 +155,17 @@ $ V arpeggio
 $ I arpeggio
  ~2/3 5/4 3/2 |
   2[3]        ||
+```
+
+## Absolute Pitches
+Using `@` before an interval measures the pitch from the base frequency.
+```
+$ Go up
+~9/8 ~9/8 ~9/8
+$ Reset back to 440Hz and go to 660Hz
+@1 @3/2
+$ Go up from there
+~9/8 ~9/8 ~9/8
 ```
 
 ## Composite intervals
@@ -190,10 +190,10 @@ $ The same spelled using fractions
 ```
 Adding one to the number after an absolute pitch raises it by an octave.
 ```
-$ Two A notes an octave apart
-A4 A5
+$ Three A notes in octaves
+A4 A5 A6
 $ The same
-@1 @2
+@1 @2 @4
 ```
 From the basic pitches we can derive the basic set of intervals `P1`, `m2`, `M2`, `m3`, `M3`, `P4`, `d5`, `a4`, `P5`, `m6`, `M6`, `m7` and `M7`.
 ```
@@ -251,7 +251,7 @@ To raise the pitch by double the amount use a double sharp sign `x` (spelled as 
 ```
 A4 A4x A𝄪4
 ```
-To lower the pitch by `2187/2048` append a flat sign `b` (spelled as a lowercase 'bee'). Unicode `♭` is also supported. The double-flat `𝄫` works too.
+To lower the pitch by `2187/2048` append a flat sign `b` (spelled as a lowercase 'bee'). Unicode `♭` is also supported. The double-flat `𝄫` works as expected.
 ```
 A4 A4b A♭4 A𝄫4
 ```
@@ -293,21 +293,17 @@ The accidentals `t` and `d` act as quarter-tone sharp and flat respectively. The
 C4 E4d G4 B4d  $ Neutral 7th arpeggio
 ```
 
+## Pergen arrows
+Melodic information can be conveyed in a higher-prime agnostic manner by splitting the octave and/or some three limit interval. As we have already seen the split fifth `P5/2` is `N3`. The split octave `P8/2` is `va4` or `^d5`. The split fourth `P4/2` is `>M2` or `<m3`. Splitting the fourth can also be achieved by combining neutralish intervals with the `^` arrow as `^hd3` or `vha2`. The meaning of the arrows `^`, `v`, `>` and `<` placed before the interval or pitch is dynamic and often only affects primes 2 and 3. Some temperaments automatically set these arrows for pergen notation. See [temperaments](#temperament) for more information.
+
 ## Ups and Downs
-Equal temperament mode is activated by specifying the number of divisions of the octave with `ET:`. Using the arrows `^` and `v` before intervals or absolute pitches raises or lowers the pitch by one edo step.
+Equal temperament mode is activated by specifying the number of divisions of the octave with `ET:`. Using the arrows `^` and `v` before the interval or pitch raises or lowers the pitch by one edo step.
 ```
 ET:31
 D4 vF4 G4 B4
 C4 M3 P5 ^m7 P8
 ```
 See [equal temperaments](#equal_temperament) for more information.
-
-## Half-octave (Tritone)
-When not in equal temperament mode the ups-and-downs arrows shift by half of an octave (&radic;2). TODO: Fix
-```
-^1 vP8  $ Two spellings for the half octave
-vhd5  $ Alternative meaning for "quartertone" as the half-diminished fifth reduced by a tritone
-```
 
 ## Inflections
 To spell intervals beyond the 3-limit HEWMP uses small adjustements defined by prime factors and their exponents. For example `5/4` is spelled `M3-` (a flat major third), `7/4` is spelled `m7<` (a flat minor seventh) and `11/8` is spelled `P4^` (a sharp perfect fourth). There's a pair of *arrows* corresponding to every prime up to 31 (ordered by size in cents bellow).
@@ -611,7 +607,7 @@ To make full use of Text2Music's tuning capabilities you need to tell it which m
 SG:2.3.5
 ```
 By default the correct subgroup is inferred from the comma list.
-### Temperament
+### <a name="temperament"></a>Temperament
 Text2Music comes with a few named presets so that you don't have to type out specific subgroups and comma lists.
 ```
 $ Same as SG:2.3.5 and CL:250/243
@@ -619,7 +615,15 @@ T:porcupine
 $ Chord progression that pumps the porcupine comma
 |: ~5/3=6:4:5 ~2/3=3:4:5 ~5/3=6:4:5 ~2/3=6:5:4 ~5/6=3:4:5 :|
 ```
-(Documentation coming soon)
+See [additional documentation](doc/temperaments.md) for a list of temperaments.
+### Enharmonics
+Not all possible temperaments support [pergen notation](https://en.xen.wiki/w/Pergen) out of the box so you need to figure out the correct enharmonics yourself.
+```
+E:^^^d2   $ Specify what ^ and v mean using a vanishing enharmonic interval
+E:<<<m2   $ Specify what > and < mean
+P8/3 vM3  $ The v arrow can now be used to spell the third-octave
+P5/3 >M2  $ The > arrow can now be used to spell the third-fifth
+```
 ### Constraints
 The tuning algorithm tries to do the least amount of damage to just intonation when tempering out commas, but sometimes you may wish to preserve certain intervals while allowing others to take more of the damage.
 ```
@@ -628,7 +632,7 @@ $ Specify quarter-comma meantone by constraining
 $ octaves to be pure and major thirds to be just
 C:P8,M3-
 ```
-### <a name="equal_temperament"></a> Equal Temperament and Warts
+### <a name="equal_temperament"></a>Equal Temperament and Warts
 While it is possible to produce an equal temperament without affecting every prime (e.g. `T:compton` is 12edo that only affects `2` and `3`) there's the option to round every prime to the closest number of steps of an equal temperement with `ET:`. You can use [Wart Notation](https://en.xen.wiki/w/Val#Shorthand_notation) to specify non-standard rounding. To specify another interval to divide besides the default `2` use `ED{N}` after the number of divisions and the warts.
 ```
 ET:13b  $ 13edo with a flat fifth to make it compatible with Ups and Downs notation

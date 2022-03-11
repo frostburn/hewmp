@@ -1305,9 +1305,11 @@ def _tokenize_fractions_pitch(note):
 
 def _tokenize_monzos_pitch(note):
     vector = list(note.pitch.monzo.vector)
-    while vector[-1] == 0:
+    while vector and vector[-1] == 0:
         vector.pop()
-    return "@Mzo:{}\n".format(" ".join(map(str, vector)))
+    if not vector:
+        vector = [0]
+    return "@Mzo:{}".format(" ".join(map(str, vector)))
 
 
 def _tokenize_cents_pitch(note, base_frequency):
@@ -1323,7 +1325,7 @@ def _tokenize_absolute_pitch(note, inflections):
     return tokenize_pitch(note.pitch.monzo.vector.astype(int), inflections)
 
 
-def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, absolute_time=False):
+def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, absolute_time=False, separator=" "):
     if isinstance(pattern, Spacer):
         return pattern.value
     if isinstance(pattern, ProgramChange):
@@ -1392,8 +1394,8 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
             previous_time = local_time
             local_time += subpattern.duration
         if main:
-            return " ".join(filter(None, subnotations))
-        return "(" + " ".join(filter(None, subnotations)) + ")" + suffix
+            return separator.join(filter(None, subnotations))
+        return "(" + separator.join(filter(None, subnotations)) + ")" + suffix
     if isinstance(pattern, Note):
         return _tokenize_pitch(pattern) + suffix
     if isinstance(pattern, Rest):
@@ -1420,7 +1422,7 @@ def patterns_to_monzos(patterns, outfile):
         if pattern.duration <= 0:
             continue
         outfile.write("---\n")
-        outfile.write(tokenize_pattern(pattern, None, _tokenize_monzos_pitch, True))
+        outfile.write(tokenize_pattern(pattern, None, _tokenize_monzos_pitch, True, separator="\n"))
         outfile.write("\n")
 
 

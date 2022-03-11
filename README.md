@@ -48,6 +48,11 @@ To verify that the diaschismic comma pump example indeed works as intended you c
 python -m hewmp.parser examples/diaschismic_comma_pump.hewmp --cents
 ```
 You should see `0.0c` or something very close to zero like `6.15e-12c` even towards the end of the piece.
+
+If you're wondering about the composition of the fractions you can use the `--monzo` command line argument.
+```
+echo "P1U M6% va4" | python -m hewmp.parser --monzo
+```
 ## JSON Output
 By default the HEWMP parser outputs JSON to the standard output. The format is still under development for easy integration with custom software synths.
 

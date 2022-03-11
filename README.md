@@ -320,11 +320,25 @@ To spell intervals beyond the 3-limit HEWMP uses small adjustements defined by p
 | v     | ^     | 11    | [-5 1 0 0 1 0 0 0 0 0 0>           | 33/32     | 53.27294 |
 | W     | M     | 31    | [5 0 0 0 0 0 0 0 0 0 -1>           | 32/31     | 54.96443 |
 
-Currently these inflections are fixed but an option to configure them will be added.
 
 The vectors associated with the primes 5, 7 and 11 follow Joe Monzo's original proposition.
 The monzo for `i` and `!` was particularly chosen so that the barbados third `13/10` is spelled `M3i+`. This in turn makes it possible to write the barbados terrad `10:13:15` as `=Mi+` using the chord system (pronounced "major island" see [Pronunciation](#pronunciation) for details).
 The inflections are supposed to resemble arrows pointing in opposite directions while the U and D pair bring to mind the words *up* and *down*.
+
+### Specifying Inflections
+If you're not satisfied with the default choices you can define your own inflections with the config `I` followed by an arrow.
+```
+$ Consistent with hewm-53 up to prime 31
+Ii:27/26
+I*:18/17
+IA:19/18
+Iu:24/23
+
+13/8 M6!   $ Now a major sixth   (default a5i)
+17/16 M2%  $ Now a major second  (default m2*)
+19/16 M2A  $ Now a major second  (default m3A)
+23/16 P5n  $ Now a perfect fifth (default a4u)
+```
 
 ## Color Notation
 Color intervals such as `y3` for `5/4` are supported. Absolute intervals are made using color commas.
@@ -338,7 +352,7 @@ The functionality of the Color Chord system is mostly implemented, but due to li
 ```
 C4=y  $ C yo chord; Cy in the original system.
 D4=w\y5  $ D wa yo-5 chord; Dw(y5) in the original.
-E4=r+ry5no5  $ E ru ruyo-4 no 5 chord; Er,ry4no5 in the original.
+E4=r+ry4no5  $ E ru ruyo-4 no 5 chord; Er,ry4no5 in the original.
 ```
 
 ## Figuring Out Spellings

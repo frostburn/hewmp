@@ -1,7 +1,7 @@
 # Text2Music
 Text2Music is a machine-readable notation system for writing music in (tempered) just intonation.
 
-It supports bare ratios, edo steps, Color notation, Ups-and-Downs notation and HEWMP notation.
+It supports bare ratios, edo steps, Color notation, Ups-and-Downs notation, pergen notation and HEWMP notation.
 (The last acronym stands for Helmholtz / Ellis / Wolf / Monzo / Pakkanen).
 
 ## Writing Music Using Ratios
@@ -13,7 +13,7 @@ You can use Text2Music with minimal knowledge of music theory by writing melodie
 Note frequency is initialized to 440Hz and each ratio multiplies it. Here's the same melody spelled using frequencies.
 ```
 BF:0
-@440Hz @550Hz @660Hz @880Hz
+440Hz 550Hz 660Hz 880Hz
 ```
 Or as *moving* ratios that multiply together as we go along.
 ```
@@ -39,10 +39,15 @@ The Giant Steps example is mostly written in relative intervals. If you wish to 
 ```
 python -m hewmp.parser examples/giant_steps.hewmp --absolute
 ```
-The Giant Steps example is written in relative 5-limit intervals. If you wish to read it in fractional numbers use the `--fractional` command line argument.
+The Minuet example is written in 3-limit intervals. If you wish to read it in fractional numbers use the `--fractional` command line argument.
 ```
-python -m hewmp.parser examples/giant_steps.hewmp --fractional
+python -m hewmp.parser examples/minuet.hewmp --fractional
 ```
+To verify that the diaschismic comma pump example indeed works as intended you can display the cent values with the `--cents` command line argument.
+```
+python -m hewmp.parser examples/diaschismic_comma_pump.hewmp --cents
+```
+You should see `0.0c` or something very close to zero like `6.15e-12c` even towards the end of the piece.
 ## JSON Output
 By default the HEWMP parser outputs JSON to the standard output. The format is still under development for easy integration with custom software synths.
 
@@ -66,7 +71,7 @@ Note duration is specified using square brackets `[`, `]` after a note. The defa
 Anything after a `$` sign is ignored until a newline is reached.
 ```
 $ This is a comment
-1 3/2 $ This another comment after two notes that play
+1 3/2  $ This another comment after two notes that play
 ```
 
 ## Rests
@@ -74,7 +79,7 @@ To advance time without playing a note use the rest symbol `.`.
 ```
 1 . 5/4 3/2
 ```
-Rests chain so `..` lasts twice as long as a single rest.
+Rests can be chained so `..` lasts twice as long as a single rest.
 
 ## Pedal
 To extend the duration of the last played note (or rest) by one use the pedal symbol `!`. You can think of it as a loud rest that doesn't cut off the sound. To specify how much to extend the duration use `!` followed by a number inside square brackets.
@@ -82,7 +87,7 @@ To extend the duration of the last played note (or rest) by one use the pedal sy
 1 !   6/5 3/2  $ The root note lasts twice as long as the other two
 1[!1] 6/5 3/2  $ The same
 ```
-Pedals chain so `!!` extends duration by two. Pedals also chain with rests so `1 !.!.` is a note of duration two followed by a rest of duration two followed by a rest. Consider it bad practice to extend rests with `!`. The proper spelling is `1 !...`.
+Pedals chain so `!!` extends duration by two. Pedals also chain with rests so `1 !...` is a note of duration two followed by a rest of duration three.
 
 ## Soft pedal
 To only extend the playing duration of the last played note use the soft pedal symbol `?`.
@@ -146,7 +151,7 @@ $ Go up from there
 ~9/8 ~9/8 ~9/8
 ```
 
-## (Root) Moving Intervals
+## Root Moving Intervals
 To play a note relative to the previous one and remember it use `~`. This can be used to play local scales by using moving intervals for root motion.
 ```
 $ ii arpeggio

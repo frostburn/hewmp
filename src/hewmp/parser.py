@@ -1327,11 +1327,11 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
     if isinstance(pattern, Spacer):
         return pattern.value
     if isinstance(pattern, ProgramChange):
-        return "I:{}".format(pattern.name)
+        return "I:{}\n".format(pattern.name)
     if isinstance(pattern, ContextChange):
-        return "N:{}".format(pattern.name)
+        return "N:{}\n".format(pattern.name)
     if isinstance(pattern, TrackVolume):
-        return "V:{}".format(pattern.volume)
+        return "V:{}\n".format(pattern.volume)
     if isinstance(pattern, UserMessage):
         return pattern.escape()
     if isinstance(pattern, Articulation):

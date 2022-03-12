@@ -66,8 +66,32 @@ FLAVOR_CHORDS = {
     "#11": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0), ("a11", 0)),
 
     "13": (("P1", 0), ("M3", 1), ("P5", 0), ("m7", -1), ("M9", 0), ("P11", 0), ("M13", 0)),
+
+    "o": (("P1", 0), ("m3", 1), ("d5", 2)),
+    "o7": (("P1", 0), ("m3", 1), ("d5", 2), ("d7", 3)),
+
+    "ø": (("P1", 0), ("m3", 1), ("d5", 2), ("m7", 1)),
+
+    "hdom": (("P1", 0), ("m3", 1), ("d5", 2), ("m7", 0)),
+
+    "aug": (("P1", 0), ("M3", 1), ("a5", 2)),
+    "aug7": (("P1", 0), ("M3", 1), ("a5", 2), ("a7", 3)),
+
+    "haug": (("P1", 0), ("M3", 1), ("a5", 2), ("m7", -1)),
+
+    "augdom": (("P1", 0), ("M3", 1), ("a5", 2), ("m7", 0)),
+
+    "M7aug": (("P1", 0), ("M3", 1), ("a5", 2), ("M7", 1)),
 }
 
+FLAVOR_CHORDS["dim"] = FLAVOR_CHORDS["o"]
+FLAVOR_CHORDS["dim7"] = FLAVOR_CHORDS["o7"]
+
+FLAVOR_CHORDS["hdim"] = FLAVOR_CHORDS["ø"]
+FLAVOR_CHORDS["ø7"] = FLAVOR_CHORDS["ø"]
+FLAVOR_CHORDS["hdim7"] = FLAVOR_CHORDS["ø"]
+
+FLAVOR_CHORDS["haug7"] = FLAVOR_CHORDS["haug"]
 
 def make_flavor_chord(base, arrow_tokens, ups_and_downs):
     positive_inflection = "".join(arrow_tokens)
@@ -89,10 +113,12 @@ def make_flavor_chord(base, arrow_tokens, ups_and_downs):
 
     chord = []
     for interval, flavor in FLAVOR_CHORDS[base]:
-        if flavor > 0:
+        while flavor > 0:
             interval = ups_and_downs + interval + positive_inflection
-        if flavor < 0:
+            flavor -= 1
+        while flavor < 0:
             interval = downs_and_ups + interval + negative_inflection
+            flavor += 1
         chord.append(interval)
 
     return chord
@@ -190,6 +216,8 @@ def interval_key(token):
 
 TONE_SPLITTER = Splitter(("add", "no", "sus"))
 
+PROTECTED_PREFIXES = ["M", "d", "u", "su", "aug", "qua", "qui", "hdim", "haug", "M7aug"]
+PROTECTED_PREFIXES.sort(key=lambda x: -len(x))
 
 def expand_chord(token):
     notation = "hewmp"
@@ -209,15 +237,12 @@ def expand_chord(token):
             sus_replacement = accidental_to_quality(replacement)
 
     prefix = ""
-    if token.startswith("M") or token.startswith("d") or token.startswith("u"):
-        prefix = token[0]
-        token = token[1:]
-    if token.startswith("su"):
-        prefix = token[:2]
-        token = token[2:]
-    if token.startswith("qua") or token.startswith("qui"):
-        prefix = token[:3]
-        token = token[3:]
+    for protected in PROTECTED_PREFIXES:
+        if token.startswith(protected):
+            prefix = protected
+            token = token[len(prefix):]
+            break
+
     separated = separate_by_arrows(token)
     base = prefix + separated.pop(0)
 

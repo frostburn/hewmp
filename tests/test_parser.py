@@ -157,7 +157,7 @@ def test_interval_translation():
 
 
 def test_chords():
-    text = "=hdim"
+    text = "=hdim+"
     notes = get_notes(text)
     pitches = [[0], [1, 1, -1], [2, 2, -2], [0, 2, -1]]
     expect_pitches(notes, pitches)
@@ -1188,6 +1188,27 @@ def test_color_temperament():
         assert False
 
 
+def test_flavor_chord_multiplicity():
+    text = "=o7+"
+    notes = get_notes(text)
+    pitches = [[0], [1, 1, -1], [2, 2, -2], [3, 3, -3]]
+    expect_pitches(notes, pitches)
+
+    text = "=o+2"
+    notes = get_notes(text)
+    pitches = [[0], [-3, 5, -2], [-6, 10, -4]]
+    expect_pitches(notes, pitches)
+
+    text = "=v>aug"
+    notes = get_notes(text)
+    pitches = [[0], [15/2, -9/2], [15, -9]]
+    expect_pitches(notes, pitches)
+
+    for symbol in ["ø", "ø7", "hdim", "hdim7", "aug7", "haug", "haug7", "augdom", "M7aug"]:
+        notes = get_notes("={}".format(symbol))
+        assert len(notes) == 4
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1281,3 +1302,4 @@ if __name__ == '__main__':
     test_instrument()
     test_default_enharmonics()
     test_color_temperament()
+    test_flavor_chord_multiplicity()

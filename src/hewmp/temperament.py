@@ -49,6 +49,23 @@ def temper_subgroup(just_mapping, comma_list, constraints, subgroup, num_iterati
 
     subgroup_just_mapping = array([dot(basis_vector, just_mapping) for basis_vector in subgroup])
     normalized_subgroup = [basis_vector / abs(basis_vector).sum() for basis_vector in subgroup]
+
+    # Pinkan kludge fix  # TODO: Figure out the correct math for the general case
+    if normalized_subgroup:
+        renorm = False
+        for i in range(len(normalized_subgroup[0])):
+            count = 0
+            for base in normalized_subgroup:
+                if base[i] != 0:
+                    count += 1
+            if count > 1:
+                for base in normalized_subgroup:
+                    base[i] = 0
+                    renorm = True
+        if renorm:
+            normalized_subgroup = [basis_vector / abs(basis_vector).sum() for basis_vector in normalized_subgroup]
+
+
     comma_list = [array([dot(basis_vector, comma) for basis_vector in normalized_subgroup]) for comma in comma_list]
     constraints = [array([dot(basis_vector, constraint) for basis_vector in normalized_subgroup]) for constraint in constraints]
     if len(constraints) == 1:

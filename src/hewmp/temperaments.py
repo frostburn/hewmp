@@ -226,7 +226,7 @@ _ENHARMONICS = {
     "143496441/134217728": ["vvvvvvM2"],
     "19683/19208": ["vvvvdd3"],
 
-    "81/80,405/392": ["vvd2"],
+    "81/80,50/49": ["vvd2"],
     "49/48,243/242": ["<<m2", "vva1"],
     "49/48,2048/2025": ["<<m2", "^^d2"],
     "243/242,2048/2025": ["^^d2", "<<a1"],
@@ -234,7 +234,7 @@ _ENHARMONICS = {
     "128/125,729/686": ["vvvd2", "<<<a1"],
     "128/125,1029/1024": ["^^^d2", "<<<m2"],
     "250/243,1029/1024": ["vvva1", "<<<m2"],
-    "405/392,1029/1024": ["vvd2", "<<<m2"],
+    "50/49,1029/1024": ["vvd2", "<<<m2"],
     "729/686,250/243": ["vvvd2", "<<<a1"],
 }
 
@@ -294,8 +294,6 @@ if __name__ == "__main__":
     by_rank = defaultdict(list)
     for name, (comma_list, subgroup) in TEMPERAMENTS.items():
         if name not in five_limit:
-            if name == "pinkan":  # TODO: Fix basis vector calculation
-                continue
             basis = subgroup.split(".")
             basis = [interval_parser.parse(basis_vector).value().monzo.float_vector() for basis_vector in basis]
             commalist = [interval_parser.parse(comma).value().monzo.float_vector() for comma in comma_list]

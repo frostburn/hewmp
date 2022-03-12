@@ -3,8 +3,8 @@
 ## Basic Chords
 | symbol    | example |
 |:---------:|:-------:|
-| `M`       | `=M-` is `P1,M3-,P5` is `4:5:6` |
-| `m`       | `=m+` is `P1,m3+,P5` is `6;5;4` |
+| `M`       | `=M-` is `P1,M3-,P5` is `4:5:6` and `=M>` is `9;7;6` |
+| `m`       | `=m+` is `P1,m3+,P5` is `6;5;4` and `=m<` is `6:7:9` |
 | `sus2`    | `=sus2-` is `P1,M2-,P5` is `18:20:27` and `=sus2` is `9;8;6` |
 | `sus4`    | `=sus4+` is `P1,P4+,P5` is `27;20;18` and `=sus4` is `6:8:9` |
 | `quartal` | `=quartal+` is `P1,P4+,m7+` is `27;20;15` and `=quartal` is `9:12:16` |

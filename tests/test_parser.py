@@ -1209,6 +1209,13 @@ def test_flavor_chord_multiplicity():
         assert len(notes) == 4
 
 
+def test_percussion_with_dynamics():
+    text = "N:percussion!\nforte f orte"
+    notes = get_notes(text)
+    print(notes)
+    # TODO: Figure out what to do here
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1303,3 +1310,4 @@ if __name__ == '__main__':
     test_default_enharmonics()
     test_color_temperament()
     test_flavor_chord_multiplicity()
+    # test_percussion_with_dynamics()

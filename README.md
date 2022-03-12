@@ -382,14 +382,19 @@ $ A minor chord written using utonal syntax
 6;5;4
 $ The same but using fractions and otonal syntax
 1/6:1/5:1/4
+$ The same but common factors expanded
+10:12:15
 ```
 ### Chord Symbols
-HEWMP comes with a chord system that applies inflections and ups-and-downs to chord tones
+HEWMP comes with a chord system that applies inflections and pergen arrows to chord tones
 ```
 $ Major seventh chord with syntonic inflections on the major third and the major seventh
 =M7-
 $ Same as
 8:10:12:15
+
+$ Semaphoric sus chord (meaning depends on the temperament)
+=<m  $ Same as P1,P4/2,P5
 ```
 See [Chord Documentation](doc/chords.md) for more.
 Some chords like `=pinkan` for `10:13:15:19` only have one version and do not support inflections.
@@ -399,11 +404,22 @@ Tones can be added to the chord symbols that support inflections.
 $ Major seventh chord with an added perfect fourth
 =M7-add4
 ```
+Added tones can also be inflected.
+```
+$ Interpreting the harmonic segment 6:7:8:9:10 as a septimal minor chord with added tones
+=m<add4add6-
+```
 #### Suspendend replacements
 The third of a chord can be substituted for chords that support inflections.
 ```
 $ Major seventh chord with the major third replaced by a major second
 =M7-sus2
+```
+#### Removed tones
+Tones can also be removed.
+```
+$ Major ninth chord without the fifth
+=M9-no5
 ```
 ### Comma-separated Pitches
 ```
@@ -538,7 +554,7 @@ Use `V:` to define the volume of a track. Default is `1.0`.
 V:0.5  $ Half as loud
 ```
 ### Notation
-Use `N:` to change what notes mean. Used for writing percussion, but reserved for future alternatives that clash with base HEWMP notation. Default is `hewmp`.
+Use `N:` to change what notes mean. Used for writing percussion and switching to a non-Pythagorean spine. Default is `hewmp`.
 ```
 N:percussion
 ```
@@ -576,6 +592,10 @@ $ 3 against 4 against 5 polyrhythm
  T (k k k)(k k k)(k k k)(k k k)
 @T (ss ss)(ss ss)(ss ss)(ss ss)
 @T (hhhhh)(hhhhh)(hhhhh)(hhhhh)
+$ Same but in a time box to see how everything aligns
+ T (k...................k...................k...................)
+@T (s..............s..............s..............s..............)
+@T (h...........h...........h...........h...........h...........)
 ```
 Warning: Some two letter names look like chains. `hc` is one Hand Clap instead of a Closed Hi-hat followed by Crash Cymbal 1. Only use chaining for patterns longer than three beats to be safe.
 To disable two letter names altogether use `N:percussion!`.
@@ -583,10 +603,10 @@ To disable two letter names altogether use `N:percussion!`.
 N:percussion!
 hc  $ Hi-hat followed by a crash cymbal
 ```
-You can even try "speaking" in percussion as most letters correspond to a sound and unrecognized letters are skipped.
+You can even try "speaking" in percussion as most letters correspond to a sound and most unrecognized letters are skipped. Reserved letters such as `T`, `p` or `f` cannot start a chain.
 ```
 N:percussion!
-You are now speaking in percussion!
+You are now speaking in Percussion!
 ```
 ### Instrument
 Use `I:` to select an instrument. If the name corresponds to General MIDI the matching program is selected as well.
@@ -617,9 +637,9 @@ $ Chord progression that pumps the diesis without changing the overall pitch.
 |: ~1/2=M- ~5/4=M- ~5/4=M-_2 ~5/4=7-_3 :|x4
 ```
 ### Subgroup
-To make full use of Text2Music's tuning capabilities you need to tell it which mappings of primes should be affected. You can also use fractions like `2.3.13/5` or multiples of primes like `2.15.7`.
+When using a comma list a prime subgroup is automatically selected, but to make full use of Text2Music's tuning capabilities you need to tell it which mappings of primes should be affected by using fractions like `2.3.13/5` or multiples of primes like `2.15.7`.
 ```
-SG:2.3.5
+SG:2.3.13/5
 ```
 By default the correct subgroup is inferred from the comma list.
 ### <a name="temperament"></a>Temperament
@@ -647,17 +667,51 @@ $ Specify quarter-comma meantone by constraining
 $ octaves to be pure and major thirds to be just
 C:P8,M3-
 ```
+### Color Temperaments
+[Color Temperament Names](https://en.xen.wiki/w/Color_notation/Temperament_Names) are supported.
+```
+T:Thotho
+$ Pergen notation for a 10 note scale (higher prime agnostic)
+P1|^P1     |M2 |vM3     |M3   |vP5 |P5 |vM6    |M6   |^M6    |P8|
+$ Same but using fractions (explicit higher primes)
+1 |27/26   |9/8|39/32   |81/64|13/9|3/2|13/8   |27/16|52/27  |2 |
+$ Pergen notation expanded using an explicit half-octave period
+P1|P5&-P8/2|M2 |M6&-P8/2|M3   |P8/2|P5 |M2&P8/2|M6   |M3&P8/2|P8|
+$ The same but slightly more obscure
+P1|M2/2    |M2 |a4/2    |M3   |P8/2|P5 |M10/2  |M6   |a12/2  |P8|
+```
+Multiple color commas are separated by `&`.
+```
+T:Trigu & Latrizo
+$ The octave is split into three equal parts
+P1 ~vM3 ~vM3 ~vM3 ~-P8
+...
+$ The fifth is also split in three. Remeber that
+$ lifts and drops are > and < instead of / and \
+P1 ~>M2 ~>M2 ~>M2 ~-P5
+```
+Use command line tools to convert color temperament commas to fractions
+```
+$ python -m hewmp.color Thotho
+169/162
+```
 ### <a name="equal_temperament"></a>Equal Temperament and Warts
-While it is possible to produce an equal temperament without affecting every prime (e.g. `T:compton` is 12edo that only affects `2` and `3`) there's the option to round every prime to the closest number of steps of an equal temperement with `ET:`. You can use [Wart Notation](https://en.xen.wiki/w/Val#Shorthand_notation) to specify non-standard rounding. To specify another interval to divide besides the default `2` use `ED{N}` after the number of divisions and the warts.
+While it is possible to produce an equal temperament without affecting every prime (e.g. `T:compton` is 12edo that only affects `2` and `3`) there's the option to round every prime to the closest number of steps of an equal temperement with `ET:`. You can use [Wart Notation](https://en.xen.wiki/w/Val#Shorthand_notation) to specify non-standard rounding. To specify another interval to divide besides the default `2` use `ED` and a number after the number of divisions and the warts.
 ```
 ET:13b  $ 13edo with a flat fifth to make it compatible with Ups and Downs notation
 ```
 ```
 ET:13ED3  $ Bohlen-Pierce scale
 ```
-Some equal temperaments have special names. Wendy Carlos' `alpha`, `beta`, `gamma`, `delta` and Bohlen-Pierce (`BP`).
+Some equal temperaments have special names: Wendy Carlos' `alpha`, `beta`, `gamma`, `delta` and Bohlen-Pierce (`BP`).
 It can be fun to spell melodies and harmonies in just intonation even when using `ET:` as it allows you to untemper the music afterwards
 Warning: Large errors in the ET mapping for the prime numbers tend to compound and produce big surprises in how the music sounds compared to its spelling.
+### Spine
+TODO
+### Waveform
+TODO
+### Monzo
+TODO
 ### Flags
 Various configs that don't take parameters go under flags `F:`.
 ```
@@ -713,7 +767,7 @@ $ 12ed2 A major scale
 ```
 Warning: Not even `ET:` will affect something specified in raw cents.
 ## Primes beyond 31
-If a fraction contains primes larger than the supported `31` those will be converted to cents in the output.
+If a fraction contains primes larger than the supported `31` it will be converted to cents in the output.
 ```
 1 37/31
 ```
@@ -839,7 +893,7 @@ N:percussion
 @T (W W w w W)[E16 4 X4]
 ```
 See the first few patterns [here](/doc/euclidean_rhythms.md).
-### Pergen
+### Period-Generator
 All of the Euclidean rhythms are MOS or Multi-MOS rhythms meaning that they only have gaps of two sizes between onsets. All MOS rhythms can be produced with a period (size of the pattern) and a generator (a fixed distance between two onsets, not necessarily adjacent) that wraps around the period. Multi-MOS patterns are simply repeated MOS patterns. You can specify the period and the generator using `PG`.
 ```
 P1[x5 7PG12 4]  $ Rhythmic pattern inspired by the layout of the white keys on a piano
@@ -1006,6 +1060,19 @@ While not the most accurate edo for the Orgone temperament, 18ed2 does greatly b
 | 18     | P8                   | P8              |
 
 Please note that 18bED2 can be easily notated using Ups and Downs. The wartless version is here just for show.
+
+## Lambda Notation
+Lambda notations is suitable for Bohlen-Pierce. The spine is generated by `7/3` against a period of `3/1`.
+```
+ET:Bohlen-Pierce
+N:lambda
+$ A nine note scale
+C4 D4 E4 F4 G4 H4 J4 A4 B4 C5
+$ The chromatic scale
+C4 C#4 D4 E4 F4 F4# G4 H4 H#4 J4 A4  A#4 B4  C5
+C4 1\  2\ 3\ 4\ 5\  6\ 7\ 8\  9\ 10\ 11\ 12\ 13\
+```
+
 
 ## Table of ASCII glyphs
 See [ASCII semantics](doc/ASCII_semantics.md) in the docs.

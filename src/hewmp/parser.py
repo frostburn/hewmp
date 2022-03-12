@@ -754,7 +754,7 @@ def parse_track(lexer, default_config, max_repeats=None):
             if config_key == "ET":
                 if "unmapET" in config["flags"]:
                     config["flags"].remove("unmapET")
-                token = token.strip()
+                token = token.strip().lower()
                 if token in EQUAL_TEMPERAMENTS:
                     et_divisions, et_divided = EQUAL_TEMPERAMENTS[token]
                     warts = Counter()

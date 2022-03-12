@@ -158,9 +158,33 @@ EXTRA_CHORDS = {
     "sp9": ["P1", "P4/2", "P4/2*2", "P4/2*3", "P4/2*4", "P4/2*5", "P4/2*6", "P4/2*7", "P4/2*8", "P4/2*9"],
 
     "semaphore5": ["P1", "P4/2", "P5"],
-    "semi3ve": ["P1", "P4/2", "P5", "3/1/2"],
+    "semi3ve": ["1/1", "4/3/2", "3/2", "3/1/2"],
 }
 
 EXTRA_CHORDS.update(YA_CHORDS)
 EXTRA_CHORDS.update(OTONAL_CHORDS)
 EXTRA_CHORDS.update(UTONAL_CHORDS)
+
+
+if __name__ == '__main__':
+    from .monzo import Pitch, PRIMES
+    from .parser import parse_chord, IntervalParser
+    from .notation import tokenize_otonal_utonal
+
+    pitch = Pitch()
+    interval_parser = IntervalParser()
+
+    stuff = list(EXTRA_CHORDS.items())
+    stuff.append(("oaug", None))
+    print("| symbol | expansion |")
+    print("|:------:|:---------:|")
+    for symbol, elements in sorted(stuff):
+        pattern = parse_chord(symbol, pitch, interval_parser)
+        pitches = []
+        for note in pattern:
+            pitches.append(note.pitch.monzo.vector)
+        try:
+            chord = tokenize_otonal_utonal(pitches, PRIMES)
+        except ValueError:
+            chord = ",".join(elements)
+        print("|`{}`|`{}`|".format(symbol, chord))

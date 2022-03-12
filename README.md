@@ -334,7 +334,7 @@ I*:18/17
 IA:19/18
 Iu:24/23
 
-13/8 M6!   $ Now a major sixth   (default a5i)
+13/8  M6!  $ Now a major sixth   (default a5i)
 17/16 M2%  $ Now a major second  (default m2*)
 19/16 M2A  $ Now a major second  (default m3A)
 23/16 P5n  $ Now a perfect fifth (default a4u)
@@ -391,8 +391,8 @@ $ Major seventh chord with syntonic inflections on the major third and the major
 $ Same as
 8:10:12:15
 ```
-Some chords like `=aug` only have one version and do not support inflections.
-(Chord documentation coming soon.)
+See [Chord Documentation](doc/chords.md) for more.
+Some chords like `=pinkan` for `10:13:15:19` only have one version and do not support inflections.
 #### Added tones
 Tones can be added to the chord symbols that support inflections.
 ```
@@ -442,14 +442,15 @@ The comma operator `,` is actually a time rewind operator that goes back to the 
 
 ## Absolute Time
 To rewind time to a specific beat use the `@` symbol followed by a number inside square brackets `[`, `]`.
+You can also use `@T` followed by a number.
 
 ## Tuplets
 Parenthesis `(`, `)` are actually used to define tuplets. Anything placed inside parenthesis will have total duration of one.
 ```
 $ Steady pedal tone
-1         1    1  1    |  1  1      1 1 ||
+@T0 1     1    1  1    |  1  1      1 1 ||
 $ Funky second voice
-~3/2[@0] (. 1) 1 (. 1) | (1 1 1)[2] 1 1 ||
+@T0 ~3/2 (. 1) 1 (. 1) | (1 1 1)[2] 1 1 ||
 ```
 
 ## Arpeggiate and Hold
@@ -876,35 +877,6 @@ See some patterns with integer parameters [here](/doc/pergen_rhythms.md).
 | W     | weak          | 31      | `W` looks like two arrows pointing down |
 
 Example `cM7-<3A2` "Compound major seventh minus less three high 2" or `987069284145/274877906944`.
-
-### Chords
-| symbol  | pronunciation         | notes                                                                                 |
-|:-------:|:---------------------:| ------------------------------------------------------------------------------------- |
-| =sus2   | sus two               | same as `P1,M2,P5` or `9;8;6` or `8:9:12` |
-| =sus4   | sus four              | same as `P1,P4,P5` or `6:8:9` |
-| =M      | major                 | same as `P1,M3,P5` or `81;64;54` or `64:81:96`                                                      |
-| =M-     | major minus           | same as `P1,M3-,P5` or `4:5:6` |
-| =m      | minor                 | same as `P1,m3,P5` or `54:64:81`                                                      |
-| =m+     | minor plus            | same as `P1,m3+,P5` or `6;5;4` |
-| =M7     | major-seventh         | the major third and the major seventh use the same inflection                         |
-| =m7     | minor-seventh         | the minor third and the minor seventh use the same inflection                         |
-| =7      | seventh               | spelled as a major chord but uses a minor seventh of the opposite inflection          |
-| =dom    | dominant              | uses a Pythagorean minor seventh for a shorter harmonic distance in a V-I progression |
-| =mM7    | minor-major-seventh   | spelled as a minor chord but uses a major seventh of the opposite inflection          |
-| =M9     | major-ninth           | the major ninth is not inflected |
-| =m9     | minor-ninth           | the major ninth is not inflected |
-| =9      | ninth                 | the major ninth is not inflected |
-| =dom9   | dominant-ninth        | only the third is inflected |
-| =mb9    | minor-flat-ninth      | the minor ninth is inflected     |
-| =M11    | major-eleventh        | the perfect eleventh is inflected |
-| =m11    | minor-eleventh        | the perfect eleventh is inflected |
-| =M#11   | major-sharp-eleventh  | the augmented eleventh is inflected |
-| =11     | eleventh              | the perfect eleventh is not inflected |
-| =domb12 | dominant-flat-twelfth | only the third is inflected |
-| =M13    | major-thirteenth      | the major thirteenth is inflected |
-| =dom13  | dominant-thirteenth   | only the third is inflected |
-| =13     | thirteenth            | the major thirteenth is not inflected |
-| =M#15   | major-sharp-fifteenth | the major thirteenth is inflected, the augmented fifteenth is not |
 
 ## <a name="phase"></a> Phase Offset
 To control when the beats of two similarly tuned notes occur use a phase offset defined in degrees. You will most likely have to write your own synths to take advantage of this.

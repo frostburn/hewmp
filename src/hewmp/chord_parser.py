@@ -91,6 +91,9 @@ FLAVOR_CHORDS["hdim"] = FLAVOR_CHORDS["ø"]
 FLAVOR_CHORDS["ø7"] = FLAVOR_CHORDS["ø"]
 FLAVOR_CHORDS["hdim7"] = FLAVOR_CHORDS["ø"]
 
+FLAVOR_CHORDS["+"] = FLAVOR_CHORDS["aug"]
+FLAVOR_CHORDS["+7"] = FLAVOR_CHORDS["aug7"]
+
 FLAVOR_CHORDS["haug7"] = FLAVOR_CHORDS["haug"]
 
 def make_flavor_chord(base, arrow_tokens, ups_and_downs):
@@ -216,7 +219,7 @@ def interval_key(token):
 
 TONE_SPLITTER = Splitter(("add", "no", "sus"))
 
-PROTECTED_PREFIXES = ["M", "d", "u", "su", "aug", "qua", "qui", "hdim", "haug", "M7aug"]
+PROTECTED_PREFIXES = ["M", "d", "u", "+", "su", "mM7", "aug", "qua", "quin", "dim7", "hdim", "haug", "M7aug"]
 PROTECTED_PREFIXES.sort(key=lambda x: -len(x))
 
 def expand_chord(token):

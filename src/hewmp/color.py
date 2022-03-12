@@ -15,6 +15,8 @@ MAX_HARMONIC_CHORD = 36
 
 
 LONG_FORMS = {
+    "a": "",
+
     "la": "L",
     "sa": "s",
 
@@ -496,10 +498,12 @@ JI = log(PRIMES)
 def parse_comma(token):
     token = token.lower().replace("-", "")
     short_token = ""
-    exponent = None
     modified = True
+    fresh = False
     while modified:
+        fresh = False
         modified = False
+        exponent = None
         exponents = []
         while True:
             for name, exponent_ in LONG_EXPONENTS.items():
@@ -510,19 +514,31 @@ def parse_comma(token):
             else:
                 break
         if exponents:
+            fresh = True
             m = 1
             for exponent_ in exponents:
                 m *= UNICODE_EXPONENTS[exponent_]
             exponent = "".join(REVERSE_UNICODE_EXPONENTS[c] for c in str(m))
-        for long_form, short_form in LONG_FORMS.items():
-            if token.startswith(long_form):
-                short_token += short_form
-                token = token[len(long_form):]
-                modified = True
-                if exponent:
-                    short_token += exponent
-                    exponent = None
-    if exponent is None:
+        while True:
+            done = False
+            for long_form, short_form in LONG_FORMS.items():
+                if token.startswith(long_form):
+                    short_token += short_form
+                    token = token[len(long_form):]
+                    modified = True
+                    if long_form == "a":
+                        done = True
+                        break
+                    if exponent:
+                        short_token += exponent
+                    if long_form in ("sa", "la"):
+                        done = True
+                    break
+            else:
+                break
+            if done:
+                break
+    if exponent is None or not fresh:
         ordinal = 1
     else:
         ordinal = UNICODE_EXPONENTS[exponent]

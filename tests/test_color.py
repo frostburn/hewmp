@@ -33,6 +33,11 @@ COMMAS = {
     "Trizo": [-2, -4, 0, 3],
     "Triru": [-1, 6, 0, -3],
     "Latrizo": [-10, 1, 0, 3],
+    "Laruru": [-7, 8, 0, -2],
+    "Laquinzo": [-14, 0, 0, 5],
+    "Quinru": [3, 7, 0, -5],
+    "Laquadru": [-3, 9, 0, -4],
+    "Laru": [-13, 10, 0, -1],
     "Lalu": [-6, 6, 0, 0, -1],
     "Trilo": [-4, -4, 0, 0, 3],
     "Thuthu": [9, -1, 0, 0, 0, -2],
@@ -41,11 +46,6 @@ COMMAS = {
 }
 # TODO
 """
-Laruru   [-7 8 -2]
-Laquinzo      [-14 0 5]
-Quinru  [3 7 -5]
-Laquadru    [-3 9 -4]
-Laru        [-13 10 -1]
 Saquadru    [16 -3 -4]
 Latribiru     [1 10 -6]
 Latriru  [-9 11 -3]
@@ -81,6 +81,13 @@ Quinthu   [9 6 -5]
 Latritho    [-19 5 3]
 """
 
-for name, target in COMMAS.items():
-    monzo = parse_comma(name)
-    assert (monzo[:len(target)] == target).all()
+if __name__ == '__main__':
+    for name, target in COMMAS.items():
+        monzo = parse_comma(name)
+        assert (monzo[:len(target)] == target).all()
+
+    assert parse_comma("trizogu")[2] == -3
+    assert parse_comma("trizo-agu")[2] == -1
+
+    assert (parse_comma("Thotrilu-agu")[:6] == [9, 0, -1, 0, -3, 1]).all()
+    assert (parse_comma("Bizozogu")[:4] == [-5, -1, -2, 4]).all()

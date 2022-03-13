@@ -358,3 +358,11 @@ if __name__ == "__main__":
         key = frozenset(comma_list)
         enhamonics = ", ".join(ENHARMONICS[key])
         print("|{}|{}|{}|{:.1f}|{}|".format(name, ", ".join(map(str, comma_list)), subgroup, mapping[0]/log(2)*1200, enhamonics))
+
+    for rank in range(3, len(PRIMES)):
+        if by_rank[rank]:
+            print("## Rank {}".format(rank))
+            print("|Name|Comma list|Subgroup|Octave size|")
+            print("|:---:|:---:|:---:|:---:|")
+            for name, comma_list, subgroup, mapping in by_rank[rank]:
+                print("|{}|{}|{}|{:.1f}|".format(name, ", ".join(comma_list), subgroup, mapping[0]/log(2)*1200))

@@ -723,9 +723,39 @@ A6 (G5 F5) | (E5 D5) (C5 B5 A5) |
 G4 A5      | A6[2]              ||
 ```
 ### Waveform
-TODO
+In WebAudio the simplest way to produce sound is using oscillators. To set the oscillator waveform use the `WF:` config. Available values are `sine`, `triangle`, `square`, `sawtooth` and an assortment of custom timbres if you're playing on [lumipakkanen.com/text2music/](https://lumipakkanen.com/text2music/) . As of writing this documentation those options are `warm1`, `warm2`, `warm3`, `warm4`, `octaver`, `brightness`, `harmonicbell`, `semisine`, `template`, `theta1`, `theta2`, `theta3`, `theta4`, `theta5`, `oddtheta1`, `oddtheta2`, `oddtheta3`, `oddtheta4` and `oddtheta5`.
+You can also use space separated numbers to directly set the sine components of the `PeriodicWave`. If you want to set the cosine components as well use a semicolon `;` to separate the two lists. The peak amplitude is normalized to 1. This config has no effect on MIDI output.
+```
+WF:0 100 50 0 10 0 0 30 5 0 0 20 0 0 10 0 2
+MP:4
+L:1/1
+
+7:11:14:16
+4:7:8:11
+11:14:16
+```
+### ADSR
+To set the Attack-Decay-Sustain-Release envelope of the WebAudio oscillator use the `ADSR:` config. Attack time, decay time and release duration are in milliseconds while the sustain level is a percentage.
+```
+$ Attack 300ms, decay 200ms, sustain 80%, release 500ms
+ADSR:300 200 80 500
+WF:theta1
+4/4 ?????
+5/4 ????
+6/4 ???
+7/4 ??
+8/4 ?
+9/4
+```
 ### Monzo
-TODO
+To enter raw monzos use `Mzo:`, `@Mzo:` or `~Mzo:` syntax. Not real configs, but this keeps raw monzos from messing with the rest of the syntax.
+```
+Mzo:0           $ 1/1
+Mzo:-1 1        $ 3/2
+Mzo:-2 0 1      $ 5/4
+Mzo:-2 0 0 1    $ 7/4
+Mzo:-3 0 0 0 1  $ 11/8
+```
 ### Flags
 Various configs that don't take parameters go under flags `F:`.
 ```
@@ -1087,6 +1117,14 @@ C4 C#4 D4 E4 F4 F4# G4 H4 H#4 J4 A4  A#4 B4  C5
 C4 1\  2\ 3\ 4\ 5\  6\ 7\ 8\  9\ 10\ 11\ 12\ 13\
 ```
 
+## Preed Notation
+Preed is an experimental notation based on the breedsma `2401/2400`. Observe that in the Breed microtemperament `M3-/2` and `P5/4` are enough to build any 7-limit interval and higher prime limits are represented fairly accurately as well. In Preed the usual 5-limit pitches and intervals are simply halved. `P5` now sounds like `N3` and `N3` is a useful eight-tone building block for something that sounds like 7-limit especially if you use `T:breed` along with `N:preed`. The syntonic arrows `+` and `-` are halved while the rest of the inflections use eight tones to achieve unhalved primes, but you shouldn't really need them. Everything withing 31-limit can be built from half-sharps, `+` and `-` to a high degree of accuracy. `T:preed` exists to improve that accuracy even further.
+```
+N:preed
+T:breed
+P1  a5-- M9   ha12- M17
+4/4 5/4  6/4  7/4   9/4
+```
 
 ## Table of ASCII glyphs
 See [ASCII semantics](doc/ASCII_semantics.md) in the docs.

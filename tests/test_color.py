@@ -16,7 +16,7 @@ COMMAS = {
     "Laquinyo": [-10, -1, 5],
     "Quingu": [-1, 8, -5],
     "Tribiyo": [-6, -5, 6],
-    # "Quadyo": [-14, 3, 4],  # Gives [-6, -2,  4] instead
+    "Laquadyo": [-14, 3, 4],
     "Saquadyo": [5, -9, 4],
     "Sayo": [12, -9, 1],
     "Layo": [-15, 8, 1],

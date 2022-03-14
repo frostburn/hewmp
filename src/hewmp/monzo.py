@@ -28,6 +28,12 @@ class SemiMonzo:
     Vector representation of a fraction or an nth root of a fraction
     """
     def __init__(self, value=None, residual=None, nats=None):
+        if isinstance(value, self.__class__):
+            if residual is not None or nats is not None:
+                raise ValueError("Residual or nats given when copying SemiMonzo")
+            residual = value.residual
+            nats = value.nats
+            value = value.vector
         if isinstance(value, Fraction):
             if residual is not None:
                 raise ValueError("Residual already given when converting fraction to monzo")

@@ -722,6 +722,10 @@ L:1/8
 A6 (G5 F5) | (E5 D5) (C5 B5 A5) |
 G4 A5      | A6[2]              ||
 ```
+To display information about a spine use the command line tools.
+```
+$ python -m hewmp.spine 4 5 7 --up 6
+```
 ### Waveform
 In WebAudio the simplest way to produce sound is using oscillators. To set the oscillator waveform use the `WF:` config. Available values are `sine`, `triangle`, `square`, `sawtooth` and an assortment of custom timbres if you're playing on [lumipakkanen.com/text2music/](https://lumipakkanen.com/text2music/) . As of writing this documentation those options are `warm1`, `warm2`, `warm3`, `warm4`, `octaver`, `brightness`, `harmonicbell`, `semisine`, `template`, `theta1`, `theta2`, `theta3`, `theta4`, `theta5`, `oddtheta1`, `oddtheta2`, `oddtheta3`, `oddtheta4` and `oddtheta5`.
 You can also use space separated numbers to directly set the sine components of the `PeriodicWave`. If you want to set the cosine components as well use a semicolon `;` to separate the two lists. The peak amplitude is normalized to 1. This config has no effect on MIDI output.

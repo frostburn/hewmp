@@ -58,7 +58,7 @@ def erect_interval(period, generator, cardinality, augmented, major_direction):
 
         def monzo(self):
             basic, periods = self.basic_part()
-            return (basic_intervals[basic] + periods * period + self.augmentations * augmented).monzo.vector
+            return (basic_intervals[basic] + periods * period + self.augmentations * augmented).monzo
 
     basic.sort(key=lambda i:JI.nats(i[0]))
     for index, (interval, quality) in enumerate(basic):
@@ -130,7 +130,7 @@ def erect_pitch(period, generator, cardinality, up, augmented, reference_octave=
 
     class Result(PythPitch):
         def monzo(self):
-            return (basic_pitches[self.letter] + (self.octave - reference_octave) * period + self.sharps * augmented).monzo.vector
+            return (basic_pitches[self.letter] + (self.octave - reference_octave) * period + self.sharps * augmented).monzo
 
     return Result
 
@@ -176,7 +176,7 @@ def calculate_inflections(period, generator, cardinality):
         inflection = prime_inflections[prime]
         if isclose(JI.nats(inflection), 0):
             inflection = two_three.pop()
-        inflections[arrow] = inflection.monzo.vector
+        inflections[arrow] = inflection.monzo
 
     return inflections
 
@@ -212,7 +212,14 @@ if __name__ == '__main__':
 
     intervalCls, pitchCls, inflections = erect_spine(period, generator, cardinality, up=args.up, reference_octave=args.octave)
 
-    mstr = lambda interval: " ".join([str(c) for c in interval.monzo()])
+    def monzo_str(monzo):
+        result = " ".join([str(c) for c in monzo.vector])
+        if monzo.nats:
+            result += " + {}c".format(monzo.nats/log(2)*1200)
+        # TODO: monzo.residual
+        return result
+
+    mstr = lambda interval: monzo_str(interval.monzo())
 
     def print_intervals(intervals):
         for cents, interval in intervals:
@@ -222,12 +229,17 @@ if __name__ == '__main__':
 
     print("Basic pitches")
     for letter in list(Letter)[:cardinality]:
-        octave = 5
+        octave = args.octave
         pitch = pitchCls(letter, 0, octave)
         frequency = JI(Pitch(pitch.monzo()))
         print("{}Hz {}{}".format(frequency, letter.value, octave))
         if args.verbose:
             print(mstr(pitch))
+    pitch = pitchCls(Letter.A, 0, args.octave + 1)
+    frequency = JI(Pitch(pitch.monzo()))
+    print("{}Hz {}{}".format(frequency, letter.A.value, args.octave + 1))
+    if args.verbose:
+        print(mstr(pitch))
 
     intervals = []
     for quality in [Quality("P"), Quality("m"), Quality("M")]:
@@ -278,4 +290,4 @@ if __name__ == '__main__':
     inflections = calculate_inflections(period, generator, cardinality)
     for arrow, inflection in inflections.items():
         cents = JI.nats(Interval(SemiMonzo(inflection))) / log(2) * 1200
-        print("{} {} {}".format(arrow.value, " ".join([str(c) for c in inflection]), cents))
+        print("{} {} {}".format(arrow.value, monzo_str(inflection), cents))

@@ -243,6 +243,17 @@ class Rest(Event):
         return self.__class__(time, duration)
 
 
+class Tie(Event):
+    def __init__(self, time=0, duration=1, real_time=None, real_duration=None):
+        super().__init__(time, duration, real_time, real_duration)
+
+    def to_json(self):
+        raise ValueError("Ties cannot be converted to json")
+
+    def retime(self, time, duration):
+        return self.__class__(time ,duration)
+
+
 class Spacer(Event):
     def __init__(self, value, time=0, duration=0, real_time=None, real_duration=None):
         if real_time is not None or real_duration is not None:
@@ -559,7 +570,7 @@ class Pattern(MusicBase, Transposable):
         for event in reversed(self.subpatterns):
             if not isinstance(event, Spacer):
                 return event
-        raise IndexError("No last event found")
+        return None
 
     @last.setter
     def last(self, value):
@@ -572,8 +583,9 @@ class Pattern(MusicBase, Transposable):
     @property
     def last_voiced(self):
         for event in reversed(self.subpatterns):
-            if isinstance(event, (Note, Percussion, Pattern)):
+            if isinstance(event, (GatedEvent, Pattern)):
                 return event
+        return None
 
     def simplify(self):
         common_denominator = 0
@@ -729,8 +741,12 @@ class Pattern(MusicBase, Transposable):
         articulation = None
         dynamic = None
         for event in self.flatten():
-            if not isinstance(event, Spacer):
-                flat.append(event)
+            if isinstance(event, Spacer):
+                continue
+            if isinstance(event, Tie):
+                flat[-1].duration += event.duration
+                continue
+            flat.append(event)
             if isinstance(event, Tempo) and tempo is None:
                 tempo = event
             if isinstance(event, Tuning):

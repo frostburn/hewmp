@@ -94,6 +94,11 @@ To extend the duration of the last played note (or rest) by one use the pedal sy
 ```
 Pedals chain so `!!` extends duration by two. Pedals also chain with rests so `1 !...` is a note of duration two followed by a rest of duration three.
 
+Pedal has a special property that allows it to cross tuplet boundaries.
+```
+1 (! 3/2)  $ A dotted quarter note followed by an eight note
+```
+Warning: When inserted after a tuplet the pedal applies to every note inside the tuplet. This makes it easier to work with chords. `(1 3/2) !` is a kind of arpeggiate and hold instead of an eight note followed by a quarter note.
 ## Soft pedal
 To only extend the playing duration of the last played note use the soft pedal symbol `?`.
 ```
@@ -102,6 +107,10 @@ To only extend the playing duration of the last played note use the soft pedal s
 ```
 Soft pedal chains with plain pedals so `1 !?` is a note of duration three that takes up two units of time.
 
+Soft pedals can leak out of tuplets.
+```
+(1 3/2 ??) . $ An eight note followed by a dotted quarter note
+```
 ## Repeats
 To repeat the last note or tuplet (useful with chords) use `%`. The pitch(es) will be the same but duration is reset to one.
 ```

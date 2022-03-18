@@ -1216,6 +1216,41 @@ def test_percussion_with_dynamics():
     # TODO: Figure out what to do here
 
 
+def test_ties_into_tuplets():
+    text = "(1 ! ! 1) 1"
+    notes = get_notes(text)
+    times_durations = [
+        (0, Fraction(3, 4)),
+        (Fraction(3, 4), Fraction(1, 4)),
+        (1, 1),
+    ]
+    for i in range(len(notes)):
+        assert notes[i].time == times_durations[i][0]
+        assert notes[i].duration == times_durations[i][1]
+
+    text = "1 (! 1) 1"
+    notes = get_real_notes(text)
+    times_durations = [
+        (0, Fraction(3, 2)),
+        (Fraction(3, 2), Fraction(1, 2)),
+        (2, 1),
+    ]
+    for i in range(len(notes)):
+        assert notes[i].time == times_durations[i][0]
+        assert notes[i].duration == times_durations[i][1]
+
+    text = "(1 1) ! 1"
+    notes = get_real_notes(text)
+    times_durations = [
+        (0, Fraction(3, 2)),
+        (Fraction(1, 2), Fraction(3, 2)),
+        (2, 1),
+    ]
+    for i in range(len(notes)):
+        assert notes[i].time == times_durations[i][0]
+        assert notes[i].duration == times_durations[i][1]
+
+
 if __name__ == '__main__':
     test_parse_interval()
     test_parse_higher_prime()
@@ -1311,3 +1346,4 @@ if __name__ == '__main__':
     test_color_temperament()
     test_flavor_chord_multiplicity()
     # test_percussion_with_dynamics()
+    test_ties_into_tuplets()

@@ -1034,6 +1034,7 @@ def parse_track(lexer, default_config, max_repeats=None):
             add_concatenated_durations = False
             pattern.t -= concatenated_pattern.duration
         elif all(mt in TEMPORAL_MINI_LANGUAGE for mt in token):
+            # TODO: Refactor
             for mini_token in token:
                 if mini_token == "%":
                     repeated_pattern = pattern.last_voiced.retime(pattern.t, 1)
@@ -1043,7 +1044,11 @@ def parse_track(lexer, default_config, max_repeats=None):
                     pattern.append(Rest(pattern.t))
                     pattern.t += pattern.last.duration
                 elif mini_token == "!":
-                    pattern.last.extend_duration(1)
+                    last = pattern.last
+                    if last is None:
+                        pattern.append(Tie(pattern.t))
+                    else:
+                        last.extend_duration(1)
                     pattern.t += 1
                 elif mini_token == "?":
                     pattern.last.extend_duration(1)
@@ -1092,6 +1097,7 @@ def parse_track(lexer, default_config, max_repeats=None):
                 pattern.append(percussion)
                 pattern.t += percussion.duration
             else:
+                # TODO: Refactor
                 for mini_token in token:
                     if mini_token in PERCUSSION_SHORTHANDS:
                         index, name = PERCUSSION_SHORTHANDS[mini_token]
@@ -1106,7 +1112,11 @@ def parse_track(lexer, default_config, max_repeats=None):
                         pattern.append(Rest(pattern.t))
                         pattern.t += pattern.last.duration
                     elif mini_token == "!":
-                        pattern.last.extend_duration(1)
+                        last = pattern.last
+                        if last is None:
+                            pattern.append(Tie(pattern.t))
+                        else:
+                            last.extend_duration(1)
                         pattern.t += 1
                     elif mini_token == "?":
                         pattern.last.extend_duration(1)
@@ -1638,7 +1648,7 @@ if __name__ == "__main__":
         for pattern in patterns:
             if pattern.duration <= 0:
                 continue
-            pattern.transpose(config["interval_parser"].base_pitch)
+            pattern.transpose(-config["interval_parser"].offset)
             if "comma_reduction_cache" in config:
                 comma_reduce_pattern(pattern, config["tuning"].comma_list, config["CRD"], config["comma_reduction_cache"])
             args.outfile.write("---\n")

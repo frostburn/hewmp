@@ -1223,10 +1223,10 @@ def parse_text(text, max_repeats=None):
     return parse_file(StringIO(text), max_repeats=max_repeats)
 
 
-def realize(patterns):
+def realize(patterns, preserve_spacers=False):
     result = []
     for pattern, (start_time, end_time) in zip(patterns, sync_playheads(patterns)):
-        result.append(pattern.realize(start_time=start_time, end_time=end_time))
+        result.append(pattern.realize(start_time=start_time, end_time=end_time, preserve_spacers=preserve_spacers))
     return result
 
 
@@ -1322,7 +1322,7 @@ def _tokenize_monzos_pitch(note):
         vector.pop()
     if not vector:
         vector = [0]
-    return "@Mzo:{}".format(" ".join(map(str, vector)))
+    return "\n@Mzo:{}\n".format(" ".join(map(str, vector)))
 
 
 def _tokenize_cents_pitch(note, base_frequency):
@@ -1393,7 +1393,7 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
                 if main and subpattern.time == 0 and subpattern.velocity == DYNAMICS["mf"]:
                     force_tokenize = False
             if force_tokenize:
-                subnotations.append(tokenize_pattern(subpattern, _tokenize_chord, _tokenize_pitch))
+                subnotations.append(tokenize_pattern(subpattern, _tokenize_chord, _tokenize_pitch, separator=separator))
             if subpattern.duration == 0:
                 continue
             local_absolute_time = False
@@ -1403,12 +1403,22 @@ def tokenize_pattern(pattern, _tokenize_chord, _tokenize_pitch, main=False, abso
                 else:
                     local_absolute_time = True
                 local_time = subpattern.time
-            subnotations.append(tokenize_pattern(subpattern, _tokenize_chord, _tokenize_pitch, absolute_time=local_absolute_time))
+            subnotations.append(tokenize_pattern(subpattern, _tokenize_chord, _tokenize_pitch, absolute_time=local_absolute_time, separator=separator))
             previous_time = local_time
             local_time += subpattern.duration
+        result = ""
+        for subnotation in subnotations[:-1]:
+            if not subnotation:
+                continue
+            if subnotation.isspace():
+                result += subnotation
+            else:
+                result += subnotation + separator
+        if subnotations:
+            result += subnotations[-1]
         if main:
-            return separator.join(filter(None, subnotations))
-        return "(" + separator.join(filter(None, subnotations)) + ")" + suffix
+            return result
+        return "(" + result + ")" + suffix
     if isinstance(pattern, Note):
         return _tokenize_pitch(pattern) + suffix
     if isinstance(pattern, Rest):
@@ -1435,7 +1445,7 @@ def patterns_to_monzos(patterns, outfile):
         if pattern.duration <= 0:
             continue
         outfile.write("---\n")
-        outfile.write(tokenize_pattern(pattern, None, _tokenize_monzos_pitch, True, separator="\n"))
+        outfile.write(tokenize_pattern(pattern, None, _tokenize_monzos_pitch, True, separator=" ").replace("\n \n", "\n"))
         outfile.write("\n")
 
 
@@ -1643,7 +1653,7 @@ if __name__ == "__main__":
     elif args.monzo:
         patterns_to_monzos(patterns, args.outfile)
     elif args.cents:
-        patterns_to_cents(realize(patterns), args.outfile, config["tuning"].base_frequency)
+        patterns_to_cents(realize(patterns, preserve_spacers=True), args.outfile, config["tuning"].base_frequency)
     elif args.absolute:
         inflections = reverse_inflections(DEFAULT_INFLECTIONS)
         _chord = lambda pattern: _tokenize_absolute_chord(pattern, inflections)

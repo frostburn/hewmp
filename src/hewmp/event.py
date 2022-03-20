@@ -734,14 +734,14 @@ class Pattern(MusicBase, Transposable):
             if isinstance(subpattern, Transposable):
                 subpattern.transpose(interval)
 
-    def realize(self, start_time=None, end_time=None):
+    def realize(self, start_time=None, end_time=None, preserve_spacers=False):
         flat = []
         tempo = None
         tuning = None
         articulation = None
         dynamic = None
         for event in self.flatten():
-            if isinstance(event, Spacer):
+            if isinstance(event, Spacer) and not preserve_spacers:
                 continue
             if isinstance(event, Tie):
                 flat[-1].duration += event.duration

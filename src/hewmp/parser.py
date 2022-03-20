@@ -1200,8 +1200,7 @@ def parse_track(lexer, default_config, max_repeats=None):
 
     pattern.duration = pattern.logical_duration
 
-    if max_polyphony is not None:
-        pattern.max_polyphony = max_polyphony
+    pattern.max_polyphony = max_polyphony
 
     config["interval_parser"] = interval_parser
     return pattern, config
@@ -1294,9 +1293,12 @@ def prune(patterns):
                     "sustain": float(Fraction(event["sustain"])),
                     "release": float(Fraction(event["release"])),
                 })
+        max_polyphony = pattern.max_polyphony
+        if max_polyphony is None:
+            max_polyphony = 15
         result.append({
             "events": events,
-            "maxPolyphony": getattr(pattern, "max_polyphony", 15),
+            "maxPolyphony": max_polyphony,
             "volume": trackVolume,
             "waveform": waveform,
         })
@@ -1476,8 +1478,8 @@ def freq_to_midi_12(frequency, pitch_bend_depth=2):
     return index, bend
 
 
-FREQ_C3 = FREQ_A4 / MIDI_STEP**21
-INDEX_C3 = INDEX_A4 - 21
+FREQ_C3 = FREQ_A4 / MIDI_STEP**9
+INDEX_C3 = INDEX_A4 - 9
 
 def freq_to_midi_et(frequency, et_divisions, et_divided=2):
     ratio = frequency / FREQ_C3
@@ -1505,7 +1507,9 @@ def tracks_to_midi(tracks, freq_to_midi=freq_to_midi_12, reserve_channel_10=True
     midi = mido.MidiFile()
     channel_offset = 0
     for pattern in realize(tracks):
-        max_polyphony = getattr(pattern, "max_polyphony", 15)
+        max_polyphony = pattern.max_polyphony
+        if max_polyphony is None:
+            max_polyphony = 15
         if pattern.duration <= 0:
             continue
         track = mido.MidiTrack()

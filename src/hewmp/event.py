@@ -524,7 +524,7 @@ class Percussion(GatedEvent):
 
 
 class Pattern(MusicBase, Transposable):
-    def __init__(self, subpatterns=None, time=0, duration=1, logical_duration=0, real_time=None, real_duration=None):
+    def __init__(self, subpatterns=None, time=0, duration=1, logical_duration=0, real_time=None, real_duration=None, max_polyphony=None):
         super().__init__(time, duration, real_time, real_duration)
         if subpatterns is None:
             self.subpatterns = []
@@ -532,6 +532,7 @@ class Pattern(MusicBase, Transposable):
             self.subpatterns = subpatterns
         self.logical_duration = logical_duration
         self.properties = None
+        self.max_polyphony = max_polyphony
 
     def __bool__(self):
         return bool(self.subpatterns)
@@ -821,16 +822,16 @@ class Pattern(MusicBase, Transposable):
                 events.insert(0, extra)
         duration = end_time - start_time
         real_time, real_duration = tempo.to_real_time(start_time, duration)
-        return Pattern(events, start_time, duration, duration, real_time, real_duration)
+        return self.__class__(events, start_time, duration, duration, real_time, real_duration, max_polyphony=self.max_polyphony)
 
     def retime(self, time, duration):
-        result = self.__class__([], time, duration, self.logical_duration)
+        result = self.__class__([], time, duration, self.logical_duration, max_polyphony=self.max_polyphony)
         for subpattern in self.subpatterns:
             result.append(subpattern.copy())
         return result
 
     def __repr__(self):
-        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.subpatterns, self.time, self.duration, self.logical_duration, self.real_time, self.real_duration)
+        return "{}({!r}, {!r}, {!r}, {!r}, {!r}, {!r}, {!r})".format(self.__class__.__name__, self.subpatterns, self.time, self.duration, self.logical_duration, self.real_time, self.real_duration, self.max_polyphony)
 
     def is_chord(self):
         for note in self:

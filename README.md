@@ -99,6 +99,10 @@ Pedal has a special property that allows it to cross tuplet boundaries.
 1 (! 3/2)  $ A dotted quarter note followed by an eight note
 ```
 Warning: When inserted after a tuplet the pedal applies to every note inside the tuplet. This makes it easier to work with chords. `(1 3/2) !` is a kind of arpeggiate and hold instead of an eight note followed by a quarter note.
+Use `T!` if you want a tie that only affects the last note of the tuplet.
+```
+(1 3/2) T!  $ An eight note followed by a quarter note
+```
 ## Soft pedal
 To only extend the playing duration of the last played note use the soft pedal symbol `?`.
 ```

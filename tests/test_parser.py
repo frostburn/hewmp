@@ -1250,6 +1250,17 @@ def test_ties_into_tuplets():
         assert notes[i].time == times_durations[i][0]
         assert notes[i].duration == times_durations[i][1]
 
+    text = "(1 3/2) T! 1"
+    notes = get_real_notes(text)
+    times_durations = [
+        (0, Fraction(1, 2)),
+        (Fraction(1, 2), Fraction(3, 2)),
+        (2, 1),
+    ]
+    for i in range(len(notes)):
+        assert notes[i].time == times_durations[i][0]
+        assert notes[i].duration == times_durations[i][1]
+
 
 if __name__ == '__main__':
     test_parse_interval()

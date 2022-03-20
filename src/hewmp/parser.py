@@ -1033,6 +1033,9 @@ def parse_track(lexer, default_config, max_repeats=None):
             concatenated_pattern = patternify(pattern.pop())
             add_concatenated_durations = False
             pattern.t -= concatenated_pattern.duration
+        elif token.startswith("T!"):
+            pattern.append(Tie(pattern.t, token.count("!")))
+            pattern.t += pattern.last.duration
         elif all(mt in TEMPORAL_MINI_LANGUAGE for mt in token):
             # TODO: Refactor
             for mini_token in token:
